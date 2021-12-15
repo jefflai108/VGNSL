@@ -1,2 +1,2 @@
 cd src
-python train.py
+python train.py --logger_name ../exp/text_mscoco/
