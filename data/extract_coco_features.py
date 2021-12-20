@@ -29,7 +29,8 @@ logger = get_logger(__file__)
 io.set_fs_verbose(True)
 
 parser = JacArgumentParser()
-parser.add_argument('--caption', required=True, type='checked_file', help='caption annotations (*.json)')
+parser.add_argument('--train-caption', required=True, type='checked_file', help='caption annotations (*.json)')
+parser.add_argument('--val-caption', required=True, type='checked_file', help='caption annotations (*.json)')
 parser.add_argument('--image-root', required=True, type='checked_dir', help='image directory')
 parser.add_argument('--output', required=True, help='output .h5 file')
 
@@ -95,15 +96,15 @@ class FeatureExtractor(nn.Module):
     def forward(self, feed_dict, image_filename):
         feed_dict = GView(feed_dict)
         f = self.resnet(feed_dict.image)
-        f = f.max(3)[0].mean(2).reshape(-1, 1) # mean-pooling on resnet output
+        f = f.max(3)[0].mean(2) # mean-pooling on resnet output
         f = f.cpu().detach().numpy() # for storing purpose 
         output_dict = {image_filename[i]: f[i] for i in range(len(image_filename))}
         
         return output_dict
 
-def main():
+def main(model, caption_file, output_dict = {}):
     logger.critical('Loading the dataset.')
-    data = io.load(args.caption)
+    data = io.load(caption_file)
     # Step 1: filter out images.
     images = [pair['image'] for pair in data['data']]
 
@@ -115,9 +116,23 @@ def main():
     ])
 
     dataset = COCOImageDataset(images, args.image_root, image_transform)
+    dataloader = dataset.make_dataloader(args.batch_size, shuffle=False, drop_last=False, nr_workers=args.data_workers)
+
+    for feed_dict in tqdm(dataloader, total=len(dataloader), desc='Extracting features'):
+        if args.use_gpu:
+            feed_dict, image_filename = async_copy_to(feed_dict, 0)
+            image_filename = [x.split('/')[1] for x in image_filename] 
+            #image_filename = ['/'.join([x.split('/')[0].replace('2014', '2017'), x.split('/')[1].split('_')[2]]) for x in image_filename] # use the 2017 mscoco instead of 2014
+        
+        with torch.no_grad():
+            output_dict.update(model(feed_dict, image_filename))
+   
+    return output_dict, len(images)
+    
+if __name__ == '__main__':
+    output_file = io.open_h5(args.output, 'w')
 
     logger.critical('Building the model.')
-
     model = FeatureExtractor()
     if args.use_gpu:
         model.cuda()
@@ -125,25 +140,15 @@ def main():
             from jactorch.parallel import JacDataParallel
             model = JacDataParallel(model, device_ids=args.gpus).cuda()
         cudnn.benchmark = True
-
     model.eval()
-    dataloader = dataset.make_dataloader(args.batch_size, shuffle=False, drop_last=False, nr_workers=args.data_workers)
-    output_file = io.open_h5(args.output, 'w')
 
     output_dict = {}
-    for feed_dict in tqdm(dataloader, total=len(dataloader), desc='Extracting features'):
-        if args.use_gpu:
-            feed_dict, image_filename = async_copy_to(feed_dict, 0)
-            image_filename = ['/'.join([x.split('/')[0].replace('2014', '2017'), x.split('/')[1].split('_')[2]]) for x in image_filename] # use the 2017 mscoco instead of 2014
-        
-        with torch.no_grad():
-            output_dict.update(model(feed_dict, image_filename))
+    output_dict, val_image_len = main(model, args.val_caption, output_dict)
+    output_dict, train_image_len = main(model, args.train_caption, output_dict)
 
-    assert len(output_dict) == len(images) 
+    assert len(output_dict) == val_image_len + train_image_len
     for k, v in output_dict.items():
         output_file.create_dataset(k, data=np.array(v))
     
     output_file.close()
 
-if __name__ == '__main__':
-    main()
