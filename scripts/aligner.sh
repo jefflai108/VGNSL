@@ -5,6 +5,8 @@
 # 
 # for simply appling pre-trained Librispeech ASR, do `mfa align`; 
 # for domain-adapt pre-trained Librispeech ASR (shifting GMM mean) and then align, do `mfa adapt` 
+# We manually set the beam-size to 1000, or else a lot of the utterances won't have alignments. 
+# `done_alignment_speakers_list2.txt` is used to keep track of finished utterances.
 # 
 # since MFA on the entire corpus takes too long, we do it in parallel (20 jobs) by speaker-split 
 # **make sure that the sub-directories are organized by speakers**
@@ -19,7 +21,7 @@
 source /data/sls/r/u/yungsung/home/miniconda3/bin/activate
 
 python data/parallel_aligner.py \
-    -d data/SpokenCOCO/wavs-speaker -c data/SpokenCOCO -l done_alignment_speakers_list.txt -N 20 -n $1
+    -d data/SpokenCOCO/wavs-speaker -c data/SpokenCOCO -l done_alignment_speakers_list2.txt -N 20 -n $1
 
 #datadir=data/SpokenCOCO
 #for spkdir in $datadir/wavs-speaker/*; do

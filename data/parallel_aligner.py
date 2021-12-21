@@ -22,7 +22,7 @@ def parallel_run(args):
         dump_dir = os.path.join(args.corpus_directory, '.mfa_adapt-' + spk)
         spk_dir = os.path.join(args.data_directory, spk)
         aligned_spk_dir = spk_dir.replace('/wavs-speaker/', '/wavs-speaker-aligned/')
-        bashCommand = "mfa adapt " + spk_dir + " " + lexicon_path + " english " + aligned_spk_dir + " -t " + dump_dir + " -j 10 -v --debug --clean"
+        bashCommand = "mfa adapt " + spk_dir + " " + lexicon_path + " english " + aligned_spk_dir + " -t " + dump_dir + " -j 10 -v --debug --clean --beam 1000 --retry-beam=1500" # set beam to 1k
         print(bashCommand)
         execute(bashCommand.split(), args.done_list, spk)
 
@@ -35,7 +35,7 @@ def execute(cmd, speaker_done_list, spk):
     if return_code:
         raise subprocess.CalledProcessError(return_code, cmd)
     else: 
-        _write_to_file(spk, speaker_done_list)
+        _write_to_file(spk, speaker_done_list) # write to `done_alignment_speakers_list2.txt` to keep track 
 
 def collect_speaker(data_directory): 
     spk_list = []
