@@ -67,6 +67,9 @@ def construct_id2path(input_json_file, args, id2path = {}):
     return id2path
 
 def skip_long_utterance(wav_file, cut_off_len = 15): 
+    """ from "Text-Free Image-to-Speech Synthesis Using Learned Segmental Units" Appendix A: 
+            When computing duration statistics, we exclude utterances longer than 15s for SpokenCOCO...
+    """
     if os.path.islink(wav_file): 
         wav_file = os.readlink(wav_file)
 

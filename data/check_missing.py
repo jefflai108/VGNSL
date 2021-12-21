@@ -40,12 +40,12 @@ def construct_id2path(input_json_file, args, f, cnt_statistics, id2path = {}):
             
             if not exists(alignment_file):
                 print(wav_file, 'does not have alignment. Skipped')
-                f.write('speaker %s file %s does not have alignment' % (caption['speaker'], wav_file))
+                f.write('speaker %s file %s does not have alignment\n' % (caption['speaker'], wav_file))
                 cnt_statistics[1] += 1
                 print('There are %d total utterances. %d has no alignments. %d exceeds 15 seconds' % (cnt_statistics[0], cnt_statistics[1], cnt_statistics[2]))
             elif skip_long_utterance(wav_file): 
                 print(wav_file, 'exceeds 15 seconds. Skipped')
-                f.write('speaker %s file %s exceeds 15 seconds.' % (caption['speaker'], wav_file))
+                f.write('speaker %s file %s exceeds 15 seconds.\n' % (caption['speaker'], wav_file))
                 cnt_statistics[2] += 1 
                 print('There are %d total utterances. %d has no alignments. %d exceeds 15 seconds' % (cnt_statistics[0], cnt_statistics[1], cnt_statistics[2]))
 
