@@ -111,6 +111,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', default='../data/mscoco',
                         help='path to datasets')
+    parser.add_argument('--vocab_path', default='../data/mscoco/vocab.pkl',
+                        help='path to vocab.pkl')
+    parser.add_argument('--image_hdf5', help='path to pre-stored image embedding .h5 file')
+    parser.add_argument('--data_summary_json', help='karpathy split json file')
     parser.add_argument('--margin', default=0.2, type=float,
                         help='rank loss margin')
     parser.add_argument('--num_epochs', default=30, type=int,
@@ -171,7 +175,7 @@ if __name__ == '__main__':
     # setup logger
     if os.path.exists(opt.logger_name):
         print(f'Warning: the folder {opt.logger_name} exists.')
-    os.system('mkdir {:s}'.format(opt.logger_name))
+    os.system('mkdir -p {:s}'.format(opt.logger_name))
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -186,7 +190,7 @@ if __name__ == '__main__':
     logger.propagate = False
 
     # load predefined vocabulary and pretrained word embeddings if applicable
-    vocab = pickle.load(open(os.path.join(opt.data_path, 'vocab.pkl'), 'rb'))
+    vocab = pickle.load(open(opt.vocab_path, 'rb'))
     opt.vocab_size = len(vocab)
 
     if opt.init_embeddings:
@@ -196,7 +200,7 @@ if __name__ == '__main__':
 
     # Load data loaders
     train_loader, val_loader = data.get_train_loaders(
-        opt.data_path, vocab, opt.batch_size, opt.workers
+        opt.data_path, vocab, opt.data_summary_json, opt.image_hdf5, opt.batch_size, opt.workers
     )
 
     # construct the model

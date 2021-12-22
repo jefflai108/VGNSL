@@ -20,8 +20,9 @@
 # use Yung-Sung's latest MFA install
 source /data/sls/r/u/yungsung/home/miniconda3/bin/activate
 
+datadir=data/SpokenCOCO
 python data/parallel_aligner.py \
-    -d data/SpokenCOCO/wavs-speaker -c data/SpokenCOCO -l done_alignment_speakers_list2.txt -N 20 -n $1
+    -d ${datadir}/wavs-speaker -c ${datadir} -l ${datadir}/done_alignment_speakers_list2.txt -N 20 -n $1
 
 #datadir=data/SpokenCOCO
 #for spkdir in $datadir/wavs-speaker/*; do

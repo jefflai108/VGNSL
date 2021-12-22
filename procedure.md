@@ -1,3 +1,10 @@
+SpokenCOCO data pre-processing: 
+    1) generate parse tree for text transcriptions --> done 
+    2) force alignment with MFA --> done
+
+SpokenCOCO baseline: 
+    1) re-run VG-NSL on SpokenCOCO. 
+
 
 Force Alignment during training: 
 

@@ -1,12 +1,14 @@
 import nltk
 import numpy as np
 import os
+import json 
+import h5py
+from tqdm import tqdm
 
 import torch
 import torch.utils.data as data
 
-
-class PrecompDataset(data.Dataset):
+class OriginalPrecompDataset(data.Dataset):
     """ load precomputed captions and image features """
 
     def __init__(self, data_path, data_split, vocab, 
@@ -47,13 +49,71 @@ class PrecompDataset(data.Dataset):
     def __len__(self):
         return self.length
 
+class PrecompDataset(data.Dataset):
+    """ load precomputed captions and image features """
+
+    def __init__(self, data_summary_json, vocab, image_hdf5, 
+                 load_img=True, img_dim=2048):
+        self.vocab = vocab
+
+        print('load', image_hdf5)
+        image_h5 = h5py.File(image_hdf5, 'r')
+
+        print('read & extract data_summary_json')
+        self.key2embed = {}
+        self.transcript_list = []
+        transcript_cnt = 0
+        self.cnt2key = {}
+        for image_key, captions_list in tqdm(data_summary_json.items()): 
+            if load_img:
+                image_embed = image_h5[image_key][:] # numpy array 
+            else:
+                image_embed = np.zeros(img_dim,)
+            self.key2embed[image_key] = image_embed
+
+            for captions in captions_list: 
+                wav_file = captions[0]
+                transcript_file = captions[1]
+                tree_file = captions[2]
+                alignment_file = captions[3]
+                
+                self.transcript_list.append(self.__readfile__(transcript_file))
+                self.cnt2key[transcript_cnt] = image_key
+                transcript_cnt += 1
+
+            #if transcript_cnt >= 200: 
+            #    break 
+
+        self.length = transcript_cnt
+
+    @staticmethod
+    def __readfile__(fpath): 
+        with open(fpath, 'r') as f: 
+            string = f.readline()
+        return string 
+
+    def __getitem__(self, index):
+        # transcript 
+        transcript_tmp = self.transcript_list[index].split()
+        caption = [self.vocab(token) 
+                   for token in ['<start>'] + transcript_tmp + ['<end>']]
+        caption = torch.tensor(caption)
+
+        # image
+        image_key = self.cnt2key[index]
+        image = torch.tensor(self.key2embed[image_key])
+
+        return image, caption, index
+
+    def __len__(self):
+        return self.length
 
 def collate_fn(data):
     """ build mini-batch tensors from a list of (image, caption) tuples """
     # sort a data list by caption length
     data.sort(key=lambda x: len(x[1]), reverse=True)
     zipped_data = list(zip(*data))
-    images, captions, ids, img_ids = zipped_data
+    images, captions, ids = zipped_data
     images = torch.stack(images, 0)
     targets = torch.zeros(len(captions), len(captions[0])).long()
     lengths = [len(cap) for cap in captions]
@@ -62,11 +122,10 @@ def collate_fn(data):
         targets[i, :end] = cap[:end]
     return images, targets, lengths, ids
 
-
-def get_precomp_loader(data_path, data_split, vocab, batch_size=128,
-                       shuffle=True, num_workers=2, load_img=True, 
-                       img_dim=2048):
-    dset = PrecompDataset(data_path, data_split, vocab, load_img, img_dim)
+def get_precomp_loader(data_summary_json, vocab, image_hdf5, batch_size=128, 
+                       shuffle=True, num_workers=2, load_img=True, img_dim=2048):
+    dset = PrecompDataset(data_summary_json, vocab, 
+                          image_hdf5, load_img, img_dim)
     data_loader = torch.utils.data.DataLoader(
         dataset=dset, batch_size=batch_size, shuffle=shuffle,
         pin_memory=True, 
@@ -74,19 +133,29 @@ def get_precomp_loader(data_path, data_split, vocab, batch_size=128,
     )
     return data_loader
 
+def get_train_loaders(data_path, vocab, data_summary_json, image_hdf5, batch_size, workers):
+    with open(data_summary_json, 'r') as f:
+        data_summary = json.load(f)
+    train_json = data_summary['train']
+    val_json = data_summary['val']
 
-def get_train_loaders(data_path, vocab, batch_size, workers):
+    print('loading train_loader')
     train_loader = get_precomp_loader(
-        data_path, 'train', vocab, batch_size, True, workers
+        train_json, vocab, image_hdf5, batch_size, True, workers
     )
+    print('loading val_loader')
     val_loader = get_precomp_loader(
-        data_path, 'dev', vocab, batch_size, False, workers
+        val_json, vocab, image_hdf5, batch_size, False, workers
     )
     return train_loader, val_loader
 
-
 def get_eval_loader(data_path, split_name, vocab, batch_size, workers, 
                     load_img=False, img_dim=2048):
+    with open(data_summary_json, 'r') as f:
+        data_summary = json.load(f)
+
+    test_json = data_summary['test']
+
     eval_loader = get_precomp_loader(
         data_path, split_name, vocab, batch_size, False, workers, 
         load_img=load_img, img_dim=img_dim

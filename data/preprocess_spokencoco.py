@@ -5,6 +5,9 @@ import os
 from pathlib import Path
 import subprocess
 from collections import defaultdict 
+import pickle
+
+from create_vocab import build_vocab
 
 # {"image": "val2014/COCO_val2014_000000325114.jpg", "captions": [{"text": "A URINAL IN A PUBLIC RESTROOM NEAR A WOODEN TABLE", "speaker": "m071506418gb9vo0w5xq3", "uttid": "m071506418gb9vo0w5xq3-3LUY3GC63Z0R9PYEETJGN5HO4UEP7B    _325114_629297", "wav": "wavs/val/0/m071506418gb9vo0w5xq3-3LUY3GC63Z0R9PYEETJGN5HO4UEP7B_325114_629297.wav", "parse_tree": "( ( a urinal ) ( in ( ( a public restroom ) ( near ( a wooden table ) ) ) ) )"}, {"text": "A WHITE URINAL WHIT    E TILES A RED TABLE WITH A DISH", "speaker": "m221bzbcdh4ro4", "uttid": "m221bzbcdh4ro4-3ZQIG0FLQEGJ4OWB8D0RLD5NKVLWVB_325114_628718", "wav": "wavs/val/0/m221bzbcdh4ro4-3ZQIG0FLQEGJ4OWB8D0RLD5NKVLWVB_325114_628718.wav", "parse_tree":     "( ( a white urinal white ) ( tiles ( a red table ) ( with ( a dish ) ) ) )"}, {"text": "A TABLE WITH A PLATE OF FOOD AND A URINAL BASIN", "speaker": "m2zco7272xa5e0", "uttid": "m2zco7272xa5e0-3RANCT1ZVFHR36908WUQ2DQJVTZBU1_325114_615    377", "wav": "wavs/val/0/m2zco7272xa5e0-3RANCT1ZVFHR36908WUQ2DQJVTZBU1_325114_615377.wav", "parse_tree": "( ( a table ) ( with ( ( ( a plate ) ( of food ) ) and ( a urinal basin ) ) ) )"}, {"text": "A LITTLE RED TABKE WITH A PLATE ON     IT IN THE BATHROOM", "speaker": "m2saqi3zjrms1y", "uttid": "m2saqi3zjrms1y-3F0BG9B9MPNLI3QF5GFZ0WA089EY7V_325114_630704", "wav": "wavs/val/0/m2saqi3zjrms1y-3F0BG9B9MPNLI3QF5GFZ0WA089EY7V_325114_630704.wav", "parse_tree": "( ( a little     red tabke ) ( with ( ( a plate ) ( on it ) ( in ( the bathroom ) ) ) ) )"}, {"text": "A URINAL NEXT TO A RED TABLE WITH A PLATE SITTING ON THE TABLE", "speaker": "ma7soiuo8jbku", "uttid": "ma7soiuo8jbku-3LOTDFNYA7ZU8RAL8YVN3R21Z9QFWI    _325114_622604", "wav": "wavs/val/0/ma7soiuo8jbku-3LOTDFNYA7ZU8RAL8YVN3R21Z9QFWI_325114_622604.wav", "parse_tree": "( ( a urinal ) ( next ( to ( ( a red table ) ( with ( ( a plate ) ( sitting ( on ( the table ) ) ) ) ) ) ) ) )"}]}
  
@@ -71,6 +74,27 @@ def _write_to_file(string, fpath):
     f.write(string)
     f.close()
 
+def _collect_transcript(input_file, transcripts): 
+    data = json.load(open(input_file))
+
+    for pair in tqdm(data['data']):
+        img = pair['image']
+        captions = pair['captions']
+        for caption in captions: # each image pairs with 5 captions
+            transcripts.append(caption['text'].lower())
+
+    return transcripts
+
+def create_and_store_vocab(args):
+    transcripts = []
+    transcripts = _collect_transcript(args.input_val_file, transcripts)
+    transcripts = _collect_transcript(args.input_train_file, transcripts)
+
+    vocab = build_vocab(transcripts, threshold=4)
+    with open(args.vocab_output_pickle, 'wb') as f:
+        pickle.dump(vocab, f, pickle.HIGHEST_PROTOCOL)
+    print("Saved vocabulary file to ", args.vocab_output_pickle)
+
 if __name__ == '__main__':
  
     parser = argparse.ArgumentParser()
@@ -78,6 +102,7 @@ if __name__ == '__main__':
     parser.add_argument('--input-train-file', '-t', type=str)
     parser.add_argument('--data-directory', '-d', type=str)
     parser.add_argument('--new-data-directory-name', '-n', type=str)
+    parser.add_argument('--vocab-output-pickle', '-p', type=str)
     args = parser.parse_args()
 
     # Step 1: create speaker-split wavs directory with softlink
@@ -85,3 +110,6 @@ if __name__ == '__main__':
 
     # Step 2: export text transcript and parse tree to the new wavs directory
     #export_transcript_and_tree(args) 
+    
+    # Step 3: create vocab dictionary based on the transcripts
+    #create_and_store_vocab(args)

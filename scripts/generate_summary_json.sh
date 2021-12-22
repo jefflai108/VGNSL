@@ -5,6 +5,7 @@
 #
 # There are 617222 total utterances. 5 has no alignments. 384 exceeds 15 seconds
 
+datadir=data/SpokenCOCO
 python data/generate_summary_json.py \
-    -s data/SpokenCOCO/karpathy_split.json -d data/SpokenCOCO -n wavs-speaker -o data/SpokenCOCO/SpokenCOCO_summary.json \
-    -v data/SpokenCOCO/SpokenCOCO_val_wparse.json -t data/SpokenCOCO/SpokenCOCO_train_wparse.json
+    -s ${datadir}/karpathy_split.json -d ${datadir} -n wavs-speaker -o ${datadir}/SpokenCOCO_summary.json \
+    -v ${datadir}/SpokenCOCO_val_wparse.json -t ${datadir}/SpokenCOCO_train_wparse.json
