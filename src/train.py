@@ -58,15 +58,15 @@ def train(opt, train_loader, model, epoch, val_loader, vocab):
 
 def validate(opt, val_loader, model, vocab):
     # compute the encoding for all the validation images and captions
-    img_embs, cap_embs = encode_data(
+    img_embs, cap_embs, keys = encode_data(
         model, val_loader, opt.log_step, logger.info, vocab)
     # caption retrieval
-    (r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, measure='cosine')
-    logger.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
-                 (r1, r5, r10, medr, meanr))
+    #(r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, measure='cosine')
+    #logger.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
+    #             (r1, r5, r10, medr, meanr))
     # image retrieval
     (r1i, r5i, r10i, medri, meanr) = t2i(
-        img_embs, cap_embs, measure='cosine')
+        img_embs, cap_embs, keys, measure='cosine')
     logger.info("Text to image: %.1f, %.1f, %.1f, %.1f, %.1f" %
                  (r1i, r5i, r10i, medri, meanr))
     # sum of recalls to be used for early stopping

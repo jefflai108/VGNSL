@@ -79,7 +79,8 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
     img_embs = None
     cap_embs = None
     logged = False
-    for i, (images, captions, lengths, ids) in enumerate(data_loader):
+    for i, (images, captions, lengths, ids, keys) in enumerate(data_loader):
+        print(ids)
         # make sure val logger is used
         model.logger = val_logger
         lengths = torch.Tensor(lengths).long()
@@ -95,7 +96,7 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
         if (not logged) or (stage == 'test'):
             logged = True
             if stage == 'dev':
-                sample_num = 5
+                sample_num = 1 # set it to 1 since batch_size is hard coded to 1
             for j in range(sample_num):
                 logging(generate_tree(captions, tree_indices, j, vocab))
 
@@ -105,11 +106,13 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
         if img_embs is None:
             img_embs = np.zeros((len(data_loader.dataset), img_emb.size(1)))
             cap_embs = np.zeros((len(data_loader.dataset), cap_emb.size(1)))
+            key_list = []
 
         # preserve the embeddings by copying from gpu and converting to numpy
         img_embs[ids] = img_emb.data.cpu().numpy().copy()
         cap_embs[ids] = cap_emb.data.cpu().numpy().copy()
-
+        key_list.extend(keys)
+        
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
@@ -121,10 +124,64 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
                     .format(
                         i, len(data_loader), batch_time=batch_time,
                         e_log=str(model.logger)))
-        del images, captions
+        del images, captions, keys
 
-    return img_embs, cap_embs
+    return img_embs, cap_embs, np.array(key_list)
 
+def t2i(images, captions, keys, npts=None, measure='cosine', return_ranks=False):
+    """
+    Text->Images (Image Search)
+    Images: (5N, K) matrix of images
+    Captions: (5N, K) matrix of captions
+    """
+    ranks = numpy.zeros(len(keys))
+    top1  = numpy.zeros(len(keys))
+
+    # create image search space 
+    uniq_keys = set(keys)
+    selected_idxs = []
+    for uniq_key in sorted(uniq_keys): 
+        selected_idx = np.where(keys == uniq_key)[0]
+        selected_idxs.append(selected_idx[0]) # only need to take the first as representative 
+
+        # double-check 
+        # ensure for each uniq_key, the image embeddings are the same 
+        _selected_img = images[selected_idx]
+        if len(_selected_img) > 1:
+            assert sum(_selected_img[0] - _selected_img[-1]) == 0
+    #print(selected_idxs)
+    unique_images = images[np.array(selected_idxs)]
+    #print(unique_images.shape)
+
+    counter = 0
+    for query_idx, query_key in enumerate(sorted(uniq_keys)): 
+        # Get query captions 
+        selected_idx = np.where(keys == query_key)[0]
+        selected_caption = captions[selected_idx]
+
+        # compute scores (selected_caption v.s. unique_images)
+        #print(selected_caption.shape) # 5, 512
+        #print(unique_images.shape) # 30, 512
+        similarity_score = np.dot(selected_caption, unique_images.T) # 5, 30
+        similarity_score_inds = np.zeros(similarity_score.shape)
+        #print(similarity_score.shape)
+        
+        for i in range(len(similarity_score)): # iterate over captions under the query_key
+            similarity_score_inds[i] = np.argsort(similarity_score[i])[::-1]
+            top1[counter] = similarity_score_inds[i][0] # highest similarity for the given caption
+            ranks[counter] = np.where(similarity_score_inds[i] == query_idx)[0][0]
+            counter += 1
+
+    # compute metrics
+    r1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)
+    r5 = 100.0 * len(np.where(ranks < 5)[0]) / len(ranks)
+    r10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
+    medr = numpy.floor(np.median(ranks)) + 1
+    meanr = ranks.mean() + 1
+    if return_ranks:
+        return (r1, r5, r10, medr, meanr), (ranks, top1)
+    else:
+        return (r1, r5, r10, medr, meanr)
 
 def i2t(images, captions, npts=None, measure='cosine', return_ranks=False):
     """
@@ -169,43 +226,6 @@ def i2t(images, captions, npts=None, measure='cosine', return_ranks=False):
     else:
         return (r1, r5, r10, medr, meanr)
 
-
-def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
-    """
-    Text->Images (Image Search)
-    Images: (5N, K) matrix of images
-    Captions: (5N, K) matrix of captions
-    """
-    if npts is None:
-        npts = int(images.shape[0] / 5)
-        # print(npts)
-    ims = numpy.array([images[i] for i in range(0, len(images), 5)])
-
-    ranks = numpy.zeros(5 * npts)
-    top1 = numpy.zeros(5 * npts)
-    for index in range(npts):
-
-        # Get query captions
-        queries = captions[5 * index:5 * index + 5]
-
-        # compute scores
-        d = numpy.dot(queries, ims.T)
-        inds = numpy.zeros(d.shape)
-        for i in range(len(inds)):
-            inds[i] = numpy.argsort(d[i])[::-1]
-            ranks[5 * index + i] = numpy.where(inds[i] == index)[0][0]
-            top1[5 * index + i] = inds[i][0]
-
-    # compute metrics
-    r1 = 100.0 * len(numpy.where(ranks < 1)[0]) / len(ranks)
-    r5 = 100.0 * len(numpy.where(ranks < 5)[0]) / len(ranks)
-    r10 = 100.0 * len(numpy.where(ranks < 10)[0]) / len(ranks)
-    medr = numpy.floor(numpy.median(ranks)) + 1
-    meanr = ranks.mean() + 1
-    if return_ranks:
-        return (r1, r5, r10, medr, meanr), (ranks, top1)
-    else:
-        return (r1, r5, r10, medr, meanr)
 
 
 def test_trees(model_path):

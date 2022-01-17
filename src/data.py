@@ -79,12 +79,13 @@ class PrecompDataset(data.Dataset):
                 
                 self.transcript_list.append(self.__readfile__(transcript_file))
                 self.cnt2key[transcript_cnt] = image_key
-                transcript_cnt += 1
+                transcript_cnt += 1 # since dataset access is based on this counter, set # of workers = 0 
 
-            #if transcript_cnt >= 200: 
-            #    break 
-
-        self.length = transcript_cnt
+            if transcript_cnt >= 30: 
+                break 
+    
+        print('length of transcription is %d' % len(self.transcript_list)) 
+        self.length = len(self.transcript_list)
 
     @staticmethod
     def __readfile__(fpath): 
@@ -103,7 +104,7 @@ class PrecompDataset(data.Dataset):
         image_key = self.cnt2key[index]
         image = torch.tensor(self.key2embed[image_key])
 
-        return image, caption, index
+        return image, caption, index, image_key
 
     def __len__(self):
         return self.length
@@ -113,14 +114,14 @@ def collate_fn(data):
     # sort a data list by caption length
     data.sort(key=lambda x: len(x[1]), reverse=True)
     zipped_data = list(zip(*data))
-    images, captions, ids = zipped_data
+    images, captions, ids, keys = zipped_data
     images = torch.stack(images, 0)
     targets = torch.zeros(len(captions), len(captions[0])).long()
     lengths = [len(cap) for cap in captions]
     for i, cap in enumerate(captions):
         end = len(cap)
         targets[i, :end] = cap[:end]
-    return images, targets, lengths, ids
+    return images, targets, lengths, ids, keys
 
 def get_precomp_loader(data_summary_json, vocab, image_hdf5, batch_size=128, 
                        shuffle=True, num_workers=2, load_img=True, img_dim=2048):
@@ -131,6 +132,7 @@ def get_precomp_loader(data_summary_json, vocab, image_hdf5, batch_size=128,
         pin_memory=True, 
         collate_fn=collate_fn
     )
+
     return data_loader
 
 def get_train_loaders(data_path, vocab, data_summary_json, image_hdf5, batch_size, workers):
@@ -145,7 +147,7 @@ def get_train_loaders(data_path, vocab, data_summary_json, image_hdf5, batch_siz
     )
     print('loading val_loader')
     val_loader = get_precomp_loader(
-        val_json, vocab, image_hdf5, batch_size, False, workers
+        val_json, vocab, image_hdf5, 1, False, workers # have to set batch_size=1 during val/test, since collate_fn sorts data by length (messes up the order)
     )
     return train_loader, val_loader
 
@@ -157,7 +159,7 @@ def get_eval_loader(data_path, split_name, vocab, batch_size, workers,
     test_json = data_summary['test']
 
     eval_loader = get_precomp_loader(
-        data_path, split_name, vocab, batch_size, False, workers, 
+        data_path, split_name, vocab, 1, False, workers, 
         load_img=load_img, img_dim=img_dim
     )
     return eval_loader

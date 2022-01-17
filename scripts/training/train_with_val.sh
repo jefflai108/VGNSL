@@ -2,7 +2,7 @@
 
 #cd src
 datadir=data/SpokenCOCO
-expdir=exp/spokencoco/text_spokencoco
+expdir=exp/spokencoco/text_spokencoco-train_w_val
 python src/train.py --logger_name $expdir \
     --data_path ${datadir} --vocab_path ${datadir}/SpokenCOCO_vocab.pkl --data_summary_json ${datadir}/SpokenCOCO_summary.json --image_hdf5 ${datadir}/SpokenCOCO_images.h5 \
     --init_embeddings 0 --img_dim 2048 --scoring_hidden_dim 128 \

@@ -349,7 +349,7 @@ class VGNSL(object):
 
         return reward_matrix, matching_loss
 
-    def train_emb(self, images, captions, lengths, ids=None, epoch=None, *args):
+    def train_emb(self, images, captions, lengths, ids=None, keys=None, epoch=None, *args):
         """ one training step given images and captions """
         self.Eiters += 1
         self.logger.update('Eit', self.Eiters)
