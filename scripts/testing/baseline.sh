@@ -1,12 +1,13 @@
 #!/bin/bash 
 
+basename=$1
 datadir=data/SpokenCOCO
-expdir=exp/spokencoco/text_spokencoco2
+expdir=exp/spokencoco/text_spokencoco3_${basename}
 i=0
-while [ $i -ne 20 ]
+while [ $i -ne 10 ]
 do  
     echo ../output/${i}.pth.tar
-    python src/test.py --candidate ${expdir}/${i}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab.pkl --data_summary_json ${datadir}/SpokenCOCO_summary.json --image_hdf5 ${datadir}/SpokenCOCO_images.h5
+    python src/test.py --candidate ${expdir}/${i}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab.pkl --basename ${basename}
     i=$(($i+1))
 done
 exit 0

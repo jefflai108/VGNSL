@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    trees, ground_truth = test_trees(args.candidate, args.vocab_path)
+    trees, ground_truth = test_trees(args.candidate, args.vocab_path, args.basename)
     f1, _, _ =  f1_score(trees, ground_truth)
     print('Model:', args.candidate)
     print('F1 score:', f1)

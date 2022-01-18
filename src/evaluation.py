@@ -95,7 +95,7 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
         if (not logged) or (stage == 'test'):
             logged = True
             if stage == 'dev':
-                sample_num = 1
+                sample_num = 5
             for j in range(sample_num):
                 logging(generate_tree(captions, tree_indices, j, vocab))
 
