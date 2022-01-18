@@ -89,17 +89,14 @@ class COCOImageDataset(Dataset):
 class FeatureExtractor(nn.Module):
     def __init__(self):
         super().__init__()
-        # standard pytorch resnet feature extraction code 
-        model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet152', pretrained=True)
-        self.resnet = torch.nn.Sequential(*(list(model.children())[:-1])) # take representation before last classification layer 
-        self.resnet.eval()
+
+        import jactorch.models.vision.resnet as resnet
+        self.resnet = resnet.resnet152(pretrained=True, incl_gap=False, num_classes=None)
 
     def forward(self, feed_dict, image_filename):
         feed_dict = GView(feed_dict)
-        with torch.no_grad(): 
-            f = self.resnet(feed_dict.image).squeeze(-1).squeeze(-1)
-            print(f.shape) # N, 2048
-
+        f = self.resnet(feed_dict.image)
+        f = f.max(3)[0].mean(2) # mean-pooling on resnet output
         f = f.cpu().detach().numpy() # for storing purpose 
         output_dict = {image_filename[i]: f[i] for i in range(len(image_filename))}
         

@@ -1,12 +1,17 @@
 #!/bin/bash 
 
-expdir=exp/spokencoco/text_spokencoco
-python src/test.py --candidate ${expdir}/1.pth.tar
+datadir=data/SpokenCOCO
+expdir=exp/spokencoco/text_spokencoco2
+i=0
+while [ $i -ne 20 ]
+do  
+    echo ../output/${i}.pth.tar
+    python src/test.py --candidate ${expdir}/${i}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab.pkl --data_summary_json ${datadir}/SpokenCOCO_summary.json --image_hdf5 ${datadir}/SpokenCOCO_images.h5
+    i=$(($i+1))
+done
 exit 0
 
-datadir=data/SpokenCOCO
-python src/train.py --logger_name $expdir \
-    --data_path ${datadir} --vocab_path ${datadir}/SpokenCOCO_vocab.pkl --data_summary_json ${datadir}/SpokenCOCO_summary.json --image_hdf5 ${datadir}/SpokenCOCO_images.h5 \
+    --data_path ${datadir} --data_summary_json ${datadir}/SpokenCOCO_summary.json --image_hdf5 ${datadir}/SpokenCOCO_images.h5 \
 
 cd src
 #python test.py --candidate ../output/model_best.pth.tar

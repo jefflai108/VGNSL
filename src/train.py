@@ -58,15 +58,15 @@ def train(opt, train_loader, model, epoch, val_loader, vocab):
 
 def validate(opt, val_loader, model, vocab):
     # compute the encoding for all the validation images and captions
-    img_embs, cap_embs, keys = encode_data(
+    img_embs, cap_embs = encode_data(
         model, val_loader, opt.log_step, logger.info, vocab)
     # caption retrieval
-    #(r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, measure='cosine')
-    #logger.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
-    #             (r1, r5, r10, medr, meanr))
+    (r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, measure='cosine')
+    logger.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
+                 (r1, r5, r10, medr, meanr))
     # image retrieval
     (r1i, r5i, r10i, medri, meanr) = t2i(
-        img_embs, cap_embs, keys, measure='cosine')
+        img_embs, cap_embs,  measure='cosine')
     logger.info("Text to image: %.1f, %.1f, %.1f, %.1f, %.1f" %
                  (r1i, r5i, r10i, medri, meanr))
     # sum of recalls to be used for early stopping
@@ -115,6 +115,7 @@ if __name__ == '__main__':
                         help='path to vocab.pkl')
     parser.add_argument('--image_hdf5', help='path to pre-stored image embedding .h5 file')
     parser.add_argument('--data_summary_json', help='karpathy split json file')
+    parser.add_argument('--basename', help='MSCOCO split')
     parser.add_argument('--margin', default=0.2, type=float,
                         help='rank loss margin')
     parser.add_argument('--num_epochs', default=30, type=int,
@@ -200,7 +201,7 @@ if __name__ == '__main__':
 
     # Load data loaders
     train_loader, val_loader = data.get_train_loaders(
-        opt.data_path, vocab, opt.data_summary_json, opt.image_hdf5, opt.batch_size, opt.workers
+        opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers
     )
 
     # construct the model

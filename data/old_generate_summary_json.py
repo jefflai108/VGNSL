@@ -4,7 +4,6 @@ from tqdm import tqdm
 import os
 from os.path import exists
 from collections import defaultdict 
-import numpy as np
 import wave
 import contextlib
 
@@ -14,23 +13,7 @@ import contextlib
 # {"filepath": "val2014", "sentids": [770337, 771687, 772707, 776154, 781998], "filename": "COCO_val2014_000000391895.jpg", "imgid": 0, "split": "test", "sentences": [{"tokens": ["a", "man", "with", "a", "red", "helmet", "on    ", "a", "small", "moped", "on", "a", "dirt", "road"], "raw": "A man with a red helmet on a small moped on a dirt road. ", "imgid": 0, "sentid": 770337}, {"tokens": ["man", "riding", "a", "motor", "bike", "on", "a", "dirt", "road", "on    ", "the", "countryside"], "raw": "Man riding a motor bike on a dirt road on the countryside.", "imgid": 0, "sentid": 771687}, {"tokens": ["a", "man", "riding", "on", "the", "back", "of", "a", "motorcycle"], "raw": "A man riding on the     back of a motorcycle.", "imgid": 0, "sentid": 772707}, {"tokens": ["a", "dirt", "path", "with", "a", "young", "person", "on", "a", "motor", "bike", "rests", "to", "the", "foreground", "of", "a", "verdant", "area", "with", "a", "bridg    e", "and", "a", "background", "of", "cloud", "wreathed", "mountains"], "raw": "A dirt path with a young person on a motor bike rests to the foreground of a verdant area with a bridge and a background of cloud-wreathed mountains. ", "i    mgid": 0, "sentid": 776154}, {"tokens": ["a", "man", "in", "a", "red", "shirt", "and", "a", "red", "hat", "is", "on", "a", "motorcycle", "on", "a", "hill", "side"], "raw": "A man in a red shirt and a red hat is on a motorcycle on a hi    ll side.", "imgid": 0, "sentid": 781998}], "cocoid": 391895} 
 
 def split_id2path(args): 
-   
-    # compute data statistics first wq
-    split_data_list = json.load(open(args.split_file))['images']
-    assert len(split_data_list) == 123287 # 123k images 
-    test_cnt, val_cnt, train_cnt, restval_cnt = 0, 0, 0, 0
-    for data in split_data_list: 
-        img_key = data['filename']
-        if data['split'] == 'test': 
-            test_cnt += 1
-        elif data['split'] == 'val':
-            val_cnt += 1
-        elif data['split'] == 'train':
-            train_cnt += 1
-        elif data['split'] == 'restval':
-            restval_cnt += 1
-    print('test_cnt:val_cnt:train_cnt:restval_cnt=%d:%d:%d:%d' % (test_cnt, val_cnt, train_cnt, restval_cnt)) # 5000:5000:82783:30504
-
+    
     # construct ID: {wav_path, transcript_path, tree_path, alignment_path}
     id2path = defaultdict(list)
     id2path = construct_id2path(args.input_train_file, args, id2path)
@@ -40,35 +23,17 @@ def split_id2path(args):
     train_id2pth, val_id2pth, test_id2pth = defaultdict(list), defaultdict(list), defaultdict(list)
     split_data_list = json.load(open(args.split_file))['images']
     assert len(split_data_list) == 123287 # 123k images 
-
-    test_cnt, val_cnt, train_cnt, restval_cnt = 0, 0, 0, 0
     for data in split_data_list: 
         img_key = data['filename']
         if data['split'] == 'test': 
-            if test_cnt >= 5000: 
-                continue 
             test_id2pth[img_key] = id2path[img_key]
-            test_cnt += 1
         elif data['split'] == 'val':
-            if val_cnt >= 5000: 
-                continue 
             val_id2pth[img_key] = id2path[img_key]
-            val_cnt += 1
-        elif data['split'] == 'train':
-            if train_cnt >= 10000: 
-                continue 
+        elif data['split'] == 'train' or data['split'] == 'restval': 
             train_id2pth[img_key] = id2path[img_key]
-            train_cnt += 1
-        elif data['split'] == 'restval':
-            # From Section 3.1 of "VSE++: IMPROVING VISUAL-SEMANTIC EMBEDDINGS WITH H. N."
-            #   "However, there are also 30,504 images that were originally in the validation set of
-            #   MS-COCO but have been left out in this split. We refer to this set as rV. "
-            # 
-            # we leave this out for now
-            continue 
     
     summary = {}
-    print('train/val/test image distribution:') # should be 113k/5k/5k if include restval in train, and 82.7k/5k/5k if not including restval
+    print('train/val/test image distribution:') # should be 113k/5k/5k
     print(len(train_id2pth), len(val_id2pth), len(test_id2pth))
     summary['train'] = train_id2pth; summary['val'] = val_id2pth; summary['test'] = test_id2pth
     with open(args.output_summary_json, 'w') as outfile:
@@ -76,7 +41,7 @@ def split_id2path(args):
 
 def construct_id2path(input_json_file, args, id2path = {}): 
     data = json.load(open(input_json_file))
-    
+
     for pair in tqdm(data['data']):
         img_key = pair['image'].split('/')[1]
         ID = img_key

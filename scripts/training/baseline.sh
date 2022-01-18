@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#cd src
+basename=$1
 datadir=data/SpokenCOCO
-expdir=exp/spokencoco/text_spokencoco
+expdir=exp/spokencoco/text_spokencoco3_${basename}
 python src/train.py --logger_name $expdir \
-    --data_path ${datadir} --vocab_path ${datadir}/SpokenCOCO_vocab.pkl --data_summary_json ${datadir}/SpokenCOCO_summary.json --image_hdf5 ${datadir}/SpokenCOCO_images.h5 \
+    --data_path ${datadir}/Freda-formatting --vocab_path ${datadir}/SpokenCOCO_vocab.pkl --basename ${basename} \
     --init_embeddings 0 --img_dim 2048 --scoring_hidden_dim 128 \
-    --num_epochs 20 --workers 0 --batch_size 256 --margin 0.2 
+    --num_epochs 20 --workers 10 --batch_size 256 --margin 0.2 
