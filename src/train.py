@@ -7,7 +7,7 @@ import time
 
 import torch
 
-import data
+import data_v2 as data
 from vocab import Vocabulary
 from model import VGNSL
 from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data
