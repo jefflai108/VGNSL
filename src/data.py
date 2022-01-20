@@ -24,17 +24,10 @@ class PrecompDataset(data.Dataset):
         self.length = len(self.captions)
 
         # segment logmelspec 
-        with open(os.path.join(data_path, f'{data_split}_segment-logmelspec_embed-{basename}.npy'), 'r') as f:
-            self.doc_segment_spec = np.load(f) # (25000, 50, 40)
-        self.logspec_dim = self.doc_segment_spec[0].shape[-1]
-        with open(os.path.join(data_path, f'{data_split}_segment-logmelspec_len-{basename}.npy'), 'r') as f:
-            self.logmelspec_true_len = np.load(f)
-
-        print(self.doc_segment_spec.shape)
-        print(self.logspec_dim)
-        print(self.logmelspec_true_len)
-        print('shit')
-        exit()
+        self.doc_segment_spec = np.load(os.path.join(data_path, f'{data_split}_segment-logmelspec_embed-{basename}.npy')) # (50000, 50, 40)
+        self.logmelspec_dim = self.doc_segment_spec[0].shape[-1]
+        self.logmelspec_true_len = np.load(os.path.join(data_path, f'{data_split}_segment-logmelspec_len-{basename}.npy'))
+        assert len(self.doc_segment_spec) == self.length 
 
         # image features
         if load_img:
@@ -57,7 +50,15 @@ class PrecompDataset(data.Dataset):
         caption = [self.vocab(token) 
                    for token in ['<start>'] + self.captions[index] + ['<end>']]
         caption = torch.tensor(caption)
-        return image, caption, index, img_id
+
+        # audio: account for start and end tokens 
+        dummy_segment_embed = np.zeros((1, self.logmelspec_dim))
+        audio = np.concatenate((dummy_segment_embed, self.doc_segment_spec[index], dummy_segment_embed), axis=0)
+        audio = torch.tensor(audio)
+        true_audio_len = self.logmelspec_true_len[index] + 2
+        assert true_audio_len == len(caption)
+
+        return image, caption, audio, true_audio_len, index, img_id
 
     def __len__(self):
         return self.length
@@ -67,60 +68,19 @@ def collate_fn(data):
     # sort a data list by caption length
     data.sort(key=lambda x: len(x[1]), reverse=True)
     zipped_data = list(zip(*data))
-    images, captions, ids, img_ids = zipped_data
+    images, captions, audios, true_audio_lens, ids, img_ids = zipped_data
     images = torch.stack(images, 0)
     targets = torch.zeros(len(captions), len(captions[0])).long()
-    lengths = [len(cap) for cap in captions]
+    lengths = [len(cap) for cap in captions] # --> ensure this match with true_audio_lens
     for i, cap in enumerate(captions):
         end = len(cap)
         targets[i, :end] = cap[:end]
-    return images, targets, lengths, ids
 
-'''
-def get_precomp_loader(data_summary_json, vocab, image_hdf5, batch_size=128, 
-                       shuffle=True, num_workers=2, load_img=True, img_dim=2048):
-    dset = PrecompDataset(data_summary_json, vocab, 
-                          image_hdf5, load_img, img_dim)
-    data_loader = torch.utils.data.DataLoader(
-        dataset=dset, batch_size=batch_size, shuffle=shuffle,
-        pin_memory=True, 
-        collate_fn=collate_fn
-    )
+    target_audios = torch.stack(list(audios), dim=0) # torch.Size([B, 52, 40])
+    audio_masks = torch.tensor(true_audio_lens)
+    assert audio_masks.tolist() == lengths # ensure we can match segment embed to words 
 
-    return data_loader
-
-def get_train_loaders(data_path, vocab, data_summary_json, image_hdf5, batch_size, workers):
-    with open(data_summary_json, 'r') as f:
-        data_summary = json.load(f)
-    train_json = data_summary['train']
-    val_json = data_summary['val']
-
-    print('loading train_loader')
-    train_loader = get_precomp_loader(
-        train_json, vocab, image_hdf5, batch_size, True, workers
-    )
-    #train_loader = get_precomp_loader(
-    #    val_json, vocab, image_hdf5, batch_size, True, workers
-    #)
-
-    print('loading val_loader')
-    val_loader = get_precomp_loader(
-        val_json, vocab, image_hdf5, 1, False, workers # have to set batch_size=1 during val/test, since collate_fn sorts data by length (messes up the order)
-    )
-    return train_loader, val_loader
-
-def get_eval_loader(data_path, vocab, data_summary_json, image_hdf5, batch_size, workers, 
-                    load_img=False, img_dim=2048):
-    with open(data_summary_json, 'r') as f:
-        data_summary = json.load(f)
-    test_json = data_summary['test']
-
-    eval_loader = get_precomp_loader(
-        test_json, vocab, image_hdf5, batch_size, False, workers, 
-        load_img=load_img, img_dim=img_dim
-    )
-    return eval_loader
-'''
+    return images, targets, target_audios, audio_masks, lengths, ids
 
 def get_precomp_loader(data_path, data_split, vocab, basename, batch_size=128,
                        shuffle=True, num_workers=2, load_img=True, 
