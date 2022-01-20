@@ -8,122 +8,8 @@ from tqdm import tqdm
 import torch
 import torch.utils.data as data
 
-class OriginalPrecompDataset(data.Dataset):
-    """ load precomputed captions and image features """
-
-    def __init__(self, data_path, data_split, vocab, 
-                 load_img=True, img_dim=2048):
-        self.vocab = vocab
-
-        # captions
-        self.captions = list()
-        with open(os.path.join(data_path, f'{data_split}_caps.txt'), 'r') as f:
-            for line in f:
-                self.captions.append(line.strip().lower().split())
-            f.close()
-        self.length = len(self.captions)
-
-        # image features
-        if load_img:
-            self.images = np.load(os.path.join(data_path, f'{data_split}_ims.npy'))
-        else:
-            self.images = np.zeros((self.length // 5, img_dim))
-        
-        # each image can have 1 caption or 5 captions 
-        if self.images.shape[0] != self.length:
-            self.im_div = 5
-            assert self.images.shape[0] * 5 == self.length
-        else:
-            self.im_div = 1
-
-    def __getitem__(self, index):
-        # image
-        img_id = index  // self.im_div
-        image = torch.tensor(self.images[img_id])
-        # caption
-        caption = [self.vocab(token) 
-                   for token in ['<start>'] + self.captions[index] + ['<end>']]
-        caption = torch.tensor(caption)
-        return image, caption, index, img_id
-
-    def __len__(self):
-        return self.length
-
-class ModPrecompDataset(data.Dataset):
-    """ load precomputed captions and image features """
-
-    def __init__(self, data_summary_json, vocab, image_hdf5, 
-                 load_img=True, img_dim=2048):
-        self.vocab = vocab
-
-        print('load', image_hdf5)
-        image_h5 = h5py.File(image_hdf5, 'r')
-
-        print('read & extract data_summary_json')
-        self.key2embed = {}
-        self.transcript_list = []
-        self.tree_list = []
-        transcript_cnt = 0
-        self.cnt2key = {}
-        for image_key, captions_list in tqdm(data_summary_json.items()): 
-            if load_img:
-                image_embed = image_h5[image_key][:] # numpy array 
-            else:
-                image_embed = np.zeros(img_dim,)
-            self.key2embed[image_key] = image_embed
-
-            # ensure image:captions == 1:5
-            if len(captions_list) > 5: 
-                captions_list = captions_list[:5]
-            while len(captions_list) < 5: # duplicate 
-                print('duplicate %s captions' % image_key)
-                captions_list.append(captions_list[-1])
-            for captions in captions_list: 
-                wav_file = captions[0]
-                transcript_file = captions[1]
-                tree_file = captions[2]
-                alignment_file = captions[3]
-                
-                self.transcript_list.append(self.__readfile__(transcript_file))
-                self.tree_list.append(self.__readfile__(tree_file))
-                self.cnt2key[transcript_cnt] = image_key
-                transcript_cnt += 1 # since dataset access is based on this counter, set # of workers = 0 --> not necessary 
-
-            assert len(self.transcript_list) % 5 == 0
-
-            #if transcript_cnt >= 50: 
-            #    break 
-    
-        print('length of transcription is %d' % len(self.transcript_list)) 
-        self.length = len(self.transcript_list)
-
-    @staticmethod
-    def __readfile__(fpath): 
-        with open(fpath, 'r') as f: 
-            string = f.readline()
-        return string 
-
-    def __getitem__(self, index):
-        # transcript 
-        transcript_tmp = self.transcript_list[index].split()
-        caption = [self.vocab(token) 
-                   for token in ['<start>'] + transcript_tmp + ['<end>']]
-        caption = torch.tensor(caption)
-
-        # image
-        image_key = self.cnt2key[index]
-        image = torch.tensor(self.key2embed[image_key])
-
-        # tree 
-        tree = self.tree_list[index]
-
-        return image, caption, index, image_key, tree
-
-    def __len__(self):
-        return self.length
-
 class PrecompDataset(data.Dataset):
-    """ load precomputed captions and image features """
+    """ add add """
 
     def __init__(self, data_path, data_split, vocab, basename,
                  load_img=True, img_dim=2048):
@@ -136,6 +22,18 @@ class PrecompDataset(data.Dataset):
                 self.captions.append(line.strip().lower().split())
             f.close()
         self.length = len(self.captions)
+
+        # segment logmelspec 
+        with open(os.path.join(data_path, f'{data_split}_segment-logmelspec_embed-{basename}.npy'), 'r') as f:
+            self.doc_segment_spec = np.load(f) # (25000, 50, 40)
+        self.logspec_dim = self.doc_segment_spec[0].shape[-1]
+        with open(os.path.join(data_path, f'{data_split}_segment-logmelspec_len-{basename}.npy'), 'r') as f:
+            self.logmelspec_true_len = np.load(f)
+
+        print(self.doc_segment_spec.shape)
+        print(self.logspec_dim)
+        print(self.logmelspec_true_len)
+        exit()
 
         # image features
         if load_img:
