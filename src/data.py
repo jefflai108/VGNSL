@@ -33,6 +33,7 @@ class PrecompDataset(data.Dataset):
         print(self.doc_segment_spec.shape)
         print(self.logspec_dim)
         print(self.logmelspec_true_len)
+        print('shit')
         exit()
 
         # image features
