@@ -208,7 +208,7 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
         return (r1, r5, r10, medr, meanr)
 
 
-def test_trees(model_path, vocab_path, basename):
+def test_trees(data_path, model_path, vocab_path, basename):
     """ use the trained model to generate parse trees for text """
     # load model and options
     checkpoint = torch.load(model_path, map_location='cpu')
@@ -224,9 +224,8 @@ def test_trees(model_path, vocab_path, basename):
     # load model state
     model.load_state_dict(checkpoint['model'])
 
-    print('Loading dataset')
     data_loader = get_eval_loader(
-        opt.data_path, 'test', vocab, basename, opt.batch_size, opt.workers, 
+        data_path, 'test', vocab, basename, opt.batch_size, opt.workers, 
         load_img=False, img_dim=opt.img_dim
     )
 
@@ -256,5 +255,5 @@ def test_trees(model_path, vocab_path, basename):
         del images, captions, img_emb, cap_emb
 
     ground_truth = [line.strip() for line in open(
-        os.path.join(opt.data_path, f'test_ground-truth-{basename}.txt'))]
+        os.path.join(data_path, f'test_ground-truth-{basename}.txt'))]
     return trees, ground_truth

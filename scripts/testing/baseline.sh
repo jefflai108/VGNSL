@@ -4,10 +4,11 @@ basename=$1
 datadir=data/SpokenCOCO
 expdir=exp/spokencoco/text_spokencoco3_${basename}
 i=0
-while [ $i -ne 10 ]
-do  
-    echo ../output/${i}.pth.tar
-    python src/test.py --candidate ${expdir}/${i}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab.pkl --basename ${basename}
+while [ $i -ne 20 ]; do  
+    if [ -f ${expdir}/${i}.pth.tar ]; then
+        #echo evaluating ${i}.pth.tar
+        python src/test.py --data_path ${datadir}/Freda-formatting/ --candidate ${expdir}/${i}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab.pkl --basename ${basename}
+    fi 
     i=$(($i+1))
 done
 exit 0
