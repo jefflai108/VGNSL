@@ -122,8 +122,8 @@ if __name__ == '__main__':
                         help='number of training epochs')
     parser.add_argument('--batch_size', default=128, type=int,
                         help='size of a training mini-batch')
-    parser.add_argument('--word_dim', default=512, type=int,
-                        help='dimensionality of the word embedding')
+    parser.add_argument('--logmelspec_dim', default=40, type=int,
+                        help='dimensionality of the logmelspec feature')
     parser.add_argument('--embed_size', default=512, type=int,
                         help='dimensionality of the joint embedding')
     parser.add_argument('--grad_clip', default=2., type=float,

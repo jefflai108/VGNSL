@@ -79,7 +79,7 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
     img_embs = None
     cap_embs = None
     logged = False
-    for i, (images, captions, lengths, ids) in enumerate(data_loader):
+    for i, (images, captions, audios, audio_masks, lengths, ids) in enumerate(data_loader):
         # make sure val logger is used
         model.logger = val_logger
         lengths = torch.Tensor(lengths).long()
@@ -87,7 +87,7 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
             lengths = lengths.cuda()
 
         # compute the embeddings
-        model_output = model.forward_emb(images, captions, lengths, volatile=True)
+        model_output = model.forward_emb(images, audios, lengths, volatile=True, audio_masks=audio_masks) # feed in audios instead of captions 
         img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, all_probs, \
         span_bounds = model_output[:8]
 
@@ -97,7 +97,7 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
             if stage == 'dev':
                 sample_num = 5
             for j in range(sample_num):
-                logging(generate_tree(captions, tree_indices, j, vocab))
+                logging(generate_tree(captions, tree_indices, j, vocab)) # visualize generated tree on top of captions
 
         cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
 
@@ -121,7 +121,7 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
                     .format(
                         i, len(data_loader), batch_time=batch_time,
                         e_log=str(model.logger)))
-        del images, captions
+        del images, captions, audios
 
     return img_embs, cap_embs
 
@@ -232,7 +232,7 @@ def test_trees(data_path, model_path, vocab_path, basename):
     cap_embs = None
     logged = False
     trees = list()
-    for i, (images, captions, lengths, ids) in enumerate(data_loader):
+    for i, (images, captions, audios, audio_masks, lengths, ids) in enumerate(data_loader):
         # make sure val logger is used
         model.logger = print
         lengths = torch.Tensor(lengths).long()
@@ -240,7 +240,7 @@ def test_trees(data_path, model_path, vocab_path, basename):
             lengths = lengths.cuda()
 
         # compute the embeddings
-        model_output = model.forward_emb(images, captions, lengths, volatile=True)
+        model_output = model.forward_emb(images, audios, lengths, volatile=True, audio_masks=audio_masks) # feed in audios instead of captions 
         img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, all_probs, \
         span_bounds = model_output[:8]
 
@@ -252,7 +252,7 @@ def test_trees(data_path, model_path, vocab_path, basename):
             appended_trees[ids[j] - min(ids)] = clean_tree(candidate_trees[j])
         trees.extend(appended_trees)
         cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
-        del images, captions, img_emb, cap_emb
+        del images, captions, img_emb, cap_emb, audios
 
     ground_truth = [line.strip() for line in open(
         os.path.join(data_path, f'test_ground-truth-{basename}.txt'))]

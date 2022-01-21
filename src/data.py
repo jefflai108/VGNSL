@@ -70,16 +70,18 @@ def collate_fn(data):
     zipped_data = list(zip(*data))
     images, captions, audios, true_audio_lens, ids, img_ids = zipped_data
     images = torch.stack(images, 0)
-    targets = torch.zeros(len(captions), len(captions[0])).long()
+    max_sentence_len = len(captions[0])
+    targets = torch.zeros(len(captions), max_sentence_len).long()
     lengths = [len(cap) for cap in captions] # --> ensure this match with true_audio_lens
     for i, cap in enumerate(captions):
         end = len(cap)
         targets[i, :end] = cap[:end]
 
-    target_audios = torch.stack(list(audios), dim=0) # torch.Size([B, 52, 40])
+    target_audios = torch.stack(list(audios), dim=0).float() # torch.Size([B, 52, 40])
+    target_audios = target_audios[:, :max_sentence_len, :] # truncate target_audios to match the sentence_len of targets
     audio_masks = torch.tensor(true_audio_lens)
     assert audio_masks.tolist() == lengths # ensure we can match segment embed to words 
-
+    
     return images, targets, target_audios, audio_masks, lengths, ids
 
 def get_precomp_loader(data_path, data_split, vocab, basename, batch_size=128,
