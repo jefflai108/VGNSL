@@ -1,7 +1,7 @@
 import nltk
 import numpy as np
 import os
-import json 
+import json
 import h5py
 from tqdm import tqdm
 
@@ -23,35 +23,35 @@ class PrecompDataset(data.Dataset):
             f.close()
         self.length = len(self.captions)
 
-        # segment logmelspec 
+        # segment logmelspec
         self.doc_segment_spec = np.load(os.path.join(data_path, f'{data_split}_segment-logmelspec_embed-{basename}.npy')) # (50000, 50, 40)
         self.logmelspec_dim = self.doc_segment_spec[0].shape[-1]
         self.logmelspec_true_len = np.load(os.path.join(data_path, f'{data_split}_segment-logmelspec_len-{basename}.npy'))
         if utt_cmvn and data_split != 'test':
             print('apply utterance-level CMVN')
             self.doc_segment_spec = self.utt_cmvn()
-        assert len(self.doc_segment_spec) == self.length 
+        assert len(self.doc_segment_spec) == self.length
 
         # image features
         if load_img:
             self.images = np.load(os.path.join(data_path, f'{data_split}_ims-{basename}.npy'))
         else:
             self.images = np.zeros((self.length // 5, img_dim))
-        
-        # each image can have 1 caption or 5 captions 
+
+        # each image can have 1 caption or 5 captions
         if self.images.shape[0] != self.length:
             self.im_div = 5
             assert self.images.shape[0] * 5 == self.length
         else:
             self.im_div = 1
 
-    def utt_cmvn(self): 
-        """ utterance-level CMVN. Within each utterance, minus the mean vector and divide by its std. 
-        need to be careful of padding. Operation is for each utterance. 
+    def utt_cmvn(self):
+        """ utterance-level CMVN. Within each utterance, minus the mean vector and divide by its std.
+        need to be careful of padding. Operation is for each utterance.
         """
         unpadded_doc_segment_spec = []
         norm_doc_segment_spec = np.zeros((self.doc_segment_spec.shape))
-        for i, sentence_segment_spec in enumerate(self.doc_segment_spec): 
+        for i, sentence_segment_spec in enumerate(self.doc_segment_spec):
             true_len = self.logmelspec_true_len[i]
             unpadded_sentence_segment_spec = sentence_segment_spec[:true_len, :]
             norm_doc_segment_spec[i, :true_len] = self._cmvn(unpadded_sentence_segment_spec)
@@ -65,11 +65,11 @@ class PrecompDataset(data.Dataset):
         img_id = index  // self.im_div
         image = torch.tensor(self.images[img_id])
         # caption
-        caption = [self.vocab(token) 
+        caption = [self.vocab(token)
                    for token in ['<start>'] + self.captions[index] + ['<end>']]
         caption = torch.tensor(caption)
 
-        # audio: account for start and end tokens 
+        # audio: account for start and end tokens
         dummy_segment_embed = np.zeros((1, self.logmelspec_dim))
         audio = np.concatenate((dummy_segment_embed, self.doc_segment_spec[index], dummy_segment_embed), axis=0)
         audio = torch.tensor(audio)
@@ -98,17 +98,17 @@ def collate_fn(data):
     target_audios = torch.stack(list(audios), dim=0).float() # torch.Size([B, 52, 40])
     target_audios = target_audios[:, :max_sentence_len, :] # truncate target_audios to match the sentence_len of targets
     audio_masks = torch.tensor(true_audio_lens)
-    assert audio_masks.tolist() == lengths # ensure we can match segment embed to words 
-    
+    assert audio_masks.tolist() == lengths # ensure we can match segment embed to words
+
     return images, targets, target_audios, audio_masks, lengths, ids
 
 def get_precomp_loader(data_path, data_split, vocab, basename, batch_size=128,
-                       shuffle=True, num_workers=2, load_img=True, 
+                       shuffle=True, num_workers=2, load_img=True,
                        img_dim=2048, utt_cmvn=False):
     dset = PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, utt_cmvn)
     data_loader = torch.utils.data.DataLoader(
         dataset=dset, batch_size=batch_size, shuffle=shuffle,
-        pin_memory=True, 
+        pin_memory=True,
         collate_fn=collate_fn
     )
     return data_loader
@@ -124,10 +124,10 @@ def get_train_loaders(data_path, vocab, basename, batch_size, workers, utt_cmvn=
     return train_loader, val_loader
 
 
-def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers, 
+def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
                     load_img=False, img_dim=2048, utt_cmvn=False):
     eval_loader = get_precomp_loader(
-        data_path, split_name, vocab, basename, batch_size, False, workers, 
+        data_path, split_name, vocab, basename, batch_size, False, workers,
         load_img=load_img, img_dim=img_dim, utt_cmvn=utt_cmvn
     )
     return eval_loader
