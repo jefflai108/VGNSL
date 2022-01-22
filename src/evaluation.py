@@ -226,7 +226,7 @@ def test_trees(data_path, model_path, vocab_path, basename):
 
     data_loader = get_eval_loader(
         data_path, 'test', vocab, basename, opt.batch_size, opt.workers, 
-        load_img=False, img_dim=opt.img_dim
+        load_img=False, img_dim=opt.img_dim, utt_cmvn=opt.logmelspec_cmvn
     )
 
     cap_embs = None

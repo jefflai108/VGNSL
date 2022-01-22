@@ -124,6 +124,8 @@ if __name__ == '__main__':
                         help='size of a training mini-batch')
     parser.add_argument('--logmelspec_dim', default=40, type=int,
                         help='dimensionality of the logmelspec feature')
+    parser.add_argument('--logmelspec_cmvn', action='store_true',
+                        help='apply utt-level cmvn on logmelspec feature')
     parser.add_argument('--embed_size', default=512, type=int,
                         help='dimensionality of the joint embedding')
     parser.add_argument('--grad_clip', default=2., type=float,
@@ -201,7 +203,7 @@ if __name__ == '__main__':
 
     # Load data loaders
     train_loader, val_loader = data.get_train_loaders(
-        opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers
+        opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.logmelspec_cmvn
     )
 
     # construct the model
