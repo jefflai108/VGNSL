@@ -105,3 +105,5 @@ venv.bak/
 
 # custom
 exp/
+data/SpokenCOCO
+data/mscoco
