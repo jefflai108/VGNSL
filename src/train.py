@@ -193,7 +193,11 @@ if __name__ == '__main__':
     logger.propagate = False
 
     # load predefined vocabulary and pretrained word embeddings if applicable
-    vocab = pickle.load(open(opt.vocab_path, 'rb'))
+    try:
+        vocab = pickle.load(open(vocab_path, 'rb'))
+    except:
+        import pickle5
+        vocab = pickle5.load(open(vocab_path, 'rb'))
     opt.vocab_size = len(vocab)
 
     if opt.init_embeddings:

@@ -5,7 +5,7 @@ import numpy
 from data import get_eval_loader
 import time
 import numpy as np
-from vocab import Vocabulary 
+from vocab import Vocabulary
 import torch
 from model import VGNSL
 from collections import OrderedDict
@@ -87,7 +87,7 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
             lengths = lengths.cuda()
 
         # compute the embeddings
-        model_output = model.forward_emb(images, audios, lengths, volatile=True, audio_masks=audio_masks) # feed in audios instead of captions 
+        model_output = model.forward_emb(images, audios, lengths, volatile=True, audio_masks=audio_masks) # feed in audios instead of captions
         img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, all_probs, \
         span_bounds = model_output[:8]
 
@@ -113,7 +113,7 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
-        
+
         if i % log_step == 0:
             logging('Test: [{0}/{1}]\t'
                     '{e_log}\t'
@@ -215,7 +215,11 @@ def test_trees(data_path, model_path, vocab_path, basename):
     opt = checkpoint['opt']
 
     # load vocabulary used by the model
-    vocab = pickle.load(open(vocab_path, 'rb'))
+    try:
+        vocab = pickle.load(open(vocab_path, 'rb'))
+    except:
+        import pickle5
+        vocab = pickle5.load(open(vocab_path, 'rb'))
     opt.vocab_size = len(vocab)
 
     # construct model
@@ -225,7 +229,7 @@ def test_trees(data_path, model_path, vocab_path, basename):
     model.load_state_dict(checkpoint['model'])
 
     data_loader = get_eval_loader(
-        data_path, 'test', vocab, basename, opt.batch_size, opt.workers, 
+        data_path, 'test', vocab, basename, opt.batch_size, opt.workers,
         load_img=False, img_dim=opt.img_dim, utt_cmvn=opt.logmelspec_cmvn
     )
 
@@ -240,7 +244,7 @@ def test_trees(data_path, model_path, vocab_path, basename):
             lengths = lengths.cuda()
 
         # compute the embeddings
-        model_output = model.forward_emb(images, audios, lengths, volatile=True, audio_masks=audio_masks) # feed in audios instead of captions 
+        model_output = model.forward_emb(images, audios, lengths, volatile=True, audio_masks=audio_masks) # feed in audios instead of captions
         img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, all_probs, \
         span_bounds = model_output[:8]
 
