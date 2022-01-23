@@ -45,17 +45,17 @@ def split_id2path(args):
     for data in split_data_list: 
         img_key = data['filename']
         if data['split'] == 'test': 
-            if test_cnt >= 5000: 
+            if test_cnt >= 100: 
                 continue 
             test_id2pth[img_key] = id2path[img_key]
             test_cnt += 1
         elif data['split'] == 'val':
-            if val_cnt >= 5000: 
+            if val_cnt >= 100: 
                 continue 
             val_id2pth[img_key] = id2path[img_key]
             val_cnt += 1
         elif data['split'] == 'train':
-            if train_cnt >= 10000: 
+            if train_cnt >= 100: 
                 continue 
             train_id2pth[img_key] = id2path[img_key]
             train_cnt += 1

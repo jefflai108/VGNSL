@@ -7,5 +7,5 @@
 
 datadir=data/SpokenCOCO
 python data/generate_summary_json.py \
-    -s ${datadir}/karpathy_split.json -d ${datadir} -n wavs-speaker -o ${datadir}/SpokenCOCO_summary-10k-5k-5k.json \
+    -s ${datadir}/karpathy_split.json -d ${datadir} -n wavs-speaker -o ${datadir}/SpokenCOCO_summary-100-100-100.json \
     -v ${datadir}/SpokenCOCO_val_wparse.json -t ${datadir}/SpokenCOCO_train_wparse.json
