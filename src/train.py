@@ -194,10 +194,10 @@ if __name__ == '__main__':
 
     # load predefined vocabulary and pretrained word embeddings if applicable
     try:
-        vocab = pickle.load(open(vocab_path, 'rb'))
+        vocab = pickle.load(open(opt.vocab_path, 'rb'))
     except:
         import pickle5
-        vocab = pickle5.load(open(vocab_path, 'rb'))
+        vocab = pickle5.load(open(opt.vocab_path, 'rb'))
     opt.vocab_size = len(vocab)
 
     if opt.init_embeddings:
