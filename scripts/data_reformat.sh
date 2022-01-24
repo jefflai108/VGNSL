@@ -5,11 +5,13 @@
 # for each split: 
 #   image: in .npy file 
 #   text/tree: directly in plain text file 
-#   utterances: pre-extract aligned features
+#   utterances: pre-extract aligned features (parallelizable) 
 
 datadir=data/SpokenCOCO
 #for split in 83k-5k-5k 10k-5k-5k 10k-1k-1k; do 
 split=$1
-python data/data_reformat_v2.py \
+num_labs=$2
+lab_id=$3
+python data/data_reformat_v3.py \
     -j ${datadir}/SpokenCOCO_summary-${split}.json -i ${datadir}/SpokenCOCO_images.h5 \
-    -o ${datadir}/Freda-formatting/
+    -o ${datadir}/Freda-formatting/ -p -n $num_labs -l $lab_id
