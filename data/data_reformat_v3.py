@@ -122,64 +122,66 @@ class SummaryJsonReader(object):
         np.save(seg_embed_pth, doc_segment_spec)
 
 def main(args):
-    
     basename = '-'.join(args.data_summary_json.split('-')[1:]).split('.')[0]
     print('processing %s' % basename)
 
     with open(args.data_summary_json, 'r') as f:
         data_summary = json.load(f)
-    train_json = data_summary['train']
-    val_json   = data_summary['val']
-    test_json  = data_summary['test'] 
 
-    #print('loading val_loader')
-    #val_writer = SummaryJsonReader(val_json, args.image_hdf5)
-    #val_writer.write_image_to_file(op.join(args.output_dir, 'val_ims-' + basename + '.npy'))
-    #val_writer.write_text_or_tree_to_file( \
-    #    op.join(args.output_dir, 'val_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'val_caps-' + basename + '.txt'))
-    #val_writer.write_utterance_to_file( \
-    #    op.join(args.output_dir, 'val_segment-logmelspec_embed-' + basename + '.npy'), op.join(args.output_dir, 'val_segment-logmelspec_len-' + basename + '.npy'))
+    if args.data_split == 'val':
+        val_json = data_summary['val']
+        print('loading val_loader')
+        val_writer = SummaryJsonReader(val_json, args.image_hdf5)
+        val_writer.write_image_to_file(op.join(args.output_dir, 'val_ims-' + basename + '.npy'))
+        val_writer.write_text_or_tree_to_file( \
+            op.join(args.output_dir, 'val_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'val_caps-' + basename + '.txt'))
+        val_writer.write_utterance_to_file( \
+            op.join(args.output_dir, 'val_segment-logmelspec_embed-' + basename + '.npy'), op.join(args.output_dir, 'val_segment-logmelspec_len-' + basename + '.npy'))
 
-    #print('loading test_loader')
-    #test_writer = SummaryJsonReader(test_json, args.image_hdf5)
-    #test_writer.write_image_to_file(op.join(args.output_dir, 'test_ims-' + basename + '.npy'))
-    #test_writer.write_text_or_tree_to_file( \
-    #    op.join(args.output_dir, 'test_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'test_caps-' + basename + '.txt'))
-    #test_writer.write_utterance_to_file( \
-    #    op.join(args.output_dir, 'test_segment-logmelspec_embed-' + basename + '.npy'), op.join(args.output_dir, 'test_segment-logmelspec_len-' + basename + '.npy'))
+    if args.data_split == 'test':
+        test_json = data_summary['test'] 
+        print('loading test_loader')
+        test_writer = SummaryJsonReader(test_json, args.image_hdf5)
+        test_writer.write_image_to_file(op.join(args.output_dir, 'test_ims-' + basename + '.npy'))
+        test_writer.write_text_or_tree_to_file( \
+            op.join(args.output_dir, 'test_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'test_caps-' + basename + '.txt'))
+        test_writer.write_utterance_to_file( \
+            op.join(args.output_dir, 'test_segment-logmelspec_embed-' + basename + '.npy'), op.join(args.output_dir, 'test_segment-logmelspec_len-' + basename + '.npy'))
 
-    print('loading train_loader')
-    train_writer = SummaryJsonReader(train_json, args.image_hdf5, parallelize=args.parallelize, num_labs=args.num_labs, lab_id=args.lab_id)
-    #train_writer.write_image_to_file(op.join(args.output_dir, 'train_ims-' + basename + '.npy'))
-    #train_writer.write_text_or_tree_to_file( \
-    #    op.join(args.output_dir, 'train_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'train_caps-' + basename + '.txt'))
-    
-    if args.parallelize: 
-        # first check if parallize lab files exist
-        all_lab_embed_file, all_lab_len_file = [], []
-        for tmp_lab_id in range(args.num_labs): 
-            lab_embed_file = op.join(args.output_dir, '.train_segment-logmelspec_embed-' + basename + '-' + str(tmp_lab_id) + '.npy')
-            lab_len_file = op.join(args.output_dir, '.train_segment-logmelspec_len-' + basename + '-' + str(tmp_lab_id) + '.npy')
-            if op.exists(lab_embed_file) and op.exists(lab_len_file): 
-                parallelize_done = True 
-                all_lab_embed_file.append(lab_embed_file)
-                all_lab_len_file.append(lab_len_file)
-            else: parallelize_done = False
-        if parallelize_done: 
-            print('Skip feature extraction. Combine all pre-extracted lab_embed_files.')
-            train_writer.combine_lab_files(all_lab_embed_file, all_lab_len_file, \
-                op.join(args.output_dir, 'train_segment-logmelspec_embed-' + basename + '.npy'), op.join(args.output_dir, 'train_segment-logmelspec_len-' + basename + '.npy'))
-        else: 
-            print('write partial numpy arrays to lab file')
-            lab_embed_file = op.join(args.output_dir, '.train_segment-logmelspec_embed-' + basename + '-' + str(args.lab_id) + '.npy')
-            lab_len_file = op.join(args.output_dir, '.train_segment-logmelspec_len-' + basename + '-' + str(args.lab_id) + '.npy')
-            if op.exists(lab_embed_file) and op.exists(lab_len_file):
-                print(f'{lab_embed_file} and {lab_len_file} already exist. Skip feature extraction')
+    if args.data_split == 'train':
+        train_json = data_summary['train']
+        print('loading train_loader')
+        train_writer = SummaryJsonReader(train_json, args.image_hdf5, parallelize=args.parallelize, num_labs=args.num_labs, lab_id=args.lab_id)
+        train_writer.write_image_to_file(op.join(args.output_dir, 'train_ims-' + basename + '.npy'))
+        train_writer.write_text_or_tree_to_file( \
+            op.join(args.output_dir, 'train_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'train_caps-' + basename + '.txt'))
+        
+        if args.parallelize: 
+            # first check if parallize lab files exist
+            all_lab_embed_file, all_lab_len_file = [], []
+            for tmp_lab_id in range(args.num_labs): 
+                lab_embed_file = op.join(args.output_dir, '.train_segment-logmelspec_embed-' + basename + '-' + str(tmp_lab_id) + '.npy')
+                lab_len_file = op.join(args.output_dir, '.train_segment-logmelspec_len-' + basename + '-' + str(tmp_lab_id) + '.npy')
+                if op.exists(lab_embed_file) and op.exists(lab_len_file): 
+                    parallelize_done = True 
+                    all_lab_embed_file.append(lab_embed_file)
+                    all_lab_len_file.append(lab_len_file)
+                else: parallelize_done = False
+            if parallelize_done: 
+                print('Skip feature extraction. Combine all pre-extracted lab_embed_files.')
+                train_writer.combine_lab_files(all_lab_embed_file, all_lab_len_file, \
+                    op.join(args.output_dir, 'train_segment-logmelspec_embed-' + basename + '.npy'), op.join(args.output_dir, 'train_segment-logmelspec_len-' + basename + '.npy'))
             else: 
-                train_writer.write_utterance_to_file(lab_embed_file, lab_len_file)
-    else: 
-        train_writer.write_utterance_to_file( \
-            op.join(args.output_dir, 'train_segment-logmelspec_embed-' + basename + '.npy'), op.join(args.output_dir, 'train_segment-logmelspec_len-' + basename + '.npy'))
+                print('write partial numpy arrays to lab file')
+                lab_embed_file = op.join(args.output_dir, '.train_segment-logmelspec_embed-' + basename + '-' + str(args.lab_id) + '.npy')
+                lab_len_file = op.join(args.output_dir, '.train_segment-logmelspec_len-' + basename + '-' + str(args.lab_id) + '.npy')
+                if op.exists(lab_embed_file) and op.exists(lab_len_file):
+                    print(f'{lab_embed_file} and {lab_len_file} already exist. Skip feature extraction')
+                else: 
+                    train_writer.write_utterance_to_file(lab_embed_file, lab_len_file)
+        else: 
+            train_writer.write_utterance_to_file( \
+                op.join(args.output_dir, 'train_segment-logmelspec_embed-' + basename + '.npy'), op.join(args.output_dir, 'train_segment-logmelspec_len-' + basename + '.npy'))
 
 if __name__ == '__main__': 
  
@@ -190,6 +192,7 @@ if __name__ == '__main__':
     parser.add_argument('--parallelize', '-p', action="store_true")
     parser.add_argument('--num_labs', '-n', type=int)
     parser.add_argument('--lab_id', '-l', type=int)
+    parser.add_argument('--data-split', '-s', type=str)
     args = parser.parse_args()
 
     main(args)

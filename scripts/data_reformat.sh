@@ -19,4 +19,4 @@ num_labs=$2
 lab_id=$3
 python data/data_reformat_v3.py \
     -j ${datadir}/SpokenCOCO_summary-${split}.json -i ${datadir}/SpokenCOCO_images.h5 \
-    -o ${datadir}/Freda-formatting/ -p -n $num_labs -l $lab_id
+    -o ${datadir}/Freda-formatting/ -p -n $num_labs -l $lab_id -s train 

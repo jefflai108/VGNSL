@@ -5,6 +5,7 @@ model_0 = getattr(hub, 'fbank')()  # use classic FBANK
 model_1 = getattr(hub, 'modified_cpc')()  # build the CPC model with pre-trained weights
 model_2 = getattr(hub, 'tera')()  # build the TERA model with pre-trained weights
 model_3 = getattr(hub, 'wav2vec2')()  # build the Wav2Vec 2.0 model with pre-trained weights
+model_3 = getattr(hub, 'hubert')()  # build the Wav2Vec 2.0 model with pre-trained weights
 
 device = 'cuda'  # or cpu
 model_3 = model_3.to(device)
