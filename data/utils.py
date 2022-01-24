@@ -13,7 +13,7 @@ WINDOWS = {'hamming': scipy.signal.hamming,
            'blackman': scipy.signal.blackman,
            'bartlett': scipy.signal.bartlett}
 
-HUBERT = getattr(hub, 'hubert')()
+HUBERT = getattr(hub, 'hubert_base')()
 
 def compute_spectrogram(input_utterance_pth, audio_conf={}):
     # load wavefile 
@@ -141,9 +141,12 @@ def hubert_feature_extraction(input_utterance_pth, layer=12, hubert_dim=768):
 
     with torch.no_grad():
         reps = upstream_model([y])["hidden_states"]
+        #print(f'reps has {len(reps)} layers')
         reps = reps[layer].squeeze().reshape(hubert_dim, -1)
         numpy_reps = reps.detach().cpu().numpy()
-    return numpy_reps
+    n_frames = numpy_reps.shape[1]
+
+    return numpy_reps, n_frames
 
 if __name__ == '__main__':
     wav_file = 'data/SpokenCOCO/wavs-speaker/m1vjq8cayvs6c9/m1vjq8cayvs6c9-32KTQ2V7RDFP25PU1AP8KXEZU8I9MO_92648_385961.wav'
@@ -151,21 +154,21 @@ if __name__ == '__main__':
     text_file = 'data/SpokenCOCO/wavs-speaker/m1vjq8cayvs6c9/m1vjq8cayvs6c9-32KTQ2V7RDFP25PU1AP8KXEZU8I9MO_92648_385961.txt'
 
     # example extracting segment-averaged logmelspec 
-    logspec, nframes = compute_spectrogram(wav_file) # (40, 530)
-    word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=0.01)
-    sentence_segment_spec, num_of_words = slice_spectrogram(logspec, word_list, \
-                                                            target_padded_length=50, padding=True, \
-                                                            return_whole=False) # (50, 40)
+    #logspec, nframes = compute_spectrogram(wav_file) # (40, 530)
+    #word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=0.01)
+    #sentence_segment_spec, num_of_words = slice_spectrogram(logspec, word_list, \
+    #                                                        target_padded_length=50, padding=True, \
+    #                                                        return_whole=False) # (50, 40)
 
-    # example extracting whole-segmnet logmelspec 
-    logspec, nframes = compute_spectrogram(wav_file) # (40, 530)
-    word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=0.01)
-    sentence_segment_spec, num_of_words = slice_spectrogram(logspec, word_list, \
-                                                            target_padded_length=50, padding=True, \
-                                                            return_whole=True) # (50, 40)
+    ## example extracting whole-segmnet logmelspec 
+    #logspec, nframes = compute_spectrogram(wav_file) # (40, 530)
+    #word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=0.01)
+    #sentence_segment_spec, num_of_words = slice_spectrogram(logspec, word_list, \
+    #                                                        target_padded_length=50, padding=True, \
+    #                                                        return_whole=True) # (50, 40)
     
     # example extracting segment-averaged hubert 
-    hubert = hubert_feature_extraction(wav_file, layer=12) # (768, 264)
+    hubert, nframes = hubert_feature_extraction(wav_file, layer=12) # (768, 264)
     word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=0.02)
     sentence_segment_spec, num_of_words = slice_spectrogram(hubert, word_list, \
                                                             target_padded_length=50, padding=True, \
