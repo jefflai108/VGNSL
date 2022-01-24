@@ -6,6 +6,11 @@
 #   image: in .npy file 
 #   text/tree: directly in plain text file 
 #   utterances: pre-extract aligned features (parallelizable) 
+# 
+# example usgaes:
+# ./scripts/data_reformat.sh 83k-5k-5k 20 0 
+# ./scripts/data_reformat.sh 83k-5k-5k 20 1
+# ./scripts/data_reformat.sh 83k-5k-5k 20 2 
 
 datadir=data/SpokenCOCO
 #for split in 83k-5k-5k 10k-5k-5k 10k-1k-1k; do 

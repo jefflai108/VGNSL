@@ -6,9 +6,6 @@ import h5py
 from tqdm import tqdm
 import argparse
 
-import torch
-import torch.utils.data as data
-
 from utils import compute_spectrogram, read_textgrid, slice_spectrogram
 
 class SummaryJsonReader(object):
@@ -119,11 +116,8 @@ class SummaryJsonReader(object):
             num_of_words_list.extend(np.load(all_lab_len_file[lab_id]))
         doc_segment_spec = np.concatenate(doc_segment_spec_list, axis=0)
         num_of_words_list = np.array(num_of_words_list)
-        print(doc_segment_spec.shape)
-        print((len(self.image_key_list)*5, self.padding_len, self.logmelspec_dim))
         assert doc_segment_spec.shape == (len(self.image_key_list)*5, self.padding_len, self.logmelspec_dim)
 
-        exit()
         np.save(true_len_pth, num_of_words_list)
         np.save(seg_embed_pth, doc_segment_spec)
 
