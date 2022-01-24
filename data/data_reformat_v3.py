@@ -22,6 +22,7 @@ class SummaryJsonReader(object):
         # for speech features
         self.padding_len = 50
         self.logmelspec_dim = 40
+        self.hubert_dim = 768
 
         print('pre-store ordered image_key to ensure the storing order is consistent')
         self.image_key_list = []
@@ -95,8 +96,11 @@ class SummaryJsonReader(object):
                 alignment_file = captions[3]
 
                 logspec, nframes = compute_spectrogram(wav_file) # (40, 530)
-                word_list, word_string = read_textgrid(alignment_file, transcript_file, nframes)
-                sentence_segment_spec, num_of_words = slice_spectrogram(logspec, word_list, self.padding_len, True) # (50, 40), 10
+                word_list, word_string = read_textgrid(alignment_file, transcript_file, nframes, frame_stride=0.01)
+                sentence_segment_spec, num_of_words = slice_spectrogram(logspec, word_list, \
+                                                                        target_padded_length=self.padding_len, padding=True, \
+                                                                        return_whole=False) # (50, 40), 10
+
                 #print(sentence_segment_spec.shape, num_of_words)
                 doc_segment_spec[idx] = sentence_segment_spec
                 num_of_words_list.append(num_of_words)

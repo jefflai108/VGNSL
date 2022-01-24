@@ -17,6 +17,9 @@ datadir=data/SpokenCOCO
 split=$1
 num_labs=$2
 lab_id=$3
+for data_split in train val test; do
 python data/data_reformat_v3.py \
     -j ${datadir}/SpokenCOCO_summary-${split}.json -i ${datadir}/SpokenCOCO_images.h5 \
-    -o ${datadir}/Freda-formatting/ -p -n $num_labs -l $lab_id -s train 
+    -o ${datadir}/Freda-formatting/ -n $num_labs -l $lab_id -s $data_split 
+done 
+    #-o ${datadir}/Freda-formatting/ -p -n $num_labs -l $lab_id -s train 
