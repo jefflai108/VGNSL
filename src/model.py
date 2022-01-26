@@ -61,7 +61,7 @@ class EncoderImagePrecomp(nn.Module):
 
 class EncoderText(nn.Module):
     """ text encoder (based on segment logmelspec embedding)"""
-    def __init__(self, opt, vocab_size, semantics_dim):
+    def __init__(self, opt, vocab_size, semantics_dim, embed_size):
         super(EncoderText, self).__init__()
         opt.syntax_dim = semantics_dim  # syntax is tied with semantics
 
@@ -70,7 +70,9 @@ class EncoderText(nn.Module):
 
         # replace word embedding with linear layer 
         #self.sem_embedding = make_embeddings(opt, self.vocab_size, self.semantics_dim)
-        self.sem_embedding = nn.Linear(self.semantics_dim, self.semantics_dim, bias=False)
+        #self.sem_embedding = nn.Linear(self.semantics_dim, self.semantics_dim, bias=False)
+        self.sem_embedding = nn.Linear(self.semantics_dim, embed_size, bias=False)
+        opt.syntax_dim = embed_size  # syntax is tied with semantics
 
         self.syn_score = nn.Sequential(
             nn.Linear(opt.syntax_dim * 2, opt.syntax_score_hidden),
@@ -105,7 +107,7 @@ class EncoderText(nn.Module):
         #sem_embeddings = (self.sem_embedding(x) - 1e10 * (1 - audio_masks)).max(-2)[0]
         sem_embeddings = self.sem_embedding(x)
         syn_embeddings = sem_embeddings
-        
+       
         output_word_embeddings = sem_embeddings * \
             sequence_mask(lengths, max_length=lengths.max()).unsqueeze(-1).float()
 
@@ -124,7 +126,6 @@ class EncoderText(nn.Module):
                 dim=2
             )
             prob_logits = self.syn_score(syn_feats).squeeze(-1)
-
             prob_logits = prob_logits - 1e10 * length_mask
             probs = F.softmax(prob_logits, dim=1)
 
@@ -257,7 +258,7 @@ class VGNSL(object):
         self.img_enc = EncoderImagePrecomp(
             opt.img_dim, opt.embed_size, opt.no_imgnorm
         )
-        self.txt_enc = EncoderText(opt, opt.vocab_size, opt.logmelspec_dim)
+        self.txt_enc = EncoderText(opt, opt.vocab_size, opt.logmelspec_dim, opt.embed_size)
 
         if torch.cuda.is_available():
             self.img_enc.cuda()
@@ -369,7 +370,7 @@ class VGNSL(object):
         # compute the embeddings
         img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, probs, \
             span_bounds = self.forward_emb(images, audios, lengths, audio_masks=audio_masks)
-
+        
         # measure accuracy and record loss
         cum_reward, matching_loss = self.forward_reward(
             img_emb, cap_span_features, left_span_features, right_span_features, word_embs, lengths,

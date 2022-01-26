@@ -1,8 +1,10 @@
 #!/bin/bash 
 
 basename=$1
+embed_size=$2
+lr=$3
 datadir=data/SpokenCOCO
-expdir=exp/spokencoco/force_aligned_seg_logmelspec_${basename}
+expdir=exp/spokencoco/force_aligned_seg_logmelspec_embed${embed_size}_lr${lr}_${basename}
 i=0
 while [ $i -ne 20 ]; do  
     if [ -f ${expdir}/${i}.pth.tar ]; then
@@ -12,4 +14,5 @@ while [ $i -ne 20 ]; do
     i=$(($i+1))
 done
 exit 0
+
 

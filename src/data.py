@@ -27,7 +27,7 @@ class PrecompDataset(data.Dataset):
         self.doc_segment_spec = np.load(os.path.join(data_path, f'{data_split}_segment-logmelspec_embed-{basename}.npy')) # (50000, 50, 40)
         self.logmelspec_dim = self.doc_segment_spec[0].shape[-1]
         self.logmelspec_true_len = np.load(os.path.join(data_path, f'{data_split}_segment-logmelspec_len-{basename}.npy'))
-        if utt_cmvn and data_split != 'test':
+        if utt_cmvn:
             print('apply utterance-level CMVN')
             self.doc_segment_spec = self.utt_cmvn()
         assert len(self.doc_segment_spec) == self.length
