@@ -13,8 +13,6 @@ WINDOWS = {'hamming': scipy.signal.hamming,
            'blackman': scipy.signal.blackman,
            'bartlett': scipy.signal.bartlett}
 
-HUBERT = getattr(hub, 'hubert_base')()
-
 def compute_spectrogram(input_utterance_pth, audio_conf={}):
     # load wavefile 
     y, native_sample_rate = librosa.load(input_utterance_pth)
@@ -91,38 +89,35 @@ def read_textgrid(textgrid_pth, text_pth, nframes, frame_stride=0.01):
 
     return word_list, word_string
     
-def slice_spectrogram(logspec, word_list, target_padded_length=None, padding=False, 
-                      return_whole=False):
+def slice_feature(logspec, word_list, 
+                  target_sent_padded_length=None, sent_level_padding=False, 
+                  target_segment_padded_length=None, return_whole=False):
     # for each word, compute the segment-level logmelspec by 
-    #       default: averaging feature across (force-aligned) word segment
-    #       alternative: return whole word segment. 
-    #
-    # (optional) pad 0s in the *word* dimension 
-    if padding:
-        sentence_segment_spec = np.zeros((target_padded_length, logspec.shape[0]))
+    #       default: averaging feature across (force-aligned) word segment --> sent_level_padding 
+    #       alternative: return whole word segment --> sent_level_padding + segment_level_padding 
+    if return_whole: 
+        sentence_segment_spec = np.zeros((target_sent_padded_length, target_segment_padded_length, logspec.shape[0]))
     else: 
-        sentence_segment_spec = np.zeros((len(word_list), logspec.shape[0]))
+        if sent_level_padding:
+            sentence_segment_spec = np.zeros((target_sent_padded_length, logspec.shape[0]))
+        else: 
+            sentence_segment_spec = np.zeros((len(word_list), logspec.shape[0]))
 
+    segment_len_list = []
     for i, (word, start_frame, end_frame) in enumerate(word_list):
-        semgnet_spec = np.mean(logspec[:, round(start_frame):round(end_frame)], axis=1) # averaged across frame dimension 
-        sentence_segment_spec[i] = semgnet_spec
-
-    '''
-    if use_raw_length:
-        target_length = n_frames
-    p = target_length - n_frames
-    if p > 0:
-        logspec = np.pad(logspec, ((0,0),(0,p)), 'constant',
-                         constant_values=(padval,padval))
-    elif p < 0:
-        print('WARNING: truncate %d/%d frames' % (-p, n_frames))
-        logspec = logspec[:,0:p]
-        n_frames = target_length
-    '''
+        if return_whole: 
+            segment_spec = logspec[:, round(start_frame):round(end_frame)].T
+            segment_len = round(end_frame)-round(start_frame)
+            sentence_segment_spec[i, :segment_len] = segment_spec # store the whole feature segment 
+            segment_len_list.append(segment_len)
+        else: 
+            segment_spec = np.mean(logspec[:, round(start_frame):round(end_frame)], axis=1) # averaged across feature segment
+            sentence_segment_spec[i] = segment_spec
     
-    return sentence_segment_spec, len(word_list)
+    return sentence_segment_spec, len(word_list), segment_len_list
 
-def hubert_feature_extraction(input_utterance_pth, layer=12, hubert_dim=768):
+def hubert_feature_extraction(input_utterance_pth, upstream_model, 
+                              layer=12, hubert_dim=768, device='cpu'):
     # extract hubert feature on GPU with torch. 
     # return specified layer's representation: 0, 1, 2, ...., 12
 
@@ -131,12 +126,6 @@ def hubert_feature_extraction(input_utterance_pth, layer=12, hubert_dim=768):
     
     # resample to the target sample rate -- important for pre-trained 16k models
     y = librosa.resample(y, native_sample_rate, 16000)
-
-    # load pre-trained model 
-    if torch.cuda.is_available(): 
-        device = 'cuda'
-    else: device = 'cpu'
-    upstream_model = HUBERT.to(device)
     y = torch.from_numpy(y).to(device)
 
     with torch.no_grad():
@@ -154,23 +143,39 @@ if __name__ == '__main__':
     text_file = 'data/SpokenCOCO/wavs-speaker/m1vjq8cayvs6c9/m1vjq8cayvs6c9-32KTQ2V7RDFP25PU1AP8KXEZU8I9MO_92648_385961.txt'
 
     # example extracting segment-averaged logmelspec 
-    #logspec, nframes = compute_spectrogram(wav_file) # (40, 530)
-    #word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=0.01)
-    #sentence_segment_spec, num_of_words = slice_spectrogram(logspec, word_list, \
-    #                                                        target_padded_length=50, padding=True, \
-    #                                                        return_whole=False) # (50, 40)
+    frame_stride=0.01
+    logspec, nframes = compute_spectrogram(wav_file) # (40, 530)
+    word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=frame_stride)
+    sentence_segment_spec, num_of_words, _ = slice_feature(logspec, word_list, \
+                                                           target_sent_padded_length=50, sent_level_padding=True, \
+                                                           target_segment_padded_length=None, return_whole=False) # (50, 40)
+    print(logspec.shape, nframes, sentence_segment_spec.shape, num_of_words) # (40, 530) 530 (50, 40) 12
 
     ## example extracting whole-segmnet logmelspec 
-    #logspec, nframes = compute_spectrogram(wav_file) # (40, 530)
-    #word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=0.01)
-    #sentence_segment_spec, num_of_words = slice_spectrogram(logspec, word_list, \
-    #                                                        target_padded_length=50, padding=True, \
-    #                                                        return_whole=True) # (50, 40)
-    
-    # example extracting segment-averaged hubert 
-    hubert, nframes = hubert_feature_extraction(wav_file, layer=12) # (768, 264)
-    word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=0.02)
-    sentence_segment_spec, num_of_words = slice_spectrogram(hubert, word_list, \
-                                                            target_padded_length=50, padding=True, \
-                                                            return_whole=False) # (50, 768)
-    print(sentence_segment_spec.shape)
+    frame_stride=0.01
+    logspec, nframes = compute_spectrogram(wav_file) # (40, 530)
+    word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=frame_stride)
+    sentence_segment_spec, num_of_words, segment_len_list = slice_feature(logspec, word_list, \
+                                                                          target_sent_padded_length=50, sent_level_padding=True, \
+                                                                          target_segment_padded_length=int(7.90/frame_stride), return_whole=True) # (50, 790, 40)
+    print(logspec.shape, nframes, sentence_segment_spec.shape, num_of_words) # (40, 530) 530 (50, 790, 40) 12
+    print(word_list, word_string)
+
+    # example extracting whole-segment hubert 
+    # setup upstream model first 
+    frame_stride=0.02
+    HUBERT = getattr(hub, 'hubert_base')()
+    # load pre-trained model 
+    if torch.cuda.is_available(): 
+        device = 'cuda'
+    else: device = 'cpu'
+    upstream_model = HUBERT.to(device)
+    upstream_model = upstream_model.eval() # important -- this disables layerdrop of w2v2/hubert
+    # upstream model feature extraction 
+    hubert_repre, nframes = hubert_feature_extraction(wav_file, upstream_model, layer=12, device=device) # (768, 264)
+    word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=frame_stride)
+    sentence_segment_spec, num_of_words, segment_len_list = slice_feature(hubert_repre, word_list, \
+                                                                          target_sent_padded_length=50, sent_level_padding=True, \
+                                                                          target_segment_padded_length=int(7.90/frame_stride), return_whole=True) # (50, 395, 768)
+    print(hubert_repre.shape, nframes, sentence_segment_spec.shape, num_of_words, segment_len_list) # (768, 264) 264 (50, 395, 768) 12 [8, 19, 22, 8, 12, 8, 30, 19, 10, 24, 11, 46]
+    print(word_list, word_string) # [('a', 35.0, 43.0), ('town', 43.0, 61.5), ('square', 61.5, 84.5), ('is', 84.5, 92.0), ('full', 92.0, 104.49999999999999), ('of', 104.49999999999999, 112.00000000000001), ('people', 112.00000000000001, 142.5), ('riding', 149.0, 167.5), ('their', 167.5, 178.0), ('bikes', 178.0, 201.5), ('and', 201.5, 213.49999999999997), ('skateboarding', 213.49999999999997, 259.0)] a town square is full of people riding their bikes and skateboarding

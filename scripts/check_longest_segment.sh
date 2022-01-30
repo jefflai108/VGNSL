@@ -14,12 +14,9 @@
 
 datadir=data/SpokenCOCO
 #for split in 83k-5k-5k 10k-5k-5k 10k-1k-1k; do 
-split=$1
-num_labs=$2
-lab_id=$3
-#for data_split in train val test; do
-data_split=$4
-python data/data_reformat_v4.py \
+split=83k-5k-5k
+data_split=$1
+feature=$2
+python data/check_longest_segment.py \
     -j ${datadir}/SpokenCOCO_summary-${split}.json -i ${datadir}/SpokenCOCO_images.h5 \
-    -o ${datadir}/Freda-formatting/ --h5_format --parallelize -n $num_labs -l $lab_id \
-    --data-split $data_split --feature logmelspec
+    -o ${datadir}/Freda-formatting/ -n 0 -l -1 -s $data_split -f logmelspec
