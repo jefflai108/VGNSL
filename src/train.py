@@ -34,7 +34,7 @@ def train(opt, train_loader, model, epoch, val_loader, vocab):
         model.logger = train_logger
 
         # Update the model
-        model.train_emb(*train_data, epoch=epoch)
+        model.train_emb(*train_data, epoch=epoch, speech_hdf5=opt.speech_hdf5)
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -59,7 +59,7 @@ def train(opt, train_loader, model, epoch, val_loader, vocab):
 def validate(opt, val_loader, model, vocab):
     # compute the encoding for all the validation images and captions
     img_embs, cap_embs = encode_data(
-        model, val_loader, opt.log_step, logger.info, vocab)
+        model, val_loader, opt.log_step, logger.info, vocab, speech_hdf5=opt.speech_hdf5)
     # caption retrieval
     (r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, measure='cosine')
     logger.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
@@ -114,6 +114,8 @@ if __name__ == '__main__':
     parser.add_argument('--vocab_path', default='../data/mscoco/vocab.pkl',
                         help='path to vocab.pkl')
     parser.add_argument('--image_hdf5', help='path to pre-stored image embedding .h5 file')
+    parser.add_argument('--speech_hdf5', action='store_true', 
+                        help='pre-stored speech embeddings are in .h5 format')
     parser.add_argument('--data_summary_json', help='karpathy split json file')
     parser.add_argument('--basename', help='MSCOCO split')
     parser.add_argument('--margin', default=0.2, type=float,
@@ -122,10 +124,12 @@ if __name__ == '__main__':
                         help='number of training epochs')
     parser.add_argument('--batch_size', default=128, type=int,
                         help='size of a training mini-batch')
-    parser.add_argument('--logmelspec_dim', default=40, type=int,
-                        help='dimensionality of the logmelspec feature')
-    parser.add_argument('--logmelspec_cmvn', action='store_true',
-                        help='apply utt-level cmvn on logmelspec feature')
+    parser.add_argument('--feature', '-f', type=str, default='logmelspec', 
+                        choices = ['logmelspec', 'hubert'])
+    parser.add_argument('--feature_dim', default=40, type=int,
+                        help='dimensionality of the feature')
+    parser.add_argument('--feature_cmvn', action='store_true',
+                        help='apply utt-level cmvn on feature')
     parser.add_argument('--embed_size', default=512, type=int,
                         help='dimensionality of the joint embedding')
     parser.add_argument('--grad_clip', default=2., type=float,
@@ -207,7 +211,7 @@ if __name__ == '__main__':
 
     # Load data loaders
     train_loader, val_loader = data.get_train_loaders(
-        opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.logmelspec_cmvn
+        opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.feature, opt.feature_cmvn, opt.speech_hdf5
     )
 
     # construct the model

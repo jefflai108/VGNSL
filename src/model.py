@@ -17,6 +17,7 @@ from utils import make_embeddings, l2norm, cosine_sim, sequence_mask, \
     index_mask, index_one_hot_ellipsis
 import utils
 
+from module import AttentivePooling
 
 class EncoderImagePrecomp(nn.Module):
     """ image encoder """
@@ -60,18 +61,23 @@ class EncoderImagePrecomp(nn.Module):
 
 
 class EncoderText(nn.Module):
-    """ text encoder (based on segment logmelspec embedding)"""
+    """ text encoder (based on segment feature embedding)"""
     def __init__(self, opt, vocab_size, semantics_dim, embed_size):
         super(EncoderText, self).__init__()
         opt.syntax_dim = semantics_dim  # syntax is tied with semantics
 
         self.vocab_size = vocab_size
         self.semantics_dim = semantics_dim
+        self.embed_size = embed_size
 
         # replace word embedding with linear layer 
         #self.sem_embedding = make_embeddings(opt, self.vocab_size, self.semantics_dim)
         #self.sem_embedding = nn.Linear(self.semantics_dim, self.semantics_dim, bias=False)
-        self.sem_embedding = nn.Linear(self.semantics_dim, embed_size, bias=False)
+        if opt.speech_hdf5: 
+            self.sem_embedding = AttentivePooling(self.semantics_dim, self.embed_size)
+        else: 
+            self.sem_embedding = nn.Linear(self.semantics_dim, self.embed_size, bias=False)
+
         opt.syntax_dim = embed_size  # syntax is tied with semantics
 
         self.syn_score = nn.Sequential(
@@ -84,7 +90,7 @@ class EncoderText(nn.Module):
     def reset_weights(self):
         self.sem_embedding.weight.data.uniform_(-0.1, 0.1)
 
-    def forward(self, x, lengths, volatile=False, audio_masks=None):  
+    def forward(self, x, lengths, volatile=False, speech_hdf5=False, audio_masks=None):  
         """ sample a tree for each sentence """
         max_select_cnt = int(lengths.max(dim=0)[0].item()) - 1
 
@@ -103,9 +109,19 @@ class EncoderText(nn.Module):
         assert audio_masks is not None
         if torch.cuda.is_available():
             audio_masks = audio_masks.cuda()
-            assert lengths.tolist() == audio_masks.tolist()
-        #sem_embeddings = (self.sem_embedding(x) - 1e10 * (1 - audio_masks)).max(-2)[0]
-        sem_embeddings = self.sem_embedding(x)
+            if not speech_hdf5: assert lengths.tolist() == audio_masks.tolist()
+      
+        # retrieve speech embeddings
+        if speech_hdf5: 
+            # learnable pooling 
+            # treat each (word) segment independently i.e. pool *within* segment not across 
+            batch_size, num_word, frame_per_segment, feat_dim = x.shape
+            x = x.reshape(-1, frame_per_segment, feat_dim)
+            audio_masks = audio_masks.reshape(-1, frame_per_segment)
+            sem_embeddings = self.sem_embedding(x, audio_masks)
+            sem_embeddings = sem_embeddings.reshape(batch_size, num_word, self.embed_size)
+        else: 
+            sem_embeddings = self.sem_embedding(x)
         syn_embeddings = sem_embeddings
        
         output_word_embeddings = sem_embeddings * \
@@ -129,10 +145,10 @@ class EncoderText(nn.Module):
             prob_logits = prob_logits - 1e10 * length_mask
             probs = F.softmax(prob_logits, dim=1)
 
-            if not volatile:
+            if not volatile: # default: categorical sampling 
                 sampler = Categorical(probs)
                 indices = sampler.sample()
-            else:
+            else: # test-time take max 
                 indices = probs.max(1)[1]
             tree_indices.append(indices)
             tree_probs.append(index_one_hot_ellipsis(probs, 1, indices))
@@ -258,7 +274,7 @@ class VGNSL(object):
         self.img_enc = EncoderImagePrecomp(
             opt.img_dim, opt.embed_size, opt.no_imgnorm
         )
-        self.txt_enc = EncoderText(opt, opt.vocab_size, opt.logmelspec_dim, opt.embed_size)
+        self.txt_enc = EncoderText(opt, opt.vocab_size, opt.feature_dim, opt.embed_size)
 
         if torch.cuda.is_available():
             self.img_enc.cuda()
@@ -300,16 +316,16 @@ class VGNSL(object):
         self.img_enc.eval()
         self.txt_enc.eval()
 
-    def forward_emb(self, images, captions, lengths, volatile=False, audio_masks=None):
+    def forward_emb(self, images, audios, lengths, volatile=False, speech_hdf5=False, audio_masks=None):
         """Compute the image and caption embeddings
         """
         # Set mini-batch dataset
         if torch.cuda.is_available():
             images = images.cuda()
-            captions = captions.cuda()
+            audios = audios.cuda()
         with torch.set_grad_enabled(not volatile):
             img_emb = self.img_enc(images)
-            txt_outputs= self.txt_enc(captions, lengths, volatile, audio_masks=audio_masks)
+            txt_outputs= self.txt_enc(audios, lengths, volatile, speech_hdf5=speech_hdf5, audio_masks=audio_masks)
         return (img_emb, ) + txt_outputs
 
     def forward_reward(self, base_img_emb, cap_span_features, left_span_features, right_span_features,
@@ -358,7 +374,7 @@ class VGNSL(object):
 
         return reward_matrix, matching_loss
 
-    def train_emb(self, images, captions, audios, audio_masks, lengths, ids=None, keys=None, epoch=None, *args):
+    def train_emb(self, images, captions, audios, audio_masks, lengths, ids=None, keys=None, epoch=None, speech_hdf5=False, *args):
         """ one training step given images and captions """
         self.Eiters += 1
         self.logger.update('Eit', self.Eiters)
@@ -369,7 +385,7 @@ class VGNSL(object):
 
         # compute the embeddings
         img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, probs, \
-            span_bounds = self.forward_emb(images, audios, lengths, audio_masks=audio_masks)
+            span_bounds = self.forward_emb(images, audios, lengths, speech_hdf5=speech_hdf5, audio_masks=audio_masks)
         
         # measure accuracy and record loss
         cum_reward, matching_loss = self.forward_reward(

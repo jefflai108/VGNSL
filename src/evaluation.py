@@ -65,7 +65,7 @@ class LogCollector(object):
         return s
 
 
-def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stage='dev'):
+def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stage='dev', speech_hdf5=False):
     """Encode all images and captions loadable by `data_loader`
     """
     batch_time = AverageMeter()
@@ -87,7 +87,7 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
             lengths = lengths.cuda()
 
         # compute the embeddings
-        model_output = model.forward_emb(images, audios, lengths, volatile=True, audio_masks=audio_masks) # feed in audios instead of captions
+        model_output = model.forward_emb(images, audios, lengths, volatile=True, speech_hdf5=speech_hdf5, audio_masks=audio_masks) # feed in audios instead of captions
         img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, all_probs, \
         span_bounds = model_output[:8]
 
@@ -244,7 +244,7 @@ def test_trees(data_path, model_path, vocab_path, basename):
             lengths = lengths.cuda()
 
         # compute the embeddings
-        model_output = model.forward_emb(images, audios, lengths, volatile=True, audio_masks=audio_masks) # feed in audios instead of captions
+        model_output = model.forward_emb(images, audios, lengths, volatile=True, speech_hdf5=opt.speech_hdf5, audio_masks=audio_masks) # feed in audios instead of captions
         img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, all_probs, \
         span_bounds = model_output[:8]
 
