@@ -17,7 +17,7 @@ from utils import make_embeddings, l2norm, cosine_sim, sequence_mask, \
     index_mask, index_one_hot_ellipsis
 import utils
 
-from module import AttentivePooling
+from module import AttentivePooling, AttentivePoolingInputNorm
 
 class EncoderImagePrecomp(nn.Module):
     """ image encoder """
@@ -74,7 +74,10 @@ class EncoderText(nn.Module):
         #self.sem_embedding = make_embeddings(opt, self.vocab_size, self.semantics_dim)
         #self.sem_embedding = nn.Linear(self.semantics_dim, self.semantics_dim, bias=False)
         if opt.speech_hdf5: 
-            self.sem_embedding = AttentivePooling(self.semantics_dim, self.embed_size)
+            if opt.attention_norm:
+                self.sem_embedding = AttentivePoolingInputNorm(self.semantics_dim, self.embed_size)
+            else:
+                self.sem_embedding = AttentivePooling(self.semantics_dim, self.embed_size)
         else: 
             self.sem_embedding = nn.Linear(self.semantics_dim, self.embed_size, bias=False)
 
@@ -120,6 +123,9 @@ class EncoderText(nn.Module):
             audio_masks = audio_masks.reshape(-1, frame_per_segment)
             sem_embeddings = self.sem_embedding(x, audio_masks)
             sem_embeddings = sem_embeddings.reshape(batch_size, num_word, self.embed_size)
+
+            del x
+            del audio_masks
         else: 
             sem_embeddings = self.sem_embedding(x)
         syn_embeddings = sem_embeddings
@@ -326,6 +332,12 @@ class VGNSL(object):
         with torch.set_grad_enabled(not volatile):
             img_emb = self.img_enc(images)
             txt_outputs= self.txt_enc(audios, lengths, volatile, speech_hdf5=speech_hdf5, audio_masks=audio_masks)
+
+        del images 
+        del audios 
+        del lengths 
+        del audio_masks 
+
         return (img_emb, ) + txt_outputs
 
     def forward_reward(self, base_img_emb, cap_span_features, left_span_features, right_span_features,

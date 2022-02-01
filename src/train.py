@@ -59,7 +59,7 @@ def train(opt, train_loader, model, epoch, val_loader, vocab):
 def validate(opt, val_loader, model, vocab):
     # compute the encoding for all the validation images and captions
     img_embs, cap_embs = encode_data(
-        model, val_loader, opt.log_step, logger.info, vocab, speech_hdf5=opt.speech_hdf5)
+        opt.data_path, opt.basename, model, val_loader, opt.log_step, logger.info, vocab, speech_hdf5=opt.speech_hdf5)
     # caption retrieval
     (r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, measure='cosine')
     logger.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
@@ -109,6 +109,10 @@ def accuracy(output, target, topk=(1,)):
 if __name__ == '__main__':
     # hyper parameters
     parser = argparse.ArgumentParser()
+    
+    # temporary ; delete this later 
+    parser.add_argument('--attention_norm', action='store_true')
+    #
     parser.add_argument('--data_path', default='../data/mscoco',
                         help='path to datasets')
     parser.add_argument('--vocab_path', default='../data/mscoco/vocab.pkl',
@@ -116,6 +120,8 @@ if __name__ == '__main__':
     parser.add_argument('--image_hdf5', help='path to pre-stored image embedding .h5 file')
     parser.add_argument('--speech_hdf5', action='store_true', 
                         help='pre-stored speech embeddings are in .h5 format')
+    parser.add_argument('--load_pretrained', action='store_true', 
+                        help='load pre-trained model ckpt and optimizer')
     parser.add_argument('--data_summary_json', help='karpathy split json file')
     parser.add_argument('--basename', help='MSCOCO split')
     parser.add_argument('--margin', default=0.2, type=float,
@@ -216,9 +222,23 @@ if __name__ == '__main__':
 
     # construct the model
     model = VGNSL(opt)
+    if opt.load_pretrained: 
+        # find last ckpt 
+        for last_ckpt in range(opt.num_epochs, -2, -1): 
+            pretrained_model_pth = os.path.join(opt.logger_name, str(last_ckpt) + '.pth.tar')
+            if os.path.exists(pretrained_model_pth): 
+                break
+        if last_ckpt == -1: 
+            print('no pretrained model found') 
+            starting_epoch = 0
+        else: 
+            print(f'loading pretrained model from {pretrained_model_pth}')
+            checkpoint = torch.load(pretrained_model_pth, map_location='cpu')
+            model.load_state_dict(checkpoint['model']) 
+            starting_epoch = checkpoint['epoch']
 
     best_rsum = 0
-    for epoch in range(opt.num_epochs):
+    for epoch in range(starting_epoch, opt.num_epochs):
         adjust_learning_rate(opt, model.optimizer, epoch)
 
         # train for one epoch

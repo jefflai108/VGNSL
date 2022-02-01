@@ -65,7 +65,7 @@ class LogCollector(object):
         return s
 
 
-def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stage='dev', speech_hdf5=False):
+def encode_data(data_path, basename, model, data_loader, log_step=10, logging=print, vocab=None, stage='dev', speech_hdf5=False):
     """Encode all images and captions loadable by `data_loader`
     """
     batch_time = AverageMeter()
@@ -123,7 +123,40 @@ def encode_data(model, data_loader, log_step=10, logging=print, vocab=None, stag
                         e_log=str(model.logger)))
         del images, captions, audios
 
+    val_trees(data_path, model, logging, data_loader, vocab, basename, speech_hdf5)
+    
     return img_embs, cap_embs
+
+
+def val_trees(data_path, model, logging, val_loader, vocab, basename, speech_hdf5):
+    """ use the trained model to generate parse trees for text """
+    cap_embs = None
+    trees = list()
+    for i, (images, captions, audios, audio_masks, lengths, ids) in enumerate(val_loader):
+        lengths = torch.Tensor(lengths).long()
+        if torch.cuda.is_available():
+            lengths = lengths.cuda()
+
+        # compute the embeddings
+        model_output = model.forward_emb(images, audios, lengths, volatile=True, speech_hdf5=speech_hdf5, audio_masks=audio_masks) # feed in audios instead of captions
+        img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, all_probs, \
+        span_bounds = model_output[:8]
+
+        candidate_trees = list()
+        for j in range(len(ids)):
+            candidate_trees.append(generate_tree(captions, tree_indices, j, vocab))
+        appended_trees = ['' for _ in range(len(ids))]
+        for j in range(len(ids)):
+            appended_trees[ids[j] - min(ids)] = clean_tree(candidate_trees[j])
+        trees.extend(appended_trees)
+        cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
+        del images, captions, img_emb, cap_emb, audios, audio_masks
+
+    ground_truth = [line.strip() for line in open(
+        os.path.join(data_path, f'val_ground-truth-{basename}.txt'))]
+    
+    f1, _, _ =  f1_score(trees, ground_truth)
+    logging(f'validation tree f1 score is {f1}')
 
 
 def i2t(images, captions, npts=None, measure='cosine', return_ranks=False):
@@ -227,10 +260,13 @@ def test_trees(data_path, model_path, vocab_path, basename):
 
     # load model state
     model.load_state_dict(checkpoint['model'])
-
+    if hasattr(opt, 'logmelspec_cmvn'):
+        use_cmvn = opt.logmelspec_cmvn
+    elif hasattr(opt, 'feature_cmvn'): 
+        use_cmvn = opt.feature_cmvn
     data_loader = get_eval_loader(
-        data_path, 'test', vocab, basename, opt.batch_size, opt.workers,
-        load_img=False, img_dim=opt.img_dim, utt_cmvn=opt.logmelspec_cmvn
+        data_path, 'test', vocab, basename, opt.batch_size, 1,
+        feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5
     )
 
     cap_embs = None
@@ -256,8 +292,60 @@ def test_trees(data_path, model_path, vocab_path, basename):
             appended_trees[ids[j] - min(ids)] = clean_tree(candidate_trees[j])
         trees.extend(appended_trees)
         cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
-        del images, captions, img_emb, cap_emb, audios
+        del images, captions, img_emb, cap_emb, audios, audio_masks
 
     ground_truth = [line.strip() for line in open(
         os.path.join(data_path, f'test_ground-truth-{basename}.txt'))]
     return trees, ground_truth
+
+
+def f1_score(produced_trees, gold_trees):
+    gold_trees = list(map(lambda tree: extract_spans(tree), gold_trees))
+    produced_trees = list(map(lambda tree: extract_spans(tree), produced_trees))
+    assert len(produced_trees) == len(gold_trees)
+    precision_cnt, precision_denom, recall_cnt, recall_denom = 0, 0, 0, 0
+    for i, item in enumerate(produced_trees):
+        pc, pd, rc, rd = extract_statistics(gold_trees[i], item)
+        precision_cnt += pc
+        precision_denom += pd
+        recall_cnt += rc
+        recall_denom += rd
+    precision = float(precision_cnt) / precision_denom * 100.0
+    recall = float(recall_cnt) / recall_denom * 100.0
+    f1 = 2 * precision * recall / (precision + recall)
+    return f1, precision, recall
+
+
+def extract_spans(tree):
+    answer = list()
+    stack = list()
+    items = tree.split()
+    curr_index = 0
+    for item in items:
+        if item == ')':
+            pos = -1
+            right_margin = stack[pos][1]
+            left_margin = None
+            while stack[pos] != '(':
+                left_margin = stack[pos][0]
+                pos -= 1
+            assert left_margin is not None
+            assert right_margin is not None
+            stack = stack[:pos] + [(left_margin, right_margin)]
+            answer.append((left_margin, right_margin))
+        elif item == '(':
+            stack.append(item)
+        else:
+            stack.append((curr_index, curr_index))
+            curr_index += 1
+    return answer
+
+
+def extract_statistics(gold_tree_spans, produced_tree_spans):
+    gold_tree_spans = set(gold_tree_spans)
+    produced_tree_spans = set(produced_tree_spans)
+    precision_cnt = sum(list(map(lambda span: 1.0 if span in gold_tree_spans else 0.0, produced_tree_spans)))
+    recall_cnt = sum(list(map(lambda span: 1.0 if span in produced_tree_spans else 0.0, gold_tree_spans)))
+    precision_denom = len(produced_tree_spans)
+    recall_denom = len(gold_tree_spans)
+    return precision_cnt, precision_denom, recall_cnt, recall_denom

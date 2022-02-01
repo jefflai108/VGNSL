@@ -4,6 +4,7 @@ import os
 import json
 import h5py
 from tqdm import tqdm
+import random
 
 import torch
 import torch.utils.data as data
@@ -14,6 +15,7 @@ class PrecompDataset(data.Dataset):
     def __init__(self, data_path, data_split, vocab, basename,
                  load_img=True, img_dim=2048, utt_cmvn=False):
         self.vocab = vocab
+        self.img_dim = img_dim
 
         # load captions
         self._load_captions(data_path, data_split, basename)
@@ -47,7 +49,7 @@ class PrecompDataset(data.Dataset):
         if load_img:
             self.images = np.load(os.path.join(data_path, f'{data_split}_ims-{basename}.npy'))
         else:
-            self.images = np.zeros((self.length // 5, img_dim))
+            self.images = np.zeros((self.length // 5, self.img_dim))
 
         # each image can have 1 caption or 5 captions
         if self.images.shape[0] != self.length:
@@ -132,8 +134,10 @@ class H5PrecompDataset(PrecompDataset):
 
     def __init__(self, data_path, data_split, vocab, basename,
                  load_img=True, img_dim=2048, feature='logmelspec', utt_cmvn=False):
+        self.data_split = data_split 
         self.vocab = vocab
- 
+        self.img_dim = img_dim
+
         # load captions
         self._load_captions(data_path, data_split, basename)
     
@@ -159,15 +163,24 @@ class H5PrecompDataset(PrecompDataset):
         #assert len(self.doc_segment_spec) == self.length
         assert len(self.feature_wordlist.keys()) == self.length
 
-    def _slice_speech_feature(self, feat, word_list):
+    def _slice_speech_feature(self, feat, word_list, max_segment_len=50):
         # return (n-th word, word segment # frames, feature-dim), where 1st dim is padded to longest segment frame for an given utterance
 
-        assert len(feat) >= word_list[-1][-1] 
+        assert len(feat) >= round(word_list[-1][-1]), print(word_list, len(feat))
         word2len = [round(z)-round(y) for (_,y,z) in word_list]
-        sliced_feat = np.zeros((len(word_list), max(word2len), self.feature_dim)) # e.g. (9, 33, 768)
+        #sliced_feat = np.zeros((len(word_list), max(word2len), self.feature_dim)) # e.g. (9, 33, 768)
+        sliced_feat = np.zeros((len(word_list), max_segment_len, self.feature_dim)) # limit the segment-dimension length
 
         for i, (word, start_frame, end_frame) in enumerate(word_list):
-            sliced_feat[i, :word2len[i]] = feat[round(start_frame):round(end_frame), :]
+            start_frame, end_frame = round(start_frame), round(end_frame)
+            if end_frame - start_frame > max_segment_len: 
+                segment_len = max_segment_len
+                start_frame = random.randint(start_frame, end_frame - max_segment_len)
+                #print('cropping speech segments: original %f, orig start frame is %f, new start frame is %f' % (end_frame - start_frame, orig_start_frame, start_frame))
+                end_frame   = start_frame + max_segment_len  
+            else: 
+                segment_len = word2len[i]
+            sliced_feat[i, :segment_len] = feat[start_frame:end_frame, :]
 
         return sliced_feat, len(word_list)
  
@@ -218,7 +231,7 @@ def h5_collate_fn(data):
         treu_audio_segment_len = audio_segment_lens[i]
         target_audios[i, :true_sentence_len, :treu_audio_segment_len] = audio
     sentence_level_speech_masks = torch.tensor(true_audio_lens)
-    audio_masks = torch.where(target_audios==0, -1e10, 0) # mask==-inf indicates padding 
+    audio_masks = torch.where(target_audios==0, -100000, 0) # mask==-inf indicates padding 
     audio_masks = audio_masks[:, :, :, 0].squeeze(-1) # feature-dim is not indicative 
     #print(target_audios.shape, audio_masks.shape) # torch.Size([256, 27, 71, 768]) torch.Size([256, 27, 71])
     assert sentence_level_speech_masks.tolist() == lengths # ensure we can match segment embed to words
@@ -252,15 +265,15 @@ def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='
         data_path, 'train', vocab, basename, batch_size, True, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5
     )
     val_loader = get_precomp_loader(
-        data_path, 'val', vocab, basename, batch_size, False, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5
+        data_path, 'val', vocab, basename, 32, False, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5
     )
     return train_loader, val_loader
 
 
 def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
-                    load_img=False, img_dim=2048, utt_cmvn=False):
+                    feature='logmelspec', speech_hdf5=False, load_img=False, img_dim=2048, utt_cmvn=False):
     eval_loader = get_precomp_loader(
-        data_path, split_name, vocab, basename, batch_size, False, workers,
-        load_img=load_img, img_dim=img_dim, utt_cmvn=utt_cmvn
+        data_path, split_name, vocab, basename, 32, False, num_workers=0, feature=feature, 
+        speech_hdf5=speech_hdf5, load_img=load_img, img_dim=img_dim, utt_cmvn=utt_cmvn
     )
     return eval_loader

@@ -1,11 +1,11 @@
 #!/bin/bash
 
-basename=$1
-embed_size=$2
-lr=$3
+basename=100-100-100
+embed_size=512
+lr=1e-4
 feature=hubert; feature_dim=768
 datadir=data/SpokenCOCO
-expdir=exp/spokencoco/force_aligned_whole_${feature}_embed${embed_size}_lr${lr}_${basename}
+expdir=exp/spokencoco/force_aligned_whole_hubert_100-100-100
 python src/train.py --logger_name $expdir \
     --data_path ${datadir}/Freda-formatting --vocab_path ${datadir}/SpokenCOCO_vocab.pkl --basename ${basename} \
     --init_embeddings 0 --img_dim 2048 --scoring_hidden_dim 128 \

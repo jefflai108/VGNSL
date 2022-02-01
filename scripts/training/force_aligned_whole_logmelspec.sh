@@ -3,7 +3,7 @@
 basename=$1
 embed_size=$2
 lr=$3
-feature=hubert; feature_dim=768
+feature=logmelspec; feature_dim=40
 datadir=data/SpokenCOCO
 expdir=exp/spokencoco/force_aligned_whole_${feature}_embed${embed_size}_lr${lr}_${basename}
 python src/train.py --logger_name $expdir \
