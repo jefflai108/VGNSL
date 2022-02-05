@@ -12,7 +12,6 @@ from vocab import Vocabulary
 from model import VGNSL
 from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data
 
-
 def train(opt, train_loader, model, epoch, val_loader, vocab):
     # average meters to record the training statistics
     batch_time = AverageMeter()

@@ -74,7 +74,7 @@ class EncoderText(nn.Module):
         #self.sem_embedding = make_embeddings(opt, self.vocab_size, self.semantics_dim)
         #self.sem_embedding = nn.Linear(self.semantics_dim, self.semantics_dim, bias=False)
         if opt.speech_hdf5: 
-            if opt.attention_norm:
+            if hasattr(opt, 'attention_norm') and opt.attention_norm:
                 self.sem_embedding = AttentivePoolingInputNorm(self.semantics_dim, self.embed_size)
             else:
                 self.sem_embedding = AttentivePooling(self.semantics_dim, self.embed_size)
