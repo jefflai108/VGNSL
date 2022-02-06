@@ -130,7 +130,9 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', default=128, type=int,
                         help='size of a training mini-batch')
     parser.add_argument('--feature', '-f', type=str, default='logmelspec', 
-                        choices = ['logmelspec', 'hubert'])
+                        choices = ['logmelspec', 
+                        'hubert', 'hubert2', 'hubert4', 'hubert6', 'hubert8', 'hubert10', 
+                        'hubert_large16', 'hubert_large18', 'hubert_large24'])
     parser.add_argument('--feature_dim', default=40, type=int,
                         help='dimensionality of the feature')
     parser.add_argument('--feature_cmvn', action='store_true',

@@ -3,12 +3,9 @@
 basename=$1
 embed_size=$2
 lr=$3
-feature=hubert; feature_dim=768
-feature=hubert2; feature_dim=768
-feature=hubert4; feature_dim=768
-feature=hubert6; feature_dim=768
-feature=hubert8; feature_dim=768
-feature=hubert10; feature_dim=768
+feature=hubert_large16; feature_dim=1024
+feature=hubert_large18; feature_dim=1024
+feature=hubert_large24; feature_dim=1024
 feature=$4
 datadir=data/SpokenCOCO
 expdir=exp/spokencoco/force_aligned_whole_${feature}_embed${embed_size}_lr${lr}_${basename}
