@@ -6,6 +6,7 @@ import torch
 import textgrid
 
 import torch 
+import torch.nn.functional as F
 import s3prl.hub as hub
 
 WINDOWS = {'hamming': scipy.signal.hamming,
@@ -129,6 +130,9 @@ def hubert_feature_extraction(input_utterance_pth, upstream_model,
     y = torch.from_numpy(y).to(device)
 
     with torch.no_grad():
+        if hubert_dim == 1024: 
+            # hubert_large; apply norm at input tensor 
+            y = F.layer_norm(y, y.shape)
         reps = upstream_model([y])["hidden_states"]
         #print(f'reps has {len(reps)} layers')
         reps = reps[layer].squeeze().reshape(hubert_dim, -1)
@@ -165,6 +169,8 @@ if __name__ == '__main__':
     # setup upstream model first 
     frame_stride=0.02
     HUBERT = getattr(hub, 'hubert_base')()
+    HUBERT = getattr(hub, 'content_vec_v07_11')()
+    HUBERT = getattr(hub, 'content_vec_v12_05')()
     # load pre-trained model 
     if torch.cuda.is_available(): 
         device = 'cuda'

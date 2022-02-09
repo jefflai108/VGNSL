@@ -23,4 +23,4 @@ layer_num=$5
 python data/data_reformat_v4.py \
     -j ${datadir}/SpokenCOCO_summary-${split}.json -i ${datadir}/SpokenCOCO_images.h5 \
     -o ${datadir}/Freda-formatting/ --h5_format --parallelize -n $num_labs -l $lab_id \
-    --data-split $data_split --feature hubert --layer_num $layer_num
+    --data-split $data_split --feature hubert_large --layer_num $layer_num

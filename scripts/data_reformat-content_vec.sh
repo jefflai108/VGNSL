@@ -19,8 +19,9 @@ num_labs=$2
 lab_id=$3
 #for data_split in train val test; do
 data_split=$4
-layer_num=$5
+feature=$5
+layer_num=12
 python data/data_reformat_v4.py \
     -j ${datadir}/SpokenCOCO_summary-${split}.json -i ${datadir}/SpokenCOCO_images.h5 \
     -o ${datadir}/Freda-formatting/ --h5_format --parallelize -n $num_labs -l $lab_id \
-    --data-split $data_split --feature hubert --layer_num $layer_num
+    --data-split $data_split --feature $feature --layer_num $layer_num

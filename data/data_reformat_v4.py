@@ -11,7 +11,7 @@ import s3prl.hub as hub
 from utils import compute_spectrogram, read_textgrid, slice_feature, hubert_feature_extraction
 
 class SummaryJsonReader(object):
-    def __init__(self, data_summary_json, image_hdf5, img_embed_dim=2048,
+    def __init__(self, data_summary_json, image_hdf5, feature, img_embed_dim=2048,
                  parallelize=False, num_labs=None, lab_id=None):
 
         self.image_h5 = h5py.File(image_hdf5, 'r')
@@ -23,7 +23,10 @@ class SummaryJsonReader(object):
 
         # for speech features
         self.logmelspec_dim = 40
-        self.hubert_dim = 768
+        if feature == 'hubert_large':
+            self.hubert_dim = 1024
+        elif feature == 'hubert' or feature == 'content_vec_v07_11' or feature == 'content_vec_v12_05':
+            self.hubert_dim = 768
         self.logmelspec_frame_stride = 0.01
         self.hubert_frame_stride = 0.02
         self.sent_level_padding_len = 50
@@ -36,7 +39,12 @@ class SummaryJsonReader(object):
         else: self.device = 'cpu'
 
         # init upstream model for feat extraction 
-        self.init_hubert()
+        if feature == 'hubert_large':
+            self.init_hubert_large()
+        elif feature == 'hubert':
+            self.init_hubert()
+        elif feature == 'content_vec_v07_11' or feature == 'content_vec_v12_05': 
+            self.init_content_vec(feature)
         
         print('pre-store ordered image_key to ensure the storing order is consistent')
         self.image_key_list = []
@@ -126,8 +134,8 @@ class SummaryJsonReader(object):
                         sentence_segment_spec, num_of_words, segment_len_list = slice_feature(feat, word_list, \
                                                                                               target_sent_padded_length=self.sent_level_padding_len, sent_level_padding=True, \
                                                                                               target_segment_padded_length=self.logmelspec_seg_level_padding_len, return_whole=True) # (50, 790, 40)
-                    elif feature == 'hubert':
-                        feat, nframes = hubert_feature_extraction(wav_file, self.upstream_model, layer=layer_num, device=self.device) # (768, 511)
+                    elif feature == 'hubert' or feature == 'hubert_large':
+                        feat, nframes = hubert_feature_extraction(wav_file, self.upstream_model, layer=layer_num, hubert_dim=self.hubert_dim, device=self.device) # (768, 511)
                         word_list, word_string = read_textgrid(alignment_file, transcript_file, nframes, frame_stride=self.hubert_frame_stride)
                         sentence_segment_spec, num_of_words, segment_len_list = slice_feature(feat, word_list, \
                                                                                               target_sent_padded_length=self.sent_level_padding_len, sent_level_padding=True, \
@@ -171,19 +179,31 @@ class SummaryJsonReader(object):
                 if feature == 'logmelspec':
                     feat, nframes = compute_spectrogram(wav_file) # (40, 530)
                     word_list, word_string = read_textgrid(alignment_file, transcript_file, nframes, frame_stride=self.logmelspec_frame_stride)
-                elif feature == 'hubert':
-                    feat, nframes = hubert_feature_extraction(wav_file, self.upstream_model, layer=layer_num, device=self.device) # (768, 511)
+                elif feature == 'hubert' or feature == 'hubert_large' or feature == 'content_vec_v07_11' or feature == 'content_vec_v12_05':
+                    feat, nframes = hubert_feature_extraction(wav_file, self.upstream_model, hubert_dim=self.hubert_dim, layer=layer_num, device=self.device) # (768, 511)
                     word_list, word_string = read_textgrid(alignment_file, transcript_file, nframes, frame_stride=self.hubert_frame_stride)
 
-                print(type(feat), feat.shape, nframes) # <class 'numpy.ndarray'> (768, 511) 511
+                #print(layer_num, type(feat), feat.shape, nframes) # <class 'numpy.ndarray'> (768, 511) 511
                 word_list_dict[idx] = word_list
                 seg_embed_h5_obj.create_dataset(str(idx), data=feat.T)
                 idx += 1
 
         np.save(word_list_pth, [word_list_dict])
 
+    def init_hubert_large(self): 
+        HUBERT = getattr(hub, 'hubert_large_ll60k')()
+        # load pre-trained model 
+        upstream_model = HUBERT.to(self.device)
+        self.upstream_model = upstream_model.eval() # important -- this disables layerdrop of w2v2/hubert
+
     def init_hubert(self): 
         HUBERT = getattr(hub, 'hubert_base')()
+        # load pre-trained model 
+        upstream_model = HUBERT.to(self.device)
+        self.upstream_model = upstream_model.eval() # important -- this disables layerdrop of w2v2/hubert
+
+    def init_content_vec(self, feature): 
+        HUBERT = getattr(hub, feature)()
         # load pre-trained model 
         upstream_model = HUBERT.to(self.device)
         self.upstream_model = upstream_model.eval() # important -- this disables layerdrop of w2v2/hubert
@@ -219,7 +239,7 @@ class SummaryJsonReader(object):
         num_of_words_list = np.array(num_of_words_list)
         if feature == 'logmelspec':
             assert doc_segment_spec.shape == (len(self.image_key_list)*5, self.sent_level_padding_len, self.logmelspec_dim)
-        elif feature == 'hubert':
+        elif feature == 'hubert' or feature == 'content_vec_v07_11' or feature == 'content_vec_v12_05':
             assert doc_segment_spec.shape == (len(self.image_key_list)*5, self.sent_level_padding_len, self.hubert_dim)
 
         np.save(true_len_pth, num_of_words_list)
@@ -231,49 +251,49 @@ def main(args):
 
     with open(args.data_summary_json, 'r') as f:
         data_summary = json.load(f)
-
+   
     if args.data_split == 'val':
         val_json = data_summary['val'] 
         print('loading val_loader')
-        val_writer = SummaryJsonReader(val_json, args.image_hdf5)
+        val_writer = SummaryJsonReader(val_json, args.image_hdf5, args.feature)
         #val_writer.write_image_to_file(op.join(args.output_dir, 'val_ims-' + basename + '.npy'))
         #val_writer.write_text_or_tree_to_file( \
         #    op.join(args.output_dir, 'val_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'val_caps-' + basename + '.txt'))
         if args.h5_format:
-            seg_embed_h5_obj = h5py.File(op.join(args.output_dir, f'val_segment-{args.feature}_embed-' + basename + '.hdf5'), "w")
-            word_list_file = op.join(args.output_dir, f'val_segment-{args.feature}_word_list-' + basename + '.npy')
+            seg_embed_h5_obj = h5py.File(op.join(args.output_dir, f'val_segment-{args.feature}{args.layer_num}_embed-' + basename + '.hdf5'), "w")
+            word_list_file = op.join(args.output_dir, f'val_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
             val_writer.write_utterance_to_h5(seg_embed_h5_obj, word_list_file, feature=args.feature, layer_num=args.layer_num)
             seg_embed_h5_obj.close()
         else: 
             val_writer.write_utterance_to_file( \
-            op.join(args.output_dir, f'val_segment-{args.feature}_embed-' + basename + '.npy'), \
-            op.join(args.output_dir, f'val_segment-{args.feature}_len-' + basename + '.npy'), \
-            op.join(args.output_dir, f'val_segment-{args.feature}_segmentlen-' + basename + '.npy'), \
+            op.join(args.output_dir, f'val_segment-{args.feature}{args.layer_num}_embed-' + basename + '.npy'), \
+            op.join(args.output_dir, f'val_segment-{args.feature}{args.layer_num}_len-' + basename + '.npy'), \
+            op.join(args.output_dir, f'val_segment-{args.feature}{args.layer_num}_segmentlen-' + basename + '.npy'), \
             feature=args.feature, return_whole=args.return_whole, layer_num=args.layer_num)
 
     if args.data_split == 'test':
         test_json = data_summary['test'] 
         print('loading test_loader')
-        test_writer = SummaryJsonReader(test_json, args.image_hdf5)
+        test_writer = SummaryJsonReader(test_json, args.image_hdf5, args.feature)
         #test_writer.write_image_to_file(op.join(args.output_dir, 'test_ims-' + basename + '.npy'))
         #test_writer.write_text_or_tree_to_file( \
         #    op.join(args.output_dir, 'test_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'test_caps-' + basename + '.txt'))
         if args.h5_format:
-            seg_embed_h5_obj = h5py.File(op.join(args.output_dir, f'test_segment-{args.feature}_embed-' + basename + '.hdf5'), "w")
-            word_list_file = op.join(args.output_dir, f'test_segment-{args.feature}_word_list-' + basename + '.npy')
+            seg_embed_h5_obj = h5py.File(op.join(args.output_dir, f'test_segment-{args.feature}{args.layer_num}_embed-' + basename + '.hdf5'), "w")
+            word_list_file = op.join(args.output_dir, f'test_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
             test_writer.write_utterance_to_h5(seg_embed_h5_obj, word_list_file, feature=args.feature, layer_num=args.layer_num)
             seg_embed_h5_obj.close()
         else: 
             test_writer.write_utterance_to_file( \
-            op.join(args.output_dir, f'test_segment-{args.feature}_embed-' + basename + '.npy'), \
-            op.join(args.output_dir, f'test_segment-{args.feature}_len-' + basename + '.npy'), \
-            op.join(args.output_dir, f'test_segment-{args.feature}_segmentlen-' + basename + '.npy'), \
+            op.join(args.output_dir, f'test_segment-{args.feature}{args.layer_num}_embed-' + basename + '.npy'), \
+            op.join(args.output_dir, f'test_segment-{args.feature}{args.layer_num}_len-' + basename + '.npy'), \
+            op.join(args.output_dir, f'test_segment-{args.feature}{args.layer_num}_segmentlen-' + basename + '.npy'), \
             feature=args.feature, return_whole=args.return_whole, layer_num=args.layer_num)
 
     if args.data_split == 'train':
         train_json = data_summary['train']
         print('loading train_loader')
-        train_writer = SummaryJsonReader(train_json, args.image_hdf5, parallelize=args.parallelize, num_labs=args.num_labs, lab_id=args.lab_id)
+        train_writer = SummaryJsonReader(train_json, args.image_hdf5, args.feature, parallelize=args.parallelize, num_labs=args.num_labs, lab_id=args.lab_id)
         #train_writer.write_image_to_file(op.join(args.output_dir, 'train_ims-' + basename + '.npy'))
         #train_writer.write_text_or_tree_to_file( \
         #    op.join(args.output_dir, 'train_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'train_caps-' + basename + '.txt'))
@@ -283,8 +303,8 @@ def main(args):
                 # first check if parallize lab files exist
                 all_lab_embed_file, all_lab_len_file = [], []
                 for tmp_lab_id in range(args.num_labs): 
-                    lab_seg_embed_h5_obj = op.join(args.output_dir, f'.train_segment-{args.feature}_embed-' + basename + '-' + str(tmp_lab_id) + '.hdf5')
-                    lab_word_list_file = op.join(args.output_dir, f'.train_segment-{args.feature}_word_list-' + basename + '-' + str(tmp_lab_id) + '.npy')
+                    lab_seg_embed_h5_obj = op.join(args.output_dir, f'.train_segment-{args.feature}{args.layer_num}_embed-' + basename + '-' + str(tmp_lab_id) + '.hdf5')
+                    lab_word_list_file = op.join(args.output_dir, f'.train_segment-{args.feature}{args.layer_num}_word_list-' + basename + '-' + str(tmp_lab_id) + '.npy')
                     if op.exists(lab_seg_embed_h5_obj) and op.exists(lab_word_list_file): 
                         parallelize_done = True 
                         all_lab_embed_file.append(h5py.File(lab_seg_embed_h5_obj, "r"))
@@ -293,15 +313,15 @@ def main(args):
                 if parallelize_done: 
                     print('Skip feature extraction. Combine all pre-extracted lab_embed_files.')
                     train_writer.combine_h5_files(all_lab_embed_file, all_lab_len_file, \
-                        h5py.File(op.join(args.output_dir, f'train_segment-{args.feature}_embed-' + basename + '.hdf5'), 'w'), \
-                        op.join(args.output_dir, f'train_segment-{args.feature}_word_list-' + basename + '.npy'), \
+                        h5py.File(op.join(args.output_dir, f'train_segment-{args.feature}{args.layer_num}_embed-' + basename + '.hdf5'), 'w'), \
+                        op.join(args.output_dir, f'train_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy'), \
                         feature=args.feature)
                     for lab_seg_embed_h5_obj in all_lab_embed_file: 
                         lab_seg_embed_h5_obj.close()
                 else: 
                     print('write partial numpy arrays to lab file')
-                    lab_seg_embed_h5_obj = op.join(args.output_dir, f'.train_segment-{args.feature}_embed-' + basename + '-' + str(args.lab_id) + '.hdf5')
-                    lab_word_list_file = op.join(args.output_dir, f'.train_segment-{args.feature}_word_list-' + basename + '-' + str(args.lab_id) + '.npy')
+                    lab_seg_embed_h5_obj = op.join(args.output_dir, f'.train_segment-{args.feature}{args.layer_num}_embed-' + basename + '-' + str(args.lab_id) + '.hdf5')
+                    lab_word_list_file = op.join(args.output_dir, f'.train_segment-{args.feature}{args.layer_num}_word_list-' + basename + '-' + str(args.lab_id) + '.npy')
                     if op.exists(lab_seg_embed_h5_obj) and op.exists(lab_word_list_file):
                         print(f'{lab_seg_embed_h5_obj} and {lab_word_list_file} already exist. Skip feature extraction')
                     else: 
@@ -312,9 +332,9 @@ def main(args):
                 # first check if parallize lab files exist
                 all_lab_embed_file, all_lab_len_file, all_lab_segmentlen_file = [], [], []
                 for tmp_lab_id in range(args.num_labs): 
-                    lab_embed_file = op.join(args.output_dir, f'.train_segment-{args.feature}_embed-' + basename + '-' + str(tmp_lab_id) + '.npy')
-                    lab_len_file = op.join(args.output_dir, f'.train_segment-{args.feature}_len-' + basename + '-' + str(tmp_lab_id) + '.npy')
-                    lab_segmentlen_file = op.join(args.output_dir, f'.train_segment-{args.feature}_segmentlen-' + basename + '-' + str(args.lab_id) + '.npy')
+                    lab_embed_file = op.join(args.output_dir, f'.train_segment-{args.feature}{args.layer_num}_embed-' + basename + '-' + str(tmp_lab_id) + '.npy')
+                    lab_len_file = op.join(args.output_dir, f'.train_segment-{args.feature}{args.layer_num}_len-' + basename + '-' + str(tmp_lab_id) + '.npy')
+                    lab_segmentlen_file = op.join(args.output_dir, f'.train_segment-{args.feature}{args.layer_num}_segmentlen-' + basename + '-' + str(args.lab_id) + '.npy')
                     if op.exists(lab_embed_file) and op.exists(lab_len_file) and op.exists(lab_segmentlen_file): 
                         parallelize_done = True 
                         all_lab_embed_file.append(lab_embed_file)
@@ -324,30 +344,30 @@ def main(args):
                 if parallelize_done: 
                     print('Skip feature extraction. Combine all pre-extracted lab_embed_files.')
                     train_writer.combine_lab_files(all_lab_embed_file, all_lab_len_file, all_lab_segmentlen_file, \
-                        op.join(args.output_dir, f'train_segment-{args.feature}_embed-' + basename + '.npy'), \
-                        op.join(args.output_dir, f'train_segment-{args.feature}_len-' + basename + '.npy'), \
-                        op.join(args.output_dir, f'train_segment-{args.feature}_segmentlen-' + basename + '.npy'), \
+                        op.join(args.output_dir, f'train_segment-{args.feature}{args.layer_num}_embed-' + basename + '.npy'), \
+                        op.join(args.output_dir, f'train_segment-{args.feature}{args.layer_num}_len-' + basename + '.npy'), \
+                        op.join(args.output_dir, f'train_segment-{args.feature}{args.layer_num}_segmentlen-' + basename + '.npy'), \
                         feature=args.feature)
                 else: 
                     print('write partial numpy arrays to lab file')
-                    lab_embed_file = op.join(args.output_dir, f'.train_segment-{args.feature}_embed-' + basename + '-' + str(args.lab_id) + '.npy')
-                    lab_len_file = op.join(args.output_dir, f'.train_segment-{args.feature}_len-' + basename + '-' + str(args.lab_id) + '.npy')
-                    lab_segmentlen_file = op.join(args.output_dir, f'.train_segment-{args.feature}_segmentlen-' + basename + '-' + str(args.lab_id) + '.npy')
+                    lab_embed_file = op.join(args.output_dir, f'.train_segment-{args.feature}{args.layer_num}_embed-' + basename + '-' + str(args.lab_id) + '.npy')
+                    lab_len_file = op.join(args.output_dir, f'.train_segment-{args.feature}{args.layer_num}_len-' + basename + '-' + str(args.lab_id) + '.npy')
+                    lab_segmentlen_file = op.join(args.output_dir, f'.train_segment-{args.feature}{args.layer_num}_segmentlen-' + basename + '-' + str(args.lab_id) + '.npy')
                     if op.exists(lab_embed_file) and op.exists(lab_len_file) and op.exists(lab_segmentlen_file):
                         print(f'{lab_embed_file} and {lab_len_file} already exist. Skip feature extraction')
                     else: 
                         train_writer.write_utterance_to_file(lab_embed_file, lab_len_file, lab_segmentlen_file, feature=args.feature, return_whole=args.return_whole, layer_num=args.layer_num)
         else: 
             if args.h5_format:
-                seg_embed_h5_obj = h5py.File(op.join(args.output_dir, f'train_segment-{args.feature}_embed-' + basename + '.hdf5'), "w")
-                word_list_file = op.join(args.output_dir, f'train_segment-{args.feature}_word_list-' + basename + '.npy')
+                seg_embed_h5_obj = h5py.File(op.join(args.output_dir, f'train_segment-{args.feature}{args.layer_num}_embed-' + basename + '.hdf5'), "w")
+                word_list_file = op.join(args.output_dir, f'train_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
                 train_writer.write_utterance_to_h5(seg_embed_h5_obj, word_list_file, feature=args.feature, layer_num=args.layer_num)
                 seg_embed_h5_obj.close()
             else: 
                 train_writer.write_utterance_to_file( \
-                op.join(args.output_dir, f'train_segment-{args.feature}_embed-' + basename + '.npy'), \
-                op.join(args.output_dir, f'train_segment-{args.feature}_len-' + basename + '.npy'), \
-                op.join(args.output_dir, f'train_segment-{args.feature}_segmentlen-' + basename + '.npy'), \
+                op.join(args.output_dir, f'train_segment-{args.feature}{args.layer_num}_embed-' + basename + '.npy'), \
+                op.join(args.output_dir, f'train_segment-{args.feature}{args.layer_num}_len-' + basename + '.npy'), \
+                op.join(args.output_dir, f'train_segment-{args.feature}{args.layer_num}_segmentlen-' + basename + '.npy'), \
                 feature=args.feature, return_whole=args.return_whole, layer_num=args.layer_num)
 
 if __name__ == '__main__': 
@@ -363,8 +383,8 @@ if __name__ == '__main__':
     parser.add_argument('--lab_id', '-l', type=int)
     parser.add_argument('--data-split', '-s', type=str, choices = ['train', 'val', 'test'])
     parser.add_argument('--feature', '-f', type=str, default='logmelspec', 
-                        choices = ['logmelspec', 'hubert'])
-    parser.add_argument('--layer_num', type=int, default=12, 
+                        choices = ['logmelspec', 'hubert', 'hubert_large', 'content_vec_v07_11', 'content_vec_v12_05'])
+    parser.add_argument('--layer_num', type=int, default=12)
     args = parser.parse_args()
 
     main(args)
