@@ -9,6 +9,8 @@ feature=hubert4; feature_dim=768
 feature=hubert6; feature_dim=768
 feature=hubert8; feature_dim=768
 feature=hubert10; feature_dim=768
+feature=content_vec_v07_1112; feature_dim=768
+feature=content_vec_v12_0512; feature_dim=768
 feature=$4
 datadir=data/SpokenCOCO
 expdir=exp/spokencoco/force_aligned_whole_${feature}_embed${embed_size}_lr${lr}_${basename}

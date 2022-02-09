@@ -132,8 +132,10 @@ if __name__ == '__main__':
     parser.add_argument('--feature', '-f', type=str, default='logmelspec', 
                         choices = ['logmelspec', 
                         'hubert', 'hubert2', 'hubert4', 'hubert6', 'hubert8', 'hubert10', 
+                        'hubert_large4', 'hubert_large6', 'hubert_large8', 'hubert_large10'
                         'hubert_large12', 'hubert_large14', 'hubert_large16',
-                        'hubert_large18', 'hubert_large20', 'hubert_large24'])
+                        'hubert_large18', 'hubert_large20', 'hubert_large22', 'hubert_large24', 
+                        'content_vec_v07_1112', 'content_vec_v12_0512'])
     parser.add_argument('--feature_dim', default=40, type=int,
                         help='dimensionality of the feature')
     parser.add_argument('--feature_cmvn', action='store_true',
