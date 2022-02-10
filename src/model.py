@@ -1,5 +1,7 @@
 import numpy as np
 from collections import OrderedDict
+import pickle
+import os
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -17,7 +19,7 @@ from utils import make_embeddings, l2norm, cosine_sim, sequence_mask, \
     index_mask, index_one_hot_ellipsis
 import utils
 
-from module import AttentivePooling, AttentivePoolingInputNorm
+from module import AttentivePooling, AttentivePoolingInputNorm, create_resdavenet_vq
 
 class EncoderImagePrecomp(nn.Module):
     """ image encoder """
@@ -78,6 +80,23 @@ class EncoderText(nn.Module):
                 self.sem_embedding = AttentivePoolingInputNorm(self.semantics_dim, self.embed_size)
             else:
                 self.sem_embedding = AttentivePooling(self.semantics_dim, self.embed_size)
+            self.use_davenet = False
+            if hasattr(opt, 'davenet_embed') and opt.davenet_embed:
+                self.use_davenet = True 
+                state_path = os.path.join('/data/sls/temp/clai24/pretrained-models', opt.davenet_embed_type, 'models/best_audio_model.pth')
+                args_path  = os.path.join('/data/sls/temp/clai24/pretrained-models', opt.davenet_embed_type, 'args.pkl')
+                with open(args_path, 'rb') as f: 
+                    _args = pickle.load(f)
+                if torch.cuda.is_available():
+                    audio_states = torch.load(state_path)
+                else:
+                    audio_states = torch.load(state_path, map_location='cpu')
+                self.sem_embedding = create_resdavenet_vq(_args)
+                if opt.davenet_embed_pretrained:
+                    self.sem_embedding.load_state_dict(audio_states)
+                self.sem_embedding.train()
+                self.sem_embedding_linear_transformer = nn.Linear(1024, self.embed_size, bias=False)
+                #self.sem_embedding.eval()
         else: 
             self.sem_embedding = nn.Linear(self.semantics_dim, self.embed_size, bias=False)
 
@@ -121,7 +140,12 @@ class EncoderText(nn.Module):
             batch_size, num_word, frame_per_segment, feat_dim = x.shape
             x = x.reshape(-1, frame_per_segment, feat_dim)
             audio_masks = audio_masks.reshape(-1, frame_per_segment)
-            sem_embeddings = self.sem_embedding(x, audio_masks)
+            if self.use_davenet:
+                num_of_true_frames_per_segment = torch.tensor([_y.tolist().index(-100000) if -100000 in _y else frame_per_segment for _y in audio_masks])
+                sem_embeddings, _, _, _ = self.sem_embedding(x, nframes=num_of_true_frames_per_segment)
+                sem_embeddings = self.sem_embedding_linear_transformer(sem_embeddings)
+            else:
+                sem_embeddings = self.sem_embedding(x, audio_masks)
             sem_embeddings = sem_embeddings.reshape(batch_size, num_word, self.embed_size)
 
             del x
@@ -295,6 +319,9 @@ class VGNSL(object):
         self.lambda_hi = opt.lambda_hi
 
         params = list(self.txt_enc.parameters())
+        text_enc_trainable_params = sum(p.numel() for p in self.txt_enc.parameters() if p.requires_grad)
+        img_enc_trainable_params  = sum(p.numel() for p in self.img_enc.parameters() if p.requires_grad)
+        #print('text_enc trainable param is %d; img_enc trainable param is %d' % (text_enc_trainable_params, img_enc_trainable_params))
         params += list(self.img_enc.fc.parameters())
         self.params = params
 

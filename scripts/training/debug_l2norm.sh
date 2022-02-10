@@ -11,4 +11,4 @@ python src/train.py --logger_name $expdir \
     --init_embeddings 0 --img_dim 2048 --scoring_hidden_dim 128 \
     --num_epochs 20 --workers 5 --batch_size 128 --margin 0.2 \
     --embed_size ${embed_size} --feature_dim ${feature_dim} --learning_rate ${lr} \
-    --speech_hdf5 --feature ${feature} --load_pretrained --attention_norm
+    --speech_hdf5 --feature ${feature} --load_pretrained 

@@ -228,8 +228,8 @@ def h5_collate_fn(data):
     target_audios = torch.zeros(len(captions), max_sentence_len, max_audio_segment_len, feature_dim).float()
     for i, audio in enumerate(audios):
         true_sentence_len = true_audio_lens[i]
-        treu_audio_segment_len = audio_segment_lens[i]
-        target_audios[i, :true_sentence_len, :treu_audio_segment_len] = audio
+        true_audio_segment_len = audio_segment_lens[i]
+        target_audios[i, :true_sentence_len, :true_audio_segment_len] = audio
     sentence_level_speech_masks = torch.tensor(true_audio_lens)
     audio_masks = torch.where(target_audios==0, -100000, 0) # mask==-inf indicates padding 
     audio_masks = audio_masks[:, :, :, 0].squeeze(-1) # feature-dim is not indicative 

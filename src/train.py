@@ -138,6 +138,14 @@ if __name__ == '__main__':
                         'content_vec_v07_1112', 'content_vec_v12_0512'])
     parser.add_argument('--feature_dim', default=40, type=int,
                         help='dimensionality of the feature')
+    parser.add_argument('--davenet_embed', action='store_true',
+                        help='use davenet as the speech embedding')
+    parser.add_argument('--davenet_embed_pretrained', action='store_true',
+                        help='use pretrained davenet')
+    parser.add_argument('--davenet_embed_type', default='RDVQ_00000', type=str,
+                        help='type of davenet', choices = ['RDVQ_00000', 
+                        'RDVQ_00000_01100', 'RDVQ_00000_01000', 'RDVQ_00000_00100', 
+                        'RDVQ_01000_01100', 'RDVQ_00100_01100', 'RDVQ_01000_01100_01110'])
     parser.add_argument('--feature_cmvn', action='store_true',
                         help='apply utt-level cmvn on feature')
     parser.add_argument('--embed_size', default=512, type=int,
