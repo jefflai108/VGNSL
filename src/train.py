@@ -132,7 +132,7 @@ if __name__ == '__main__':
     parser.add_argument('--feature', '-f', type=str, default='logmelspec', 
                         choices = ['logmelspec', 
                         'hubert', 'hubert2', 'hubert4', 'hubert6', 'hubert8', 'hubert10', 
-                        'hubert_large4', 'hubert_large6', 'hubert_large8', 'hubert_large10'
+                        'hubert_large4', 'hubert_large6', 'hubert_large8', 'hubert_large10', 
                         'hubert_large12', 'hubert_large14', 'hubert_large16',
                         'hubert_large18', 'hubert_large20', 'hubert_large22', 'hubert_large24', 
                         'content_vec_v07_1112', 'content_vec_v12_0512'])
@@ -145,7 +145,8 @@ if __name__ == '__main__':
     parser.add_argument('--davenet_embed_type', default='RDVQ_00000', type=str,
                         help='type of davenet', choices = ['RDVQ_00000', 
                         'RDVQ_00000_01100', 'RDVQ_00000_01000', 'RDVQ_00000_00100', 
-                        'RDVQ_01000_01100', 'RDVQ_00100_01100', 'RDVQ_01000_01100_01110'])
+                        'RDVQ_01000_01100', 'RDVQ_00100_01100', 'RDVQ_01000_01100_01110', 
+                        'RDVQ_01000', 'RDVQ_00100'])
     parser.add_argument('--feature_cmvn', action='store_true',
                         help='apply utt-level cmvn on feature')
     parser.add_argument('--embed_size', default=512, type=int,
