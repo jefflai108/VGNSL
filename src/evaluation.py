@@ -1,17 +1,19 @@
 import os
 import pickle
-
-import numpy
-from data import get_eval_loader
+import regex
 import time
-import numpy as np
-from vocab import Vocabulary
-import torch
-from model import VGNSL
 from collections import OrderedDict
 
-from utils import generate_tree, clean_tree
+import numpy
+import numpy as np
+import torch
+from nltk import Tree
 from IPython import embed
+
+from model import VGNSL
+from vocab import Vocabulary
+from data import get_eval_loader
+from utils import generate_tree, clean_tree
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -241,7 +243,7 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
         return (r1, r5, r10, medr, meanr)
 
 
-def test_trees(data_path, model_path, vocab_path, basename):
+def test_trees(data_path, model_path, vocab_path, basename, visual_tree=False, visual_samples=10):
     """ use the trained model to generate parse trees for text """
     # load model and options
     checkpoint = torch.load(model_path, map_location='cpu')
@@ -264,8 +266,12 @@ def test_trees(data_path, model_path, vocab_path, basename):
         use_cmvn = opt.logmelspec_cmvn
     elif hasattr(opt, 'feature_cmvn'): 
         use_cmvn = opt.feature_cmvn
+
+    if visual_tree: 
+        eval_batch_size = 1 
+    else: eval_batch_size = opt.batch_size
     data_loader = get_eval_loader(
-        data_path, 'test', vocab, basename, opt.batch_size, 1,
+        data_path, 'test', vocab, basename, eval_batch_size, 1,
         feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5
     )
 
@@ -273,6 +279,9 @@ def test_trees(data_path, model_path, vocab_path, basename):
     logged = False
     trees = list()
     for i, (images, captions, audios, audio_masks, lengths, ids) in enumerate(data_loader):
+        if visual_tree and i == visual_samples: 
+            break 
+
         # make sure val logger is used
         model.logger = print
         lengths = torch.Tensor(lengths).long()
@@ -286,7 +295,9 @@ def test_trees(data_path, model_path, vocab_path, basename):
 
         candidate_trees = list()
         for j in range(len(ids)):
-            candidate_trees.append(generate_tree(captions, tree_indices, j, vocab))
+            candidate_tree = generate_tree(captions, tree_indices, j, vocab)
+            candidate_trees.append(candidate_tree)
+
         appended_trees = ['' for _ in range(len(ids))]
         for j in range(len(ids)):
             appended_trees[ids[j] - min(ids)] = clean_tree(candidate_trees[j])
@@ -296,15 +307,35 @@ def test_trees(data_path, model_path, vocab_path, basename):
 
     ground_truth = [line.strip() for line in open(
         os.path.join(data_path, f'test_ground-truth-{basename}.txt'))]
-    return trees, ground_truth
+    captions = [line.strip() for line in open(
+        os.path.join(data_path, f'test_caps-{basename}.txt'))]
+    if visual_tree: 
+        ground_truth = ground_truth[:visual_samples]
+        captions = captions[:visual_samples]
+
+    return trees, ground_truth, captions
 
 
-def f1_score(produced_trees, gold_trees):
-    gold_trees = list(map(lambda tree: extract_spans(tree), gold_trees))
-    produced_trees = list(map(lambda tree: extract_spans(tree), produced_trees))
-    assert len(produced_trees) == len(gold_trees)
+def viz_tree(bare_tree):
+    nt_tree = bare_tree.replace('(', '(NT').replace(' ', '  ')
+    nt_tree = regex.sub(r' ([^ \(\)]+) ', r' (PT \1) ', nt_tree)
+    nltk_tree = Tree.fromstring(nt_tree)
+    nltk_tree.pretty_print()
+
+
+def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False):
+    gold_trees = list(map(lambda tree: extract_spans(tree), orig_gold_trees))
+    produced_trees = list(map(lambda tree: extract_spans(tree), orig_produced_trees))
+    assert len(produced_trees) == len(gold_trees), print(len(produced_trees), len(gold_trees))
     precision_cnt, precision_denom, recall_cnt, recall_denom = 0, 0, 0, 0
     for i, item in enumerate(produced_trees):
+        if visual_tree: 
+            print('\ntarget captions:')
+            print(f'{captions[i]}')
+            print('\ngold tree:\n')
+            viz_tree(orig_gold_trees[i])
+            print('\ninduced tree:\n')
+            viz_tree(orig_produced_trees[i])
         pc, pd, rc, rd = extract_statistics(gold_trees[i], item)
         precision_cnt += pc
         precision_denom += pd

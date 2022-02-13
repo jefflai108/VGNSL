@@ -265,7 +265,7 @@ def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='
         data_path, 'train', vocab, basename, batch_size, True, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5
     )
     val_loader = get_precomp_loader(
-        data_path, 'val', vocab, basename, 32, False, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5
+        data_path, 'val', vocab, basename, batch_size, False, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5
     )
     return train_loader, val_loader
 
@@ -273,7 +273,7 @@ def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='
 def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
                     feature='logmelspec', speech_hdf5=False, load_img=False, img_dim=2048, utt_cmvn=False):
     eval_loader = get_precomp_loader(
-        data_path, split_name, vocab, basename, 32, False, num_workers=0, feature=feature, 
+        data_path, split_name, vocab, basename, batch_size, False, num_workers=0, feature=feature, 
         speech_hdf5=speech_hdf5, load_img=load_img, img_dim=img_dim, utt_cmvn=utt_cmvn
     )
     return eval_loader

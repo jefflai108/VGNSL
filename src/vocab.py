@@ -22,5 +22,8 @@ class Vocabulary(object):
             return self.word2idx['<unk>']
         return self.word2idx[word]
 
+    def decode(self, id):
+        return self.idx2word[id]
+
     def __len__(self):
         return len(self.word2idx)
