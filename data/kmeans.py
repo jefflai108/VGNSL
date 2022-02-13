@@ -50,15 +50,18 @@ def load_feature_and_partial_km(km_model, data_dir, feature, percentage=0.1):
     h5_obj = h5py.File(h5_fpth, "r")
     word_list_keys = list(np.load(word_list_fpth, allow_pickle=True)[0].keys())
     random.shuffle(word_list_keys)
+    max_frame = int(20e6)
     if feature == 'logmelspec':
-        total_feat = np.ones((int(40e6), 40), dtype=np.float32)
+        total_feat = np.zeros((max_frame, 40), dtype=np.float32)
     else:
-        total_feat = np.ones((int(40e6), 768), dtype=np.float32)
+        total_feat = np.zeros((max_frame, 768), dtype=np.float32)
     
     cur_frame_num = 0
     for tmp_idx in tqdm(word_list_keys[:int(len(word_list_keys)*percentage)]):
         tmp_feat = h5_obj[str(tmp_idx)][:] 
         tmp_frame_num = tmp_feat.shape[0]
+        if cur_frame_num+tmp_frame_num >= max_frame: 
+            break 
         total_feat[cur_frame_num:cur_frame_num+tmp_frame_num, :] = tmp_feat
         cur_frame_num += tmp_frame_num
 
