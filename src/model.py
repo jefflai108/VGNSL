@@ -19,7 +19,8 @@ from utils import make_embeddings, l2norm, cosine_sim, sequence_mask, \
     index_mask, index_one_hot_ellipsis
 import utils
 
-from module import AttentivePooling, AttentivePoolingInputNorm, create_resdavenet_vq
+from module import AttentivePooling, AttentivePoolingInputNorm, \
+                   AttentivePoolingDiscreteInput, create_resdavenet_vq
 
 class EncoderImagePrecomp(nn.Module):
     """ image encoder """
@@ -75,12 +76,17 @@ class EncoderText(nn.Module):
         # replace word embedding with linear layer 
         #self.sem_embedding = make_embeddings(opt, self.vocab_size, self.semantics_dim)
         #self.sem_embedding = nn.Linear(self.semantics_dim, self.semantics_dim, bias=False)
+        self.use_davenet = False
+        self.discretize_word = False 
         if opt.speech_hdf5: 
             if hasattr(opt, 'attention_norm') and opt.attention_norm:
                 self.sem_embedding = AttentivePoolingInputNorm(self.semantics_dim, self.embed_size)
+            elif hasattr(opt, 'discretized_word') and opt.discretized_word:
+                self.discretize_word = True
+                self.sem_embedding = AttentivePoolingDiscreteInput(discrete_vocab_size=opt.km_clusters+3, 
+                                                                   discrete_embed_size=self.embed_size)
             else:
                 self.sem_embedding = AttentivePooling(self.semantics_dim, self.embed_size)
-            self.use_davenet = False
             if hasattr(opt, 'davenet_embed') and opt.davenet_embed:
                 self.use_davenet = True 
                 state_path = os.path.join('/data/sls/temp/clai24/pretrained-models', opt.davenet_embed_type, 'models/best_audio_model.pth')
@@ -137,8 +143,12 @@ class EncoderText(nn.Module):
         if speech_hdf5: 
             # learnable pooling 
             # treat each (word) segment independently i.e. pool *within* segment not across 
-            batch_size, num_word, frame_per_segment, feat_dim = x.shape
-            x = x.reshape(-1, frame_per_segment, feat_dim)
+            if self.discretize_word: # discrete id seq does not have feat_dim
+                batch_size, num_word, frame_per_segment = x.shape
+                x = x.reshape(-1, frame_per_segment)
+            else:
+                batch_size, num_word, frame_per_segment, feat_dim = x.shape
+                x = x.reshape(-1, frame_per_segment, feat_dim)
             audio_masks = audio_masks.reshape(-1, frame_per_segment)
             if self.use_davenet:
                 num_of_true_frames_per_segment = torch.tensor([_y.tolist().index(-100000) if -100000 in _y else frame_per_segment for _y in audio_masks])
@@ -153,7 +163,7 @@ class EncoderText(nn.Module):
         else: 
             sem_embeddings = self.sem_embedding(x)
         syn_embeddings = sem_embeddings
-       
+        
         output_word_embeddings = sem_embeddings * \
             sequence_mask(lengths, max_length=lengths.max()).unsqueeze(-1).float()
 

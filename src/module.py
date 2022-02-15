@@ -41,6 +41,45 @@ class AttentivePooling(nn.Module):
 
         return segment_rep
 
+class AttentivePoolingDiscreteInput(nn.Module):
+    """
+    Attentive Pooling module with discrete ID as input (init with an Embedding layer)
+    """
+    def __init__(self, discrete_vocab_size, discrete_embed_size, **kwargs):
+        super(AttentivePoolingDiscreteInput, self).__init__()
+        
+        self.pad_discrete_token_id = discrete_vocab_size - 1 # pre-defined in dataloader 
+        self.sem_embedding = nn.Embedding(discrete_vocab_size, discrete_vocab_size, padding_idx=self.pad_discrete_token_id)
+        self.feature_transform = nn.Linear(discrete_vocab_size, discrete_embed_size)
+        self.W_a = nn.Linear(discrete_embed_size, discrete_embed_size)
+        self.W = nn.Linear(discrete_embed_size, 1)
+        self.act_fn = nn.ReLU()
+        self.softmax = nn.functional.softmax
+        print('self.pad_discrete_token_id is', self.pad_discrete_token_id)
+
+    def forward(self, batch_rep, att_mask):
+        """
+        input:
+        batch_rep : size (B, T), B: batch size, T: sequence length
+        att_mask:  size (B, T),     Attention Mask logits
+        
+        attention_weight:
+        att_w : size (B, T, 1)
+        
+        return:
+        utter_rep: size (B, H)
+        """
+        batch_rep  = self.feature_transform(self.act_fn(self.sem_embedding(batch_rep)))
+        att_logits = self.W(self.act_fn(self.W_a(batch_rep))).squeeze(-1)
+        att_logits = att_mask + att_logits # masked out frames recieves ~0% prob. 
+        # compute attention att_w
+        # softmax over segment dimension i.e. take the most representation frame to represent word 
+        att_w = self.softmax(att_logits, dim=-1).unsqueeze(-1)
+        # apply att_w to input
+        segment_rep = torch.sum(batch_rep * att_w, dim=1) 
+        
+        return segment_rep
+
 class AttentivePoolingInputNorm(nn.Module):
     """
     Attentive Pooling module incoporate attention mask 

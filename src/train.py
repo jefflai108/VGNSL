@@ -138,6 +138,16 @@ if __name__ == '__main__':
                         'content_vec_v07_1112', 'content_vec_v12_0512'])
     parser.add_argument('--feature_dim', default=40, type=int,
                         help='dimensionality of the feature')
+    parser.add_argument('--word_dim', default=512, type=int,
+                        help='dimensionality of the word embedding')
+    parser.add_argument('--discretized_word', action='store_true',
+                        help='discretize input speech sequence with word-level input \
+                             aka discrete ID + force alignment --> VGNSL')
+    parser.add_argument('--discretized_phone', action='store_true',
+                        help='discretize input speech sequence with phone-level input \
+                             aka discrete ID --> VGNSL')
+    parser.add_argument('--km_clusters', default=0, type=int,
+                        help='number of kmeans clusters')
     parser.add_argument('--davenet_embed', action='store_true',
                         help='use davenet as the speech embedding')
     parser.add_argument('--davenet_embed_pretrained', action='store_true',
@@ -230,7 +240,8 @@ if __name__ == '__main__':
 
     # Load data loaders
     train_loader, val_loader = data.get_train_loaders(
-        opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.feature, opt.feature_cmvn, opt.speech_hdf5
+        opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.feature, opt.feature_cmvn, opt.speech_hdf5, 
+        opt.discretized_phone, opt.discretized_word, opt.km_clusters
     )
 
     # construct the model
