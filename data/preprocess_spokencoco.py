@@ -91,6 +91,7 @@ def create_and_store_vocab(args):
     transcripts = _collect_transcript(args.input_train_file, transcripts)
 
     vocab = build_vocab(transcripts, threshold=4)
+    vocab = build_vocab(transcripts, threshold=1) # try this 
     with open(args.vocab_output_pickle, 'wb') as f:
         pickle.dump(vocab, f, pickle.HIGHEST_PROTOCOL)
     print("Saved vocabulary file to ", args.vocab_output_pickle)

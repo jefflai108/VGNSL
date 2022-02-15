@@ -8,4 +8,5 @@
 datadir=data/SpokenCOCO
 python data/preprocess_spokencoco.py \
     -v ${datadir}/SpokenCOCO_val_wparse.json -t ${datadir}/SpokenCOCO_train_wparse.json \
-    -d ${datadir} -n wavs-speaker -p ${datadir}/SpokenCOCO_vocab.pkl
+    -d ${datadir} -n wavs-speaker -p ${datadir}/SpokenCOCO_vocab-threshold1.pkl
+    #-d ${datadir} -n wavs-speaker -p ${datadir}/SpokenCOCO_vocab.pkl
