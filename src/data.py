@@ -428,9 +428,14 @@ def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='
 
 
 def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
-                    feature='logmelspec', speech_hdf5=False, load_img=False, img_dim=2048, utt_cmvn=False):
+                    feature='logmelspec', speech_hdf5=False, load_img=False, img_dim=2048, utt_cmvn=False, 
+                    discretized_phone=False, discretized_word=False, km_clusters=0):
+
+    assert discretized_phone & discretized_word == False
+    
     eval_loader = get_precomp_loader(
         data_path, split_name, vocab, basename, batch_size, False, num_workers=0, feature=feature, 
-        speech_hdf5=speech_hdf5, load_img=load_img, img_dim=img_dim, utt_cmvn=utt_cmvn
+        speech_hdf5=speech_hdf5, load_img=load_img, img_dim=img_dim, utt_cmvn=utt_cmvn, 
+        discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters
     )
     return eval_loader

@@ -266,13 +266,23 @@ def test_trees(data_path, model_path, vocab_path, basename, visual_tree=False, v
         use_cmvn = opt.logmelspec_cmvn
     elif hasattr(opt, 'feature_cmvn'): 
         use_cmvn = opt.feature_cmvn
+    if hasattr(opt, 'discretized_phone'): 
+        use_discretized_phone = opt.discretized_phone
+    else: use_discretized_phone = False
+    if hasattr(opt, 'discretized_word'): 
+        use_discretized_word = opt.discretized_word
+    else: use_discretized_word = False
+    if hasattr(opt, 'km_clusters'): 
+        km_clusters = opt.km_clusters
+    else: km_clusters = 0
 
     if visual_tree: 
         eval_batch_size = 1 
     else: eval_batch_size = opt.batch_size
     data_loader = get_eval_loader(
         data_path, 'test', vocab, basename, eval_batch_size, 1,
-        feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5
+        feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5, 
+        discretized_phone=use_discretized_phone, discretized_word=use_discretized_word, km_clusters=km_clusters
     )
 
     cap_embs = None

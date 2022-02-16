@@ -55,7 +55,7 @@ class AttentivePoolingDiscreteInput(nn.Module):
         self.W = nn.Linear(discrete_embed_size, 1)
         self.act_fn = nn.ReLU()
         self.softmax = nn.functional.softmax
-        print('self.pad_discrete_token_id is', self.pad_discrete_token_id)
+        #print('self.pad_discrete_token_id is', self.pad_discrete_token_id)
 
     def forward(self, batch_rep, att_mask):
         """

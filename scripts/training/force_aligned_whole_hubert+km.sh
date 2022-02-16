@@ -28,7 +28,7 @@ python src/train.py --logger_name $expdir \
 fi 
 
 if [ $stage -eq 2 ]; then 
-expdir=exp/spokencoco/force_aligned_whole_${feature}_km${km_cluster}-discrete_phone-embed${embed_size}_lr${lr}_${basename}
+expdir=exp/spokencoco/whole_${feature}_km${km_cluster}-discrete_phone-embed${embed_size}_lr${lr}_${basename}
 python src/train.py --logger_name $expdir \
     --data_path ${datadir}/Freda-formatting --vocab_path ${datadir}/SpokenCOCO_vocab.pkl --basename ${basename} \
     --init_embeddings 0 --img_dim 2048 --scoring_hidden_dim 128 \
