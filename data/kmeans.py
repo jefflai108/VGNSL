@@ -3,12 +3,12 @@ import os
 import sys
 from tqdm import tqdm
 import random 
+import joblib
 
 import h5py
 import numpy as np
+import torch 
 from sklearn.cluster import MiniBatchKMeans
-
-import joblib
 
 logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -16,19 +16,10 @@ logging.basicConfig(
     level=os.environ.get("LOGLEVEL", "INFO").upper(),
     stream=sys.stdout,
 )
-logger = logging.getLogger("learn_kmeans")
+logger = logging.getLogger("kmeans")
 
 
-def get_km_model(
-    n_clusters,
-    init,
-    max_iter,
-    batch_size,
-    tol,
-    max_no_improvement,
-    n_init,
-    reassignment_ratio,
-):
+def get_km_model(n_clusters, init, max_iter, batch_size, tol, max_no_improvement, n_init, reassignment_ratio):
     return MiniBatchKMeans(
         n_clusters=n_clusters,
         init=init,
@@ -43,7 +34,54 @@ def get_km_model(
         reassignment_ratio=reassignment_ratio,
     )
 
-def load_feature_and_partial_km(km_model, data_dir, feature, percentage=0.1):
+
+class ApplyKmeans(object):
+    def __init__(self, km_path):
+        self.km_model = joblib.load(km_path)
+        self.C_np = self.km_model.cluster_centers_.transpose()
+        self.Cnorm_np = (self.C_np ** 2).sum(0, keepdims=True)
+
+        self.C = torch.from_numpy(self.C_np)
+        self.Cnorm = torch.from_numpy(self.Cnorm_np)
+        if torch.cuda.is_available():
+            self.C = self.C.cuda()
+            self.Cnorm = self.Cnorm.cuda()
+
+    def __call__(self, x):
+        if isinstance(x, torch.Tensor):
+            dist = (
+                x.pow(2).sum(1, keepdim=True)
+                - 2 * torch.matmul(x, self.C)
+                + self.Cnorm
+            )
+            return dist.argmin(dim=1).cpu().numpy()
+        else:
+            dist = (
+                (x ** 2).sum(1, keepdims=True)
+                - 2 * np.matmul(x, self.C_np)
+                + self.Cnorm_np
+            )
+            return np.argmin(dist, axis=1)
+
+
+def load_feature_and_apply_km(apply_kmeans, n_clusters, data_dir, data_split, feature):
+    input_h5_fpth  = os.path.join(data_dir, f'{data_split}_segment-{feature}_embed-83k-5k-5k.hdf5')
+    output_h5_fpth = os.path.join(data_dir, f'{data_split}_segment-{feature}_embed-km{n_clusters}-83k-5k-5k.hdf5')
+    word_list_fpth = os.path.join(data_dir, f'{data_split}_segment-{feature}_word_list-83k-5k-5k.npy')
+    word_list_keys = list(np.load(word_list_fpth, allow_pickle=True)[0].keys())
+    logging.info(f'Loading feature from h5py file {input_h5_fpth}')
+    logging.info(f'Writing feature to h5py file {output_h5_fpth}')
+    feature_h5_obj = h5py.File(input_h5_fpth, "r")
+    feature_km_h5_obj = h5py.File(output_h5_fpth, "w")
+
+    for tmp_idx in tqdm(word_list_keys):
+        tmp_feat = feature_h5_obj[str(tmp_idx)][:] 
+        lab = apply_kmeans(tmp_feat).tolist()
+        feature_km_h5_obj.create_dataset(str(tmp_idx), data=lab)
+    feature_h5_obj.close(), feature_km_h5_obj.close()
+
+
+def load_feature_and_train_km(km_model, data_dir, feature, percentage=0.1):
     h5_fpth = os.path.join(data_dir, f'train_segment-{feature}_embed-83k-5k-5k.hdf5')
     word_list_fpth = os.path.join(data_dir, f'train_segment-{feature}_word_list-83k-5k-5k.npy')
     logging.info(f'Loading feature from h5py file {h5_fpth}')
@@ -72,21 +110,9 @@ def load_feature_and_partial_km(km_model, data_dir, feature, percentage=0.1):
 
     return km_model, total_feat
 
-def learn_kmeans(
-    data_dir, 
-    feature, 
-    kmeans_dir,
-    n_clusters,
-    seed,
-    percent,
-    init,
-    max_iter,
-    batch_size,
-    tol,
-    n_init,
-    reassignment_ratio,
-    max_no_improvement,
-):
+
+def learn_kmeans(data_dir, feature, kmeans_dir, n_clusters, seed, percent, init, 
+                 max_iter, batch_size, tol, n_init, reassignment_ratio, max_no_improvement):
     random.seed(seed)
     km_model = get_km_model(
         n_clusters,
@@ -99,7 +125,7 @@ def learn_kmeans(
         reassignment_ratio,
     )
     logger.info('Start kmeans training')
-    km_model, feat = load_feature_and_partial_km(km_model, data_dir, feature, percent)
+    km_model, feat = load_feature_and_train_km(km_model, data_dir, feature, percent)
     km_path = os.path.join(kmeans_dir, f'train_segment-{feature}_embed-83k-5k-5k.km{n_clusters}')
     logger.info('Storing kmeans model at %s', km_path)
     joblib.dump(km_model, km_path)
@@ -107,6 +133,15 @@ def learn_kmeans(
     inertia = -km_model.score(feat) / len(feat)
     logger.info("total intertia: %.5f", inertia)
     logger.info("finished successfully")
+
+
+def apply_kmeans(data_dir, feature, kmeans_dir, n_clusters, seed, percent, init, 
+                 max_iter, batch_size, tol, n_init, reassignment_ratio, max_no_improvement):
+    km_path = os.path.join(kmeans_dir, f'train_segment-{feature}_embed-83k-5k-5k.km{n_clusters}')
+    logger.info('Loading kmeans model from %s', km_path)
+    apply_kmeans = ApplyKmeans(km_path)
+    for data_split in ['test', 'val', 'train']:
+        load_feature_and_apply_km(apply_kmeans, n_clusters, data_dir, data_split, feature)
 
 
 if __name__ == "__main__":
@@ -131,4 +166,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logging.info(str(args))
     
-    learn_kmeans(**vars(args))
+    # Step 1: learn kmeans 
+    #learn_kmeans(**vars(args))
+
+    # Step 2: apply kmeans 
+    #apply_kmeans(**vars(args))
