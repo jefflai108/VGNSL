@@ -243,7 +243,8 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
         return (r1, r5, r10, medr, meanr)
 
 
-def test_trees(data_path, model_path, vocab_path, basename, visual_tree=False, visual_samples=10):
+def test_trees(data_path, model_path, vocab_path, basename, \
+               visual_tree=False, visual_samples=10):
     """ use the trained model to generate parse trees for text """
     # load model and options
     checkpoint = torch.load(model_path, map_location='cpu')
@@ -275,10 +276,10 @@ def test_trees(data_path, model_path, vocab_path, basename, visual_tree=False, v
     if hasattr(opt, 'km_clusters'): 
         km_clusters = opt.km_clusters
     else: km_clusters = 0
-
     if visual_tree: 
         eval_batch_size = 1 
     else: eval_batch_size = opt.batch_size
+
     data_loader = get_eval_loader(
         data_path, 'test', vocab, basename, eval_batch_size, 1,
         feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5, 

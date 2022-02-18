@@ -25,4 +25,6 @@ if __name__ == '__main__':
     f1, _, _ = f1_score(trees, ground_truth, captions, args.visual_tree)
     #print('Model:', args.candidate)
     #print('F1 score:', f1)
-    print(f1)
+    if args.visual_tree:
+        print('visual samples f1 score is %f' % f1)
+    else: print(f1)
