@@ -11,6 +11,9 @@ feature=hubert8; feature_dim=768
 feature=hubert10; feature_dim=768
 feature=$4
 ckpt=$5
+
+for ckpt in `seq -s ' ' 0 9`; do 
+
 datadir=data/SpokenCOCO
 expname=force_aligned_whole_${feature}_embed${embed_size}_lr${lr}_${basename}
 expdir=exp/spokencoco/${expname}
@@ -19,3 +22,5 @@ if [ -f ${expdir}/${ckpt}.pth.tar ]; then
     echo evaluating ${ckpt}.pth.tar
     python src/test.py --data_path ${datadir}/Freda-formatting/ --candidate ${expdir}/${ckpt}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab-threshold1.pkl --basename ${basename} --visual_tree > $vis_fpath
 fi 
+
+done 
