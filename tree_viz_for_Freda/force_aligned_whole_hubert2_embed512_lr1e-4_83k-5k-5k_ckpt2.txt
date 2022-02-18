@@ -1,0 +1,443 @@
+
+target captions:
+a dirt path with a young person on a motor bike rests to the foreground of a verdant area with a bridge and a background of cloudwreathed mountains
+
+gold tree:
+
+                                         NT                                                                                                                                            
+                          _______________|________________________                                                                                                                      
+                         |                                        NT                                                                                                                   
+                         |                                    ____|___                                                                                                                  
+                         |                                   |        NT                                                                                                               
+                         |                                   |     ___|__________________                                                                                               
+                         |                                   |    |                      NT                                                                                            
+                         |                                   |    |        ______________|_________                                                                                     
+                         |                                   |    |       |                        NT                                                                                  
+                         |                                   |    |       |               _________|__________                                                                          
+                         |                                   |    |       |              |                    NT                                                                       
+                         |                                   |    |       |              |          __________|_____________                                                            
+                         NT                                  |    |       |              |         |                        NT                                                         
+      ___________________|_____                              |    |       |              |         |           _____________|_________                                                  
+     |                         NT                            |    |       |              |         |          |                       NT                                               
+     |          _______________|_____                        |    |       |              |         |          |         ______________|__________________                               
+     |         |                     NT                      |    |       |              |         |          |        |          |                      NT                            
+     |         |          ___________|_______                |    |       |              |         |          |        |          |        ______________|________                      
+     |         |         |                   NT              |    |       |              |         |          |        |          |       |                       NT                   
+     |         |         |            _______|____           |    |       |              |         |          |        |          |       |               ________|________             
+     NT        |         NT          |            NT         |    |       NT             |         NT         |        NT         |       NT             |                 NT          
+  ___|____     |     ____|_____      |    ________|____      |    |    ___|______        |    _____|_____     |     ___|____      |    ___|______        |         ________|______      
+ PT  PT   PT   PT   PT   PT    PT    PT  PT       PT   PT    PT   PT  PT         PT      PT  PT    PT    PT   PT   PT       PT    PT  PT         PT      PT       PT              PT   
+ |   |    |    |    |    |     |     |   |        |    |     |    |   |          |       |   |     |     |    |    |        |     |   |          |       |        |               |     
+ a  dirt path with  a  young person  on  a      motor bike rests  to the     foreground  of  a  verdant area with  a      bridge and  a      background  of cloudwreathed     mountains
+
+
+induced tree:
+
+                                                                                  NT                                                                                                           
+                                                           _______________________|_______________________________________________________________                                              
+                                                          NT                                                                                      |                                            
+                                                  ________|______________________________________________________                                 |                                             
+                                                 NT                                                              |                                |                                            
+  _______________________________________________|___                                                            |                                |                                             
+ |                                                   NT                                                          |                                |                                            
+ |                  _________________________________|_________                                                  |                                |                                             
+ |                 |                                           NT                                                |                                |                                            
+ |                 |                          _________________|__________________                               |                                |                                             
+ |                 |                         |                                    NT                             |                                |                                            
+ |                 |                         |                                 ___|______________                |                                |                                             
+ |                 |                         |                                NT                 |               |                                |                                            
+ |                 |                         |                            ____|__________        |               |                                |                                             
+ |                 |                         |                           NT              |       |               |                                NT                                           
+ |                 |                         |                  _________|________       |       |               |                         _______|_______________________                      
+ |                 NT                        |                 NT                 |      |       |               |                        NT                              |                    
+ |              ___|_____________            |        _________|____              |      |       |               |              __________|___                            |                     
+ |             NT                |           |       |              NT            |      |       |               NT            |              NT                          |                    
+ |    _________|___              |           |       |     _________|____         |      |       |          _____|________     |     _________|___                        |                     
+ |   |             NT            |           |       |    |              NT       |      |       |         NT             |    |    |             NT                      NT                   
+ |   |     ________|____         |           |       |    |          ____|____    |      |       |    _____|_____         |    |    |          ___|______         ________|________             
+ |   |    |             NT       |           NT      |    |         NT        |   |      |       |   |           NT       |    |    |         NT         |       |                 NT          
+ |   |    |         ____|___     |      _____|___    |    |     ____|____     |   |      |       |   |      _____|___     |    |    |      ___|___       |       |         ________|______      
+ PT  PT   PT       PT       PT   PT    PT        PT  PT   PT   PT        PT   PT  PT     PT      PT  PT    PT        PT   PT   PT   PT    PT      PT     PT      PT       PT              PT   
+ |   |    |        |        |    |     |         |   |    |    |         |    |   |      |       |   |     |         |    |    |    |     |       |      |       |        |               |     
+ a  dirt path     with      a  young person      on  a  motor bike     rests  to the foreground  of  a  verdant     area with  a  bridge and      a  background  of cloudwreathed     mountains
+
+
+target captions:
+a man with a red helmet on a small moped on a dirt road
+
+gold tree:
+
+                                     NT                                      
+      _______________________________|______________                          
+     |                |                             NT                       
+     |                |               ______________|____                     
+     |                |              |                   NT                  
+     |                |              |         __________|_______             
+     |                NT             |        |                  NT          
+     |        ________|___           |        |           _______|___         
+     NT      |            NT         |        NT         |           NT      
+  ___|___    |     _______|____      |    ____|_____     |    _______|____    
+ PT      PT  PT   PT      PT   PT    PT  PT   PT    PT   PT  PT      PT   PT 
+ |       |   |    |       |    |     |   |    |     |    |   |       |    |   
+ a      man with  a      red helmet  on  a  small moped  on  a      dirt road
+
+
+induced tree:
+
+                                     NT                                                  
+                                _____|_______________________________                     
+                               NT                                    |                   
+                           ____|_____________                        |                    
+                          NT                 |                       |                   
+                   _______|__________        |                       |                    
+                  NT                 |       |                       |                   
+          ________|____________      |       |                       |                    
+         NT                    |     |       |                       |                   
+  _______|____                 |     |       |                       |                    
+ |            NT               |     |       |                       NT                  
+ |    ________|___             |     |       |           ____________|___                 
+ |   |            NT           |     |       |          |                NT              
+ |   |    ________|___         |     |       |          |         _______|________        
+ |   |   |            NT       |     |       NT         |        NT               NT     
+ |   |   |         ___|___     |     |    ___|____      |     ___|___         ____|___    
+ PT  PT  PT       PT      PT   PT    PT  PT       PT    PT   PT      PT      PT       PT 
+ |   |   |        |       |    |     |   |        |     |    |       |       |        |   
+ a  man with      a      red helmet  on  a      small moped  on      a      dirt     road
+
+
+target captions:
+man riding a motor bike on a dirt road on the countryside
+
+gold tree:
+
+      NT                                                           
+  ____|__________                                                   
+ |               NT                                                
+ |     __________|_____________                                     
+ |    |          |             NT                                  
+ |    |          |          ___|________                            
+ |    |          |         |            NT                         
+ |    |          |         |        ____|________                   
+ |    |          |         |       |             NT                
+ |    |          |         |       |          ___|___               
+ |    |          NT        |       NT        |       NT            
+ |    |      ____|____     |    ___|____     |    ___|_______       
+ PT   PT    PT   PT   PT   PT  PT  PT   PT   PT  PT          PT    
+ |    |     |    |    |    |   |   |    |    |   |           |      
+man riding  a  motor bike  on  a  dirt road  on the     countryside
+
+
+induced tree:
+
+                                       NT                                          
+                      _________________|_____________________                       
+                     NT                                      |                     
+       ______________|_____________                          |                      
+      |                            NT                        NT                    
+      |                        ____|_______          ________|_______               
+      NT                      NT           |        NT               |             
+  ____|_____               ___|________    |    ____|____            |              
+ |          NT            NT           |   |   |         NT          NT            
+ |     _____|___      ____|___         |   |   |     ____|___     ___|_______       
+ PT   PT        PT   PT       PT       PT  PT  PT   PT       PT  PT          PT    
+ |    |         |    |        |        |   |   |    |        |   |           |      
+man riding      a  motor     bike      on  a  dirt road      on the     countryside
+
+
+target captions:
+a man in a red shirt and a red hat is on a motorcycle on a hill side
+
+gold tree:
+
+                                       NT                                                     
+                      _________________|__________________________                             
+                     NT                                           |                           
+      _______________|____                                        |                            
+     |                    NT                                      NT                          
+     |        ____________|____                 __________________|_______________             
+     |       |                 NT              |       NT                         NT          
+     |       |        _________|_______        |    ___|___                _______|___         
+     NT      |       NT        |       NT      |   |       NT             |           NT      
+  ___|___    |    ___|____     |    ___|___    |   |    ___|______        |    _______|____    
+ PT      PT  PT  PT  PT   PT   PT  PT  PT  PT  PT  PT  PT         PT      PT  PT      PT   PT 
+ |       |   |   |   |    |    |   |   |   |   |   |   |          |       |   |       |    |   
+ a      man  in  a  red shirt and  a  red hat  is  on  a      motorcycle  on  a      hill side
+
+
+induced tree:
+
+                                               NT                                                         
+  _____________________________________________|___                                                        
+ |                                                 NT                                                     
+ |        _________________________________________|___                                                    
+ |       |                                             NT                                                 
+ |       |                              _______________|__________________                                 
+ |       |                             |                                  NT                              
+ |       |                             |                __________________|___________                     
+ |       |                             NT              |                              NT                  
+ |       |                          ___|___________    |            __________________|___________         
+ |       |                         NT              |   |           NT                             |       
+ |       |                 ________|_______        |   |    _______|______                        |        
+ |       NT               NT               |       |   |   |              NT                      NT      
+ |    ___|___         ____|____            |       |   |   |    __________|_______             ___|____    
+ |   |       NT      |         NT          NT      |   |   |   |                  NT          NT       |  
+ |   |    ___|___    |     ____|___     ___|___    |   |   |   |           _______|___     ___|___     |   
+ PT  PT  PT      PT  PT   PT       PT  PT      PT  PT  PT  PT  PT         PT          PT  PT      PT   PT 
+ |   |   |       |   |    |        |   |       |   |   |   |   |          |           |   |       |    |   
+ a  man  in      a  red shirt     and  a      red hat  is  on  a      motorcycle      on  a      hill side
+
+
+target captions:
+a man riding on the back of a motorcycle
+
+gold tree:
+
+         NT                                               
+      ___|__________                                       
+     |              NT                                    
+     |         _____|___________                           
+     |        |                 NT                        
+     |        |      ___________|____                      
+     |        |     |                NT                   
+     |        |     |        ________|___                  
+     |        |     |       |            NT               
+     |        |     |       |         ___|___              
+     NT       |     |       NT       |       NT           
+  ___|___     |     |    ___|___     |    ___|______       
+ PT      PT   PT    PT  PT      PT   PT  PT         PT    
+ |       |    |     |   |       |    |   |          |      
+ a      man riding  on the     back  of  a      motorcycle
+
+
+induced tree:
+
+                            NT                            
+                         ___|________________              
+                        NT                   |            
+                   _____|_______             |             
+                  NT            |            |            
+              ____|_________    |            |             
+             NT             |   |            |            
+          ___|__________    |   |            |             
+         NT             |   |   |            NT           
+      ___|________      |   |   |         ___|______       
+     NT           |     |   |   |        NT         |     
+  ___|___         |     |   |   |     ___|___       |      
+ PT      PT       PT    PT  PT  PT   PT      PT     PT    
+ |       |        |     |   |   |    |       |      |      
+ a      man     riding  on the back  of      a  motorcycle
+
+
+target captions:
+girl blowing out the candle on an icecream
+
+gold tree:
+
+                  NT                                
+  ________________|________                          
+ |                         NT                       
+ |       __________________|_________                
+ |      |     |       |              NT             
+ |      |     |       |           ___|___            
+ |      |     |       NT         |       NT         
+ |      |     |    ___|____      |    ___|_____      
+ PT     PT    PT  PT       PT    PT  PT        PT   
+ |      |     |   |        |     |   |         |     
+girl blowing out the     candle  on  an     icecream
+
+
+induced tree:
+
+                      NT                                
+                   ___|______________________            
+                  NT                         |          
+         _________|____________              |           
+        NT                     NT            |          
+  ______|_____             ____|_____        |           
+ |            NT          NT         |       NT         
+ |       _____|___     ___|____      |    ___|_____      
+ PT     PT        PT  PT       PT    PT  PT        PT   
+ |      |         |   |        |     |   |         |     
+girl blowing     out the     candle  on  an     icecream
+
+
+target captions:
+a young girl inhales with the intent of blowing out a candle
+
+gold tree:
+
+           NT                                                            
+       ____|____________                                                  
+      |                 NT                                               
+      |            _____|____                                             
+      |           |          NT                                          
+      |           |      ____|________                                    
+      |           |     |             NT                                 
+      |           |     |         ____|___________                        
+      |           |     |        |                NT                     
+      |           |     |        |           _____|_____                  
+      |           |     |        |          |           NT               
+      |           |     |        |          |      _____|_______          
+      NT          |     |        NT         |     |     |       NT       
+  ____|____       |     |     ___|____      |     |     |    ___|____     
+ PT   PT   PT     PT    PT   PT       PT    PT    PT    PT  PT       PT  
+ |    |    |      |     |    |        |     |     |     |   |        |    
+ a  young girl inhales with the     intent  of blowing out  a      candle
+
+
+induced tree:
+
+                                     NT                                          
+                       ______________|______________________________              
+                      NT                                            |            
+      ________________|______________                               |             
+     |                               NT                             |            
+     |                       ________|__________                    |             
+     |                      NT                  |                   |            
+     |          ____________|____               |                   |             
+     |         |                 NT             |                   NT           
+     |         |       __________|___           |                ___|________     
+     |         |      |              NT         |               NT           |   
+     |         |      |           ___|____      |            ___|_______     |    
+     NT        |      |          NT       |     |           NT          |    |   
+  ___|____     |      |      ____|___     |     |      _____|___        |    |    
+ PT       PT   PT     PT    PT       PT   PT    PT    PT        PT      PT   PT  
+ |        |    |      |     |        |    |     |     |         |       |    |    
+ a      young girl inhales with     the intent  of blowing     out      a  candle
+
+
+target captions:
+a young girl is preparing to blow out her candle
+
+gold tree:
+
+           NT                                           
+       ____|___________                                  
+      |                NT                               
+      |          ______|______                           
+      |         |             NT                        
+      |         |       ______|___                       
+      |         |      |          NT                    
+      |         |      |       ___|____                  
+      |         |      |      |        NT               
+      |         |      |      |    ____|_______          
+      NT        |      |      |   |    |       NT       
+  ____|____     |      |      |   |    |    ___|____     
+ PT   PT   PT   PT     PT     PT  PT   PT  PT       PT  
+ |    |    |    |      |      |   |    |   |        |    
+ a  young girl  is preparing  to blow out her     candle
+
+
+induced tree:
+
+                               NT                                       
+                     __________|_______________________                  
+                    NT                                 |                
+                ____|_________________                 |                 
+               NT                     |                |                
+           ____|________              |                |                 
+          NT            |             |                NT               
+      ____|____         |             |         _______|_______          
+     NT        |        NT            |        NT              NT       
+  ___|____     |     ___|______       |    ____|___         ___|____     
+ PT       PT   PT   PT         PT     PT  PT       PT      PT       PT  
+ |        |    |    |          |      |   |        |       |        |    
+ a      young girl  is     preparing  to blow     out     her     candle
+
+
+target captions:
+a kid is to blow out the single candle in a bowl of birthday goodness
+
+gold tree:
+
+             NT                                                                          
+      _______|____________                                                                
+     |                    NT                                                             
+     |        ____________|_______________                                                
+     |       |                            NT                                             
+     |       |    ________________________|_____                                          
+     |       |   |                              NT                                       
+     |       |   |    __________________________|___________                              
+     |       |   |   |    |        |                        NT                           
+     |       |   |   |    |        |             ___________|____                         
+     |       |   |   |    |        |            |                NT                      
+     |       |   |   |    |        |            |        ________|_____                   
+     |       |   |   |    |        |            |       |              NT                
+     |       |   |   |    |        |            |       |         _____|______            
+     NT      |   |   |    |        NT           |       NT       |            NT         
+  ___|___    |   |   |    |    ____|______      |    ___|___     |      ______|_____      
+ PT      PT  PT  PT  PT   PT  PT   PT     PT    PT  PT      PT   PT    PT           PT   
+ |       |   |   |   |    |   |    |      |     |   |       |    |     |            |     
+ a      kid  is  to blow out the single candle  in  a      bowl  of birthday     goodness
+
+
+induced tree:
+
+                                           NT                                                    
+                  _________________________|________________                                      
+                 |                                          NT                                   
+                 |                     _____________________|_______                              
+                 |                    |                             NT                           
+                 |                    |                          ___|_______________________      
+                 NT                   |                         NT                          |    
+              ___|_______             |                  _______|________                   |     
+             NT          |            |                 |                NT                 |    
+          ___|_______    |            |                 |        ________|___               |     
+         NT          |   |            NT                |       |            NT             |    
+      ___|_______    |   |         ___|____             |       |         ___|_____         |     
+     NT          |   |   |        NT       |            NT      |        NT        |        |    
+  ___|___        |   |   |     ___|___     |       _____|___    |    ____|___      |        |     
+ PT      PT      PT  PT  PT   PT      PT   PT     PT        PT  PT  PT       PT    PT       PT   
+ |       |       |   |   |    |       |    |      |         |   |   |        |     |        |     
+ a      kid      is  to blow out     the single candle      in  a  bowl      of birthday goodness
+
+
+target captions:
+a little girl is getting ready to blow out a candle on a small dessert
+
+gold tree:
+
+            NT                                                                         
+       _____|__________                                                                 
+      |                NT                                                              
+      |           _____|______                                                          
+      |          |            NT                                                       
+      |          |      ______|____                                                     
+      |          |     |           NT                                                  
+      |          |     |       ____|________                                            
+      |          |     |      |             NT                                         
+      |          |     |      |     ________|____________                               
+      |          |     |      |    |                     NT                            
+      |          |     |      |    |    _________________|_____________                 
+      |          |     |      |    |   |    |       |                  NT              
+      |          |     |      |    |   |    |       |           _______|____            
+      NT         |     |      |    |   |    |       NT         |            NT         
+  ____|_____     |     |      |    |   |    |    ___|____      |    ________|______     
+ PT   PT    PT   PT    PT     PT   PT  PT   PT  PT       PT    PT  PT       PT     PT  
+ |    |     |    |     |      |    |   |    |   |        |     |   |        |      |    
+ a  little girl  is getting ready  to blow out  a      candle  on  a      small dessert
+
+
+induced tree:
+
+                                               NT                                                  
+                        _______________________|_______________________                             
+                       NT                                              |                           
+       ________________|____________________________                   |                            
+      NT                                            |                  |                           
+  ____|__________                                   |                  |                            
+ |               NT                                 |                  NT                          
+ |     __________|_____                             |        __________|_______                     
+ |    |                NT                           |       |                  NT                  
+ |    |      __________|_____                       |       |     _____________|___                 
+ |    |     |                NT                     |       |    |                 NT              
+ |    |     |     ___________|____                  |       |    |              ___|___________     
+ |    |     |    |                NT                |       |    |             NT              |   
+ |    |     |    |      __________|____             |       |    |          ___|________       |    
+ |    |     |    |     |               NT           NT      |    |         NT           |      |   
+ |    |     |    |     |           ____|___     ____|___    |    |      ___|___         |      |    
+ PT   PT    PT   PT    PT         PT       PT  PT       PT  PT   PT    PT      PT       PT     PT  
+ |    |     |    |     |          |        |   |        |   |    |     |       |        |      |    
+ a  little girl  is getting     ready      to blow     out  a  candle  on      a      small dessert
+
+visual samples f1 score is 24.137931
