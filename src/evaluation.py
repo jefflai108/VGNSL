@@ -1,6 +1,7 @@
 import os
 import pickle
 import regex
+from tqdm import tqdm 
 import time
 from collections import OrderedDict
 
@@ -243,7 +244,7 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
         return (r1, r5, r10, medr, meanr)
 
 
-def test_trees(data_path, model_path, vocab_path, basename, \
+def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
                visual_tree=False, visual_samples=10):
     """ use the trained model to generate parse trees for text """
     # load model and options
@@ -279,9 +280,9 @@ def test_trees(data_path, model_path, vocab_path, basename, \
     if visual_tree: 
         eval_batch_size = 1 
     else: eval_batch_size = opt.batch_size
-
+    
     data_loader = get_eval_loader(
-        data_path, 'test', vocab, basename, eval_batch_size, 1,
+        data_path, data_split, vocab, basename, eval_batch_size, 1,
         feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5, 
         discretized_phone=use_discretized_phone, discretized_word=use_discretized_word, km_clusters=km_clusters
     )
@@ -317,9 +318,9 @@ def test_trees(data_path, model_path, vocab_path, basename, \
         del images, captions, img_emb, cap_emb, audios, audio_masks
 
     ground_truth = [line.strip() for line in open(
-        os.path.join(data_path, f'test_ground-truth-{basename}.txt'))]
+        os.path.join(data_path, f'{data_split}_ground-truth-{basename}.txt'))]
     captions = [line.strip() for line in open(
-        os.path.join(data_path, f'test_caps-{basename}.txt'))]
+        os.path.join(data_path, f'{data_split}_caps-{basename}.txt'))]
     if visual_tree: 
         ground_truth = ground_truth[:visual_samples]
         captions = captions[:visual_samples]

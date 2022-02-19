@@ -13,6 +13,8 @@ if __name__ == '__main__':
     parser.add_argument('--image_hdf5', help='path to pre-stored image embedding .h5 file')
     parser.add_argument('--data_summary_json', help='karpathy split json file')
     parser.add_argument('--basename', help='MSCOCO split')
+    parser.add_argument('--data_split', type=str, default='test',
+                        help='targeted data_split', choices = ['train', 'val', 'test'])
     parser.add_argument('--vocab_path', default='../data/mscoco/vocab.pkl',
                         help='path to vocab.pkl')
     parser.add_argument('--visual_tree', '-v', action="store_true", 
@@ -21,7 +23,8 @@ if __name__ == '__main__':
                         help='number of trees to visualize')
     args = parser.parse_args()
 
-    trees, ground_truth, captions = test_trees(args.data_path, args.candidate, args.vocab_path, args.basename, args.visual_tree, args.visual_samples)
+    trees, ground_truth, captions = test_trees(args.data_path, args.candidate, args.vocab_path, args.basename, args.data_split, 
+                                              args.visual_tree, args.visual_samples)
     f1, _, _ = f1_score(trees, ground_truth, captions, args.visual_tree)
     #print('Model:', args.candidate)
     #print('F1 score:', f1)
