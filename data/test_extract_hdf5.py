@@ -21,7 +21,7 @@ def slice_discrete_feature_seq(feat, word_list, pad_id=0, max_segment_len=50):
     """
     assert len(feat) >= round(word_list[-1][-1]), print(word_list, len(feat))
     word2len = [round(z)-round(y) for (_,y,z) in word_list]
-    sliced_matrix = pad_id * np.ones((len(word_list), max_segment_len)) 
+    sliced_matrix = pad_id * np.ones((len(word_list), min(max_segment_len, max(word2len)))) 
 
     for i, (word, start_frame, end_frame) in enumerate(word_list):
         start_frame, end_frame = round(start_frame), round(end_frame)
