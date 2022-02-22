@@ -1,7 +1,6 @@
 import os
 import pickle
 import regex
-from tqdm import tqdm 
 import time
 from collections import OrderedDict
 
@@ -245,7 +244,8 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
 
 
 def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
-               visual_tree=False, visual_samples=10):
+               visual_tree=False, visual_samples=10, \
+               export_tree=False, export_tree_path=None):
     """ use the trained model to generate parse trees for text """
     # load model and options
     checkpoint = torch.load(model_path, map_location='cpu')
@@ -280,13 +280,23 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
     if visual_tree: 
         eval_batch_size = 1 
     else: eval_batch_size = opt.batch_size
-    
+
     data_loader = get_eval_loader(
         data_path, data_split, vocab, basename, eval_batch_size, 1,
         feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5, 
         discretized_phone=use_discretized_phone, discretized_word=use_discretized_word, km_clusters=km_clusters
     )
 
+    ground_truth = [line.strip() for line in open(
+        os.path.join(data_path, f'{data_split}_ground-truth-{basename}.txt'))]
+    all_captions = [line.strip() for line in open(
+        os.path.join(data_path, f'{data_split}_caps-{basename}.txt'))]
+    if visual_tree: 
+        ground_truth = ground_truth[:visual_samples]
+        all_captions = all_captions[:visual_samples]
+
+    if export_tree: 
+        export_tree_writer = open(export_tree_path, 'w')
     cap_embs = None
     logged = False
     trees = list()
@@ -314,18 +324,23 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
         for j in range(len(ids)):
             appended_trees[ids[j] - min(ids)] = clean_tree(candidate_trees[j])
         trees.extend(appended_trees)
+       
+        # process inferred tree by mini-batch due to memory error 
+        if export_tree:
+            start_id, end_id = ids[0], ids[-1]
+            for tree in trees: 
+                export_tree_writer.write('%s\n' % tree)
+            f1, _, _ = f1_score(trees, ground_truth[start_id:end_id+1], all_captions[start_id:end_id+1])
+            print(f'Current batch tree f1 is {f1}')
+            trees = list() # refresh after mini-batch 
+
         cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
         del images, captions, img_emb, cap_emb, audios, audio_masks
 
-    ground_truth = [line.strip() for line in open(
-        os.path.join(data_path, f'{data_split}_ground-truth-{basename}.txt'))]
-    captions = [line.strip() for line in open(
-        os.path.join(data_path, f'{data_split}_caps-{basename}.txt'))]
-    if visual_tree: 
-        ground_truth = ground_truth[:visual_samples]
-        captions = captions[:visual_samples]
-
-    return trees, ground_truth, captions
+    if export_tree: 
+        export_tree_writer.close()
+        exit()
+    return trees, ground_truth, all_captions
 
 
 def viz_tree(bare_tree):
