@@ -456,21 +456,21 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
                                             discretized_phone, discretized_word, km_clusters)
             data_loader = torch.utils.data.DataLoader(
                 dataset=dset, batch_size=batch_size, shuffle=shuffle,
-                pin_memory=True,
+                pin_memory=True, num_workers=num_workers, 
                 collate_fn=h5_discrete_collate_fn_eval if no_collate_fn_sorting else h5_discrete_collate_fn
             )
         else:
             dset = H5PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn)
             data_loader = torch.utils.data.DataLoader(
                 dataset=dset, batch_size=batch_size, shuffle=shuffle,
-                pin_memory=True,
+                pin_memory=True, num_workers=num_workers,
                 collate_fn=h5_collate_fn_eval if no_collate_fn_sorting else h5_collate_fn
             )
     else: # averaged over segments, support for logmelspec 
         dset = PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, utt_cmvn)
         data_loader = torch.utils.data.DataLoader(
             dataset=dset, batch_size=batch_size, shuffle=shuffle,
-            pin_memory=True,
+            pin_memory=True, num_workers=num_workers,
             collate_fn=collate_fn
         )
 

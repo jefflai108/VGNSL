@@ -1,0 +1,74 @@
+### Summary of Running Commands ###
+
+## Feature + force-alignment --> Attentive-Pooling + VG-NSL Training 
+# train VG-NSL on word-level logmelspec/hubert/hubert_large embeddings 
+# e.g. train VG-NSL on hubert_base 2nd layer representations
+./scripts/training/force_aligned_whole_hubert.sh 83k-5k-5k 512 1e-5 hubert2
+# e.g. train VG-NSL on hubert_large_ll60k 24th layer representations
+./scripts/training/force_aligned_whole_hubert_large.sh 83k-5k-5k 512 1e-6 hubert_large24
+# e.g. train VG-NSL on logmelspec
+./scripts/training/force_aligned_whole_logmelspec.sh 83k-5k-5k 256 5e-5
+
+## Feature + force-alignment --> Attentive-Pooling + VG-NSL-HI Training
+# train VG-NSL+head-init-bias on word-level logmelspec/hubert/hubert_large embeddings
+# e.g. set head initial bias to 1
+./scripts/training/force_aligned_whole_hubert_HIB.sh 83k-5k-5k 512 1e-5 1
+# e.g. set head initial bias to 50
+./scripts/training/force_aligned_whole_hubert_HIB.sh 83k-5k-5k 512 1e-5 50
+
+## Feature --> Davenet + force-alignment --> VG-NSL Training 
+# utilize Davenet-variants as spoken word embeddings extractor for VG-NSL trainings 
+# e.g. train VG-NSL on (logmelspec --> pre-trained RDVQ_00000) word embeddings 
+./scripts/training/force_aligned_davenet_logmelspec.sh 83k-5k-5k 512 1e-5 RDVQ_00000
+# e.g. train VG-NSL on (logmelspec --> from-scratch RDVQ_00000_00100) word embeddings 
+./scripts/training/force_aligned_scratch_davenet_logmelspec.sh 83k-5k-5k 512 5e-6 RDVQ_00000_00100
+
+## Discrete ID + force-alignment --> VG-NSL Training 
+# train VG-NSL on word-level discrete speech sequences
+# e.g. train VG-NSL on hubert_km64_embed512_lr1e-5 (hubert 12th layer discretize into 64 kmeans cluster IDs)
+./scripts/training/force_aligned_whole_hubert+km.sh 83k-5k-5k 512 1e-5 hubert 64
+# e.g. train VG-NSL on logmelspec_km128_embed512_lr5e-6 (logmelspec discretize into 128 kmeans cluster IDs)
+./scripts/training/force_aligned_whole_hubert+km.sh 83k-5k-5k 512 5e-6 logmelspec 128
+
+## Speech Discretization 
+# discretize continuous frame-level speech features (hubert/logmelspec) into discrete kmeans cluster IDs. 
+# Includes kmeans model training and kmeans discretization (2 steps).
+./scripts/kmeans.sh hubert8 
+./scripts/kmeans.sh logmelspec
+
+## Tree Visualization
+# visualize a given model ckpt's inferred trees into .txt files
+# e.g. visualize hubert2_embed512_lr1e-6 ckpt 19 and store the sample trees in `tree_viz_for_Freda/`
+./scripts/viz.sh 83k-5k-5k 512 1e-6 hubert2 19
+# e.g. visualize hubert2_embed512_lr1e-4 ckpt 2 and store the sample trees in `tree_viz_for_Freda/`
+./scripts/viz.sh 83k-5k-5k 512 1e-4 hubert2 2
+
+## Parallelized Feature Extraction 
+# pre-extract and pre-store acoustic features (e.g. hubert_base/hubert_large). 
+# e.g. pre-extract hubert_base 10th layer frame-level representations for SpokenCOCO test and val data_splits (no parallelization needed)
+./scripts/data_reformat.sh 83k-5k-5k 0 -1 test 10 
+./scripts/data_reformat.sh 83k-5k-5k 0 -1 val 10
+# e.g. pre-extract hubert_base 10th layer frame-level representations for SpokenCOCO train data_splits (parallelize into 8 jobs) 
+./scripts/data_reformat.sh 83k-5k-5k 8 0 train 10
+./scripts/data_reformat.sh 83k-5k-5k 8 1 train 10
+…
+./scripts/data_reformat.sh 83k-5k-5k 8 7 train 10
+# e.g. combine the above 8 temporary hdf5 feature files into a single hdf5 feature file
+./scripts/data_reformat.sh 83k-5k-5k 8 -1 train 10
+
+# similar example for extracting hubert_large_ll60k 18th layer frame-level representations
+./scripts/data_reformat-hubert_large.sh 83k-5k-5k 0 -1 test 18
+./scripts/data_reformat-hubert_large.sh 83k-5k-5k 0 -1 val 18
+./scripts/data_reformat-hubert_large.sh 83k-5k-5k 8 0 train 18
+./scripts/data_reformat-hubert_large.sh 83k-5k-5k 8 1 train 18
+…
+./scripts/data_reformat-hubert_large.sh 83k-5k-5k 8 7 train 18
+./scripts/data_reformat-hubert_large.sh 83k-5k-5k 8 -1 train 18
+
+# similar example for extracting content_vec_v12_05 12th layer frame-level representations
+./scripts/data_reformat-content_vec.sh 83k-5k-5k 0 -1 val content_vec_v12_05
+./scripts/data_reformat-content_vec.sh 83k-5k-5k 0 -1 test content_vec_v12_05
+./scripts/data_reformat-content_vec.sh 83k-5k-5k 6 0 train content_vec_v12_05
+…
+./scripts/data_reformat-content_vec.sh 83k-5k-5k 6 5 train content_vec_v12_05
+./scripts/data_reformat-content_vec.sh 83k-5k-5k 6 -1 train content_vec_v12_05

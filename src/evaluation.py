@@ -279,6 +279,8 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
     else: km_clusters = 0
     if visual_tree: 
         eval_batch_size = 1 
+    elif export_tree: 
+        eval_batch_size = 16
     else: eval_batch_size = opt.batch_size
 
     data_loader = get_eval_loader(
@@ -327,15 +329,19 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
        
         # process inferred tree by mini-batch due to memory error 
         if export_tree:
+            #for id in ids: print(id)
             start_id, end_id = ids[0], ids[-1]
             for tree in trees: 
                 export_tree_writer.write('%s\n' % tree)
             f1, _, _ = f1_score(trees, ground_truth[start_id:end_id+1], all_captions[start_id:end_id+1])
             print(f'Current batch tree f1 is {f1}')
+            del trees, candidate_trees
             trees = list() # refresh after mini-batch 
 
-        cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
-        del images, captions, img_emb, cap_emb, audios, audio_masks
+        #cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
+        #del images, captions, img_emb, cap_emb, audios, audio_masks
+        del images, captions, img_emb, audios, audio_masks, cap_span_features, left_span_features, \
+            right_span_features, word_embs, tree_indices, all_probs, span_bounds
 
     if export_tree: 
         export_tree_writer.close()
