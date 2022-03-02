@@ -5,9 +5,11 @@ import os
 import os.path as osp
 from os.path import exists
 import copy 
+import regex
 
 import numpy as np
 import textgrid
+from nltk import Tree
 
 class PhoneTreeWriter(object):
     def __init__(self, data_summary_json):
@@ -23,11 +25,13 @@ class PhoneTreeWriter(object):
             self.image_key_list.append(image_key)
         self.utt_key_list = self.image_key_list
 
-    def write_phn_tree_to_file(self, phn_tree_pth, word_tree_pth): 
-        print('writing phone-level tree to %s' % (phn_tree_pth))
-        phn_tree_f = open(phn_tree_pth, 'w')
+    def write_phn_tree_to_file(self, phn_tree_pth, word_tree_pth, new_word_tree_pth): 
+        print('writing phone-level tree to %s and word-level tree to %s' % (phn_tree_pth, new_word_tree_pth))
+        phn_tree_f  = open(phn_tree_pth, 'w')
+        new_word_tree_f = open(new_word_tree_pth, 'w')
         gt_word_level_trees = self._read_text_file(word_tree_pth)
-        cnt = 0 
+        tree_cnt = 0 
+        _mismatch_cnt = 0 
         for image_key in tqdm(self.utt_key_list):
             captions_list = self.data_summary_json[image_key]
             captions_list = self.__deduplicate__(captions_list, image_key)
@@ -37,14 +41,25 @@ class PhoneTreeWriter(object):
                 textgrid_file   = captions[3]
                 
                 word_level_tree = self._read_text_file(word_tree_file)[0]
-                gt_word_level_tree = gt_word_level_trees[cnt] 
-                assert word_level_tree == gt_word_level_tree # double-ensure ordering is correct
-                cnt += 1
+                gt_word_level_tree = gt_word_level_trees[tree_cnt] 
+                assert word_level_tree == gt_word_level_tree # double-ensure *ordering* is correct
+                tree_cnt += 1
 
-                word2phn = self._construct_word2phn_mapping(textgrid_file, transcript_file)
-                phn_level_tree = self._convert_tree_via_word2phn(word_level_tree, word2phn)
+                # ensure the underlying sentence from tree == ground-truth sentence 
+                words_from_gt_tree = ' '.join([_x for _x in gt_word_level_tree.split() if _x.isalnum()])
+                word2phn, gt_text = self._construct_word2phn_mapping(textgrid_file, transcript_file)
+                if words_from_gt_tree != gt_text: 
+                    # if there's sentence mismatch, add a placeholder string. This will be handy during training/testing tree eval. 
+                    phn_level_tree = 'MISMATCH'
+                    gt_word_level_tree = 'MISMATCH'
+                    _mismatch_cnt += 1
+                else:
+                    # if no sentence mismatch, generate phn-level tree
+                    phn_level_tree = self._convert_tree_via_word2phn(word_level_tree, word2phn, tree_cnt, viz=True)
 
                 phn_tree_f.write('%s\n' % phn_level_tree)
+                new_word_tree_f.write('%s\n' % gt_word_level_tree)
+        print('number of MISMATCH is %d' % _mismatch_cnt)
     
     def __deduplicate__(self, captions_list, image_key):
         # ensure image:captions == 1:5
@@ -94,9 +109,9 @@ class PhoneTreeWriter(object):
             gt_text = f.readline()
         assert gt_text == word_string, print(f'{word_string}\n{gt_text}')
 
-        return word2phn
+        return word2phn, gt_text
 
-    def _convert_tree_via_word2phn(self, word_level_tree, word2phn): 
+    def _convert_tree_via_word2phn(self, word_level_tree, word2phn, tree_cnt, viz=False): 
         word_level_tree_list = word_level_tree.split()
         phn_level_tree_list = []
         for idx, word_token in enumerate(word_level_tree_list): 
@@ -110,8 +125,15 @@ class PhoneTreeWriter(object):
                 phn_level_tree_list.append('(')
                 phn_level_tree_list.extend(phns)
                 phn_level_tree_list.append(')')
-       
-        return ' '.join(phn_level_tree_list)
+        
+        phn_level_tree = ' '.join(phn_level_tree_list)
+        if viz and tree_cnt < 100: # visualize top 100 samples 
+            print('\n ground-truth word-level tree')
+            viz_tree(word_level_tree)
+            print('\n ground-truth phone-level tree via force alignment')
+            viz_tree(phn_level_tree)
+
+        return phn_level_tree
 
     def _read_textgrid2(self, textgrid_pth, text_pth, nframes, frame_stride=0.01):
         # return [(0-th word, start frame, end frame), ..., (n-th word, start frame, end frame)]
@@ -138,19 +160,26 @@ class PhoneTreeWriter(object):
 
         return word_list, word_string
 
+def viz_tree(bare_tree):
+    nt_tree = bare_tree.replace('(', '(NT').replace(' ', '  ')
+    nt_tree = regex.sub(r' ([^ \(\)]+) ', r' (PT \1) ', nt_tree)
+    nltk_tree = Tree.fromstring(nt_tree)
+    nltk_tree.pretty_print()
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_summary_json', '-j', type=str)
     parser.add_argument('--data_dir', type=str, default='data/SpokenCOCO/Freda-formatting/')
+    parser.add_argument('--data_split', type=str, choices=['test', 'val', 'train'])
     args = parser.parse_args()
 
-    data_split = 'val'
     basename = '-'.join(args.data_summary_json.split('-')[1:]).split('.')[0]
     print('processing %s' % basename)
 
     with open(args.data_summary_json, 'r') as f:
-        data_summary = json.load(f)[data_split]
+        data_summary = json.load(f)[args.data_split]
 
     reader = PhoneTreeWriter(data_summary)
-    reader.write_phn_tree_to_file(osp.join(args.data_dir, data_split + '_phn-level-ground-truth-' + basename + '.txt'), 
-                                  osp.join(args.data_dir, data_split + '_ground-truth-' + basename + '.txt'))
+    reader.write_phn_tree_to_file(osp.join(args.data_dir, args.data_split + '_phn-level-ground-truth-' + basename + '.txt'), 
+                                  osp.join(args.data_dir, args.data_split + '_ground-truth-' + basename + '.txt'), 
+                                  osp.join(args.data_dir, args.data_split + '_word-level-ground-truth-' + basename + '.txt'))
