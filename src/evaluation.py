@@ -2,6 +2,7 @@ import os
 import pickle
 import regex
 import time
+from tqdm import tqdm
 from collections import OrderedDict
 
 import numpy
@@ -279,8 +280,8 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
     else: km_clusters = 0
     if visual_tree: 
         eval_batch_size = 1 
-    elif export_tree: 
-        eval_batch_size = 16
+    elif export_tree: # smaller batch size to avoid mem error
+        eval_batch_size = 128
     else: eval_batch_size = opt.batch_size
 
     data_loader = get_eval_loader(
@@ -302,7 +303,7 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
     cap_embs = None
     logged = False
     trees = list()
-    for i, (images, captions, audios, audio_masks, lengths, ids) in enumerate(data_loader):
+    for i, (images, captions, audios, audio_masks, lengths, ids) in enumerate(tqdm(data_loader)):
         if visual_tree and i == visual_samples: 
             break 
 
@@ -326,7 +327,7 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
         for j in range(len(ids)):
             appended_trees[ids[j] - min(ids)] = clean_tree(candidate_trees[j])
         trees.extend(appended_trees)
-       
+        
         # process inferred tree by mini-batch due to memory error 
         if export_tree:
             #for id in ids: print(id)
@@ -336,12 +337,12 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
             f1, _, _ = f1_score(trees, ground_truth[start_id:end_id+1], all_captions[start_id:end_id+1])
             print(f'Current batch tree f1 is {f1}')
             del trees, candidate_trees
+            torch.cuda.empty_cache()
             trees = list() # refresh after mini-batch 
 
         #cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
-        #del images, captions, img_emb, cap_emb, audios, audio_masks
-        del images, captions, img_emb, audios, audio_masks, cap_span_features, left_span_features, \
-            right_span_features, word_embs, tree_indices, all_probs, span_bounds
+        del images, captions, img_emb, audios, audio_masks, lengths, ids, model_output, \
+            cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, all_probs, span_bounds
 
     if export_tree: 
         export_tree_writer.close()
@@ -357,6 +358,9 @@ def viz_tree(bare_tree):
 
 
 def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False):
+    orig_gold_trees[:] = [sentence for sentence in orig_gold_trees if sentence != 'MISMATCH'] # remove mismatch
+    orig_produced_trees[:] = [sentence for sentence in orig_produced_trees if sentence != 'MISMATCH'] # remove mismatch
+
     gold_trees = list(map(lambda tree: extract_spans(tree), orig_gold_trees))
     produced_trees = list(map(lambda tree: extract_spans(tree), orig_produced_trees))
     assert len(produced_trees) == len(gold_trees), print(len(produced_trees), len(gold_trees))
