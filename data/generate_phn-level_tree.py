@@ -27,7 +27,7 @@ class PhoneTreeWriter(object):
 
     def write_phn_tree_to_file(self, phn_tree_pth, word_tree_pth, new_word_tree_pth): 
         print('writing phone-level tree to %s and word-level tree to %s' % (phn_tree_pth, new_word_tree_pth))
-        phn_tree_f  = open(phn_tree_pth, 'w')
+        phn_tree_f = open(phn_tree_pth, 'w')
         new_word_tree_f = open(new_word_tree_pth, 'w')
         gt_word_level_trees = self._read_text_file(word_tree_pth)
         tree_cnt = 0 
@@ -55,7 +55,7 @@ class PhoneTreeWriter(object):
                     _mismatch_cnt += 1
                 else:
                     # if no sentence mismatch, generate phn-level tree
-                    phn_level_tree = self._convert_tree_via_word2phn(word_level_tree, word2phn, tree_cnt, viz=True)
+                    phn_level_tree = self._convert_tree_via_word2phn(word_level_tree, word2phn, tree_cnt, viz=False)
 
                 phn_tree_f.write('%s\n' % phn_level_tree)
                 new_word_tree_f.write('%s\n' % gt_word_level_tree)
@@ -135,30 +135,45 @@ class PhoneTreeWriter(object):
 
         return phn_level_tree
 
-    def _read_textgrid2(self, textgrid_pth, text_pth, nframes, frame_stride=0.01):
-        # return [(0-th word, start frame, end frame), ..., (n-th word, start frame, end frame)]
+    def write_phn_list_to_numpy(self, phn_list_pth, word_list_pth, feature='logmelspec'):
+        preprocessed_word_lists = np.load(word_list_pth, allow_pickle=True)[0]
+        phn_list_dict = {}
+        cnt = 0
+        for image_key in tqdm(self.utt_key_list):
+            captions_list = self.data_summary_json[image_key]
+            captions_list = self.__deduplicate__(captions_list, image_key)
+            for captions in captions_list: 
+                textgrid_file = captions[3]
+ 
+                if feature == 'logmelspec':
+                    frame_stride = self.logmelspec_frame_stride 
+                elif feature in ['hubert', 'hubert_large', 'content_vec_v07_11', 'content_vec_v12_05']:
+                    frame_stride = self.hubert_frame_stride 
+                max_frame = preprocessed_word_lists[cnt][-1][-1]
+                phn_list = self._construct_phn_list(textgrid_file, max_frame, frame_stride)
+                phn_list_dict[cnt] = phn_list
+                cnt += 1
+
+        np.save(phn_list_pth, [phn_list_dict])
+
+    def _construct_phn_list(self, textgrid_pth, word_max_frame, frame_stride):
+        # return [(0-th phn, start frame, end frame), ..., (n-th phn, start frame, end frame)]
         # 
         # note: logmelspec has frame_stride 10ms, while SSL models like hubert has 20ms 
-        word_tgs = textgrid.TextGrid.fromFile(textgrid_pth)[0]
+        word_tgs, phn_tgs = textgrid.TextGrid.fromFile(textgrid_pth)
 
-        word_list = []
-        word_string = []
-        for word_tg in word_tgs: 
-            word = word_tg.mark
-            if word == '': # probably silence
+        phn_list = []
+        for phn_tg in phn_tgs: 
+            phn = phn_tg.mark
+            if phn == '': # probably silence
                 continue 
             # convert to frame-based (0.01s/0.02s stride)
-            word_obj = (word, word_tg.minTime/frame_stride, word_tg.maxTime/frame_stride)
-            word_list.append(word_obj)
-            word_string.append(word)
-        assert word_tg.maxTime <= nframes
+            phn_obj = (phn, phn_tg.minTime/frame_stride, phn_tg.maxTime/frame_stride)
+            phn_max_frame = phn_tg.maxTime/frame_stride
+            phn_list.append(phn_obj)
+        assert phn_max_frame == word_max_frame, print(phn_max_frame, word_max_frame) # word & phone end frame should match 
 
-        word_string = ' '.join(word_string)
-        with open(text_pth, 'r') as f: 
-            gt_text = f.readline()
-        assert gt_text == word_string, print(f'{word_string}\n{gt_text}')
-
-        return word_list, word_string
+        return phn_list
 
 def viz_tree(bare_tree):
     nt_tree = bare_tree.replace('(', '(NT').replace(' ', '  ')
@@ -171,6 +186,9 @@ if __name__ == '__main__':
     parser.add_argument('--data_summary_json', '-j', type=str)
     parser.add_argument('--data_dir', type=str, default='data/SpokenCOCO/Freda-formatting/')
     parser.add_argument('--data_split', type=str, choices=['test', 'val', 'train'])
+    parser.add_argument('--feature', '-f', type=str, default='logmelspec', 
+                        choices = ['logmelspec', 'hubert', 'hubert_large', 'content_vec_v07_11', 'content_vec_v12_05'])
+    parser.add_argument('--layer_num', type=int, default=12)
     args = parser.parse_args()
 
     basename = '-'.join(args.data_summary_json.split('-')[1:]).split('.')[0]
@@ -179,7 +197,17 @@ if __name__ == '__main__':
     with open(args.data_summary_json, 'r') as f:
         data_summary = json.load(f)[args.data_split]
 
-    reader = PhoneTreeWriter(data_summary)
-    reader.write_phn_tree_to_file(osp.join(args.data_dir, args.data_split + '_phn-level-ground-truth-' + basename + '.txt'), 
+    writer = PhoneTreeWriter(data_summary)
+    # convert word-level tree to phn-level based on force alignments
+    writer.write_phn_tree_to_file(osp.join(args.data_dir, args.data_split + '_phn-level-ground-truth-' + basename + '.txt'), 
                                   osp.join(args.data_dir, args.data_split + '_ground-truth-' + basename + '.txt'), 
                                   osp.join(args.data_dir, args.data_split + '_word-level-ground-truth-' + basename + '.txt'))
+
+    # convert word_list to phn_list for logmelspec/hubert based on force alignments 
+    if args.feature == 'logmelspec' or (args.feature == 'hubert' and args.layer_num == 12): # naming convention 
+        phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_phn_list-' + basename + '.npy')
+        word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_word_list-' + basename + '.npy')
+    else:
+        phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_phn_list-' + basename + '.npy')
+        word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
+    writer.write_phn_list_to_numpy(phn_list_pth, word_list_pth, args.feature)
