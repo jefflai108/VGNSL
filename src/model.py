@@ -191,9 +191,6 @@ class EncoderText(nn.Module):
             else: # test-time take max 
                 indices = probs.max(1)[1]
             tree_indices.append(indices)
-            #print(indices)
-            #print(probs)
-            #print(index_one_hot_ellipsis(probs, 1, indices))
             tree_probs.append(index_one_hot_ellipsis(probs, 1, indices))
 
             this_spans = torch.stack([
@@ -232,8 +229,6 @@ class EncoderText(nn.Module):
             left_bounds = self.update_with_mask(left_bounds, left_bounds, this_spans[:, 0], *update_masks)
             right_bounds = self.update_with_mask(right_bounds, right_bounds, this_spans[:, 1], *update_masks)
 
-        #print(tree_indices)
-        #print(tree_probs)
         return features, left_span_features, right_span_features, output_word_embeddings, tree_indices, \
                tree_probs, span_bounds
 
