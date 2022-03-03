@@ -25,10 +25,13 @@ class PhoneTreeWriter(object):
             self.image_key_list.append(image_key)
         self.utt_key_list = self.image_key_list
 
-    def write_phn_tree_to_file(self, phn_tree_pth, word_tree_pth, new_word_tree_pth): 
+    def write_phn_tree_to_file(self, phn_tree_pth, word_tree_pth, new_word_tree_pth, 
+                               phn_caps_pth): 
         print('writing phone-level tree to %s and word-level tree to %s' % (phn_tree_pth, new_word_tree_pth))
+        print('writing phone-level captions to %s' % (phn_caps_pth))
         phn_tree_f = open(phn_tree_pth, 'w')
         new_word_tree_f = open(new_word_tree_pth, 'w')
+        phn_cap_f  = open(phn_caps_pth, 'w')
         gt_word_level_trees = self._read_text_file(word_tree_pth)
         tree_cnt = 0 
         _mismatch_cnt = 0 
@@ -47,7 +50,7 @@ class PhoneTreeWriter(object):
 
                 # ensure the underlying sentence from tree == ground-truth sentence 
                 words_from_gt_tree = ' '.join([_x for _x in gt_word_level_tree.split() if _x.isalnum()])
-                word2phn, gt_text = self._construct_word2phn_mapping(textgrid_file, transcript_file)
+                word2phn, gt_text, phn_string = self._construct_word2phn_mapping(textgrid_file, transcript_file)
                 if words_from_gt_tree != gt_text: 
                     # if there's sentence mismatch, add a placeholder string. This will be handy during training/testing tree eval. 
                     phn_level_tree = 'MISMATCH'
@@ -59,6 +62,7 @@ class PhoneTreeWriter(object):
 
                 phn_tree_f.write('%s\n' % phn_level_tree)
                 new_word_tree_f.write('%s\n' % gt_word_level_tree)
+                phn_cap_f.write('%s\n' % phn_string)
         print('number of MISMATCH is %d' % _mismatch_cnt)
     
     def __deduplicate__(self, captions_list, image_key):
@@ -109,7 +113,7 @@ class PhoneTreeWriter(object):
             gt_text = f.readline()
         assert gt_text == word_string, print(f'{word_string}\n{gt_text}')
 
-        return word2phn, gt_text
+        return word2phn, gt_text, phn_string 
 
     def _convert_tree_via_word2phn(self, word_level_tree, word2phn, tree_cnt, viz=False): 
         word_level_tree_list = word_level_tree.split()
@@ -201,13 +205,14 @@ if __name__ == '__main__':
     # convert word-level tree to phn-level based on force alignments
     writer.write_phn_tree_to_file(osp.join(args.data_dir, args.data_split + '_phn-level-ground-truth-' + basename + '.txt'), 
                                   osp.join(args.data_dir, args.data_split + '_ground-truth-' + basename + '.txt'), 
-                                  osp.join(args.data_dir, args.data_split + '_word-level-ground-truth-' + basename + '.txt'))
+                                  osp.join(args.data_dir, args.data_split + '_word-level-ground-truth-' + basename + '.txt'), 
+                                  osp.join(args.data_dir, args.data_split + '_phn_caps-' + basename + '.txt'))
 
     # convert word_list to phn_list for logmelspec/hubert based on force alignments 
-    if args.feature == 'logmelspec' or (args.feature == 'hubert' and args.layer_num == 12): # naming convention 
-        phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_phn_list-' + basename + '.npy')
-        word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_word_list-' + basename + '.npy')
-    else:
-        phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_phn_list-' + basename + '.npy')
-        word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
-    writer.write_phn_list_to_numpy(phn_list_pth, word_list_pth, args.feature)
+    #if args.feature == 'logmelspec' or (args.feature == 'hubert' and args.layer_num == 12): # naming convention 
+    #    phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_phn_list-' + basename + '.npy')
+    #    word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_word_list-' + basename + '.npy')
+    #else:
+    #    phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_phn_list-' + basename + '.npy')
+    #    word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
+    #writer.write_phn_list_to_numpy(phn_list_pth, word_list_pth, args.feature)
