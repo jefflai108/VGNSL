@@ -71,6 +71,13 @@ class LogCollector(object):
 def encode_data(data_path, basename, model, data_loader, log_step=10, logging=print, vocab=None, stage='dev', speech_hdf5=False, phn_force_align=False):
     """Encode all images and captions loadable by `data_loader`
     """
+    if phn_force_align: 
+        ground_truth = [line.strip().lower() for line in open(
+            os.path.join(data_path, f'val_phn-level-ground-truth-{basename}.txt'))]
+    else: 
+        ground_truth = [line.strip() for line in open(
+            os.path.join(data_path, f'val_word-level-ground-truth-{basename}.txt'))]
+
     batch_time = AverageMeter()
     val_logger = LogCollector()
     # switch to evaluate mode
@@ -82,6 +89,7 @@ def encode_data(data_path, basename, model, data_loader, log_step=10, logging=pr
     img_embs = None
     cap_embs = None
     logged = False
+    trees = list()
     for i, (images, captions, audios, audio_masks, lengths, ids) in enumerate(data_loader):
         # make sure val logger is used
         model.logger = val_logger
@@ -102,6 +110,20 @@ def encode_data(data_path, basename, model, data_loader, log_step=10, logging=pr
             for j in range(sample_num):
                 logging(generate_tree(captions, tree_indices, j, vocab)) # visualize generated tree on top of captions
 
+        # store trees
+        candidate_trees = list()
+        for j in range(len(ids)):
+            candidate_trees.append(generate_tree(captions, tree_indices, j, vocab))
+
+        # re-order trees
+        appended_trees = ['' for _ in range(len(ids))] # mini-batch produced trees
+        batched_ground_truth = ['' for _ in range(len(ids))] # mini-batch gruond_truth trees
+        for j in range(len(ids)):
+            appended_trees[ids[j] - min(ids)] = clean_tree(candidate_trees[j])
+            batched_ground_truth[ids[j] - min(ids)] = ground_truth[ids[j]]
+        trees.extend(appended_trees)
+        
+        # cap emb
         cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
 
         # initialize the numpy arrays given the size of the embeddings
@@ -124,45 +146,12 @@ def encode_data(data_path, basename, model, data_loader, log_step=10, logging=pr
                     .format(
                         i, len(data_loader), batch_time=batch_time,
                         e_log=str(model.logger)))
-        del images, captions, audios
-
-    val_trees(data_path, model, logging, data_loader, vocab, basename, speech_hdf5, phn_force_align)
-    
-    return img_embs, cap_embs
-
-
-def val_trees(data_path, model, logging, val_loader, vocab, basename, speech_hdf5, phn_force_align):
-    """ use the trained model to generate parse trees for text """
-    cap_embs = None
-    trees = list()
-    for i, (images, captions, audios, audio_masks, lengths, ids) in enumerate(val_loader):
-        lengths = torch.Tensor(lengths).long()
-        if torch.cuda.is_available():
-            lengths = lengths.cuda()
-
-        # compute the embeddings
-        model_output = model.forward_emb(images, audios, lengths, volatile=True, speech_hdf5=speech_hdf5, audio_masks=audio_masks) # feed in audios instead of captions
-        img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, all_probs, \
-        span_bounds = model_output[:8]
-
-        candidate_trees = list()
-        for j in range(len(ids)):
-            candidate_trees.append(generate_tree(captions, tree_indices, j, vocab))
-        appended_trees = ['' for _ in range(len(ids))]
-        for j in range(len(ids)):
-            appended_trees[ids[j] - min(ids)] = clean_tree(candidate_trees[j])
-        trees.extend(appended_trees)
-        cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
         del images, captions, img_emb, cap_emb, audios, audio_masks
-    if phn_force_align: 
-        ground_truth = [line.strip().lower() for line in open(
-            os.path.join(data_path, f'val_phn-level-ground-truth-{basename}.txt'))]
-    else: 
-        ground_truth = [line.strip() for line in open(
-            os.path.join(data_path, f'val_word-level-ground-truth-{basename}.txt'))]
-    
+
     f1, _, _ =  f1_score(trees, ground_truth)
     logging(f'validation tree f1 score is {f1}')
+
+    return img_embs, cap_embs
 
 
 def i2t(images, captions, npts=None, measure='cosine', return_ranks=False):
@@ -371,10 +360,14 @@ def _retrieve_text_from_tree(tree):
 
 def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False):
     # remove word-level mismatch (from pre-processing)
-    for i in range(len(orig_gold_trees)): 
-        if orig_gold_trees[i] == 'MISMATCH': 
-            orig_gold_trees.pop(i)
-            orig_produced_trees.pop(i)
+    # by keeping track of the indices 
+    indices_to_remove = []
+    for i in range(len(orig_gold_trees)):
+        if orig_gold_trees[i] in ['MISMATCH', 'mismatch']:
+            indices_to_remove.append(i)
+    orig_gold_trees = [orig_gold_tree for i, orig_gold_tree in enumerate(orig_gold_trees) if i not in indices_to_remove]
+    orig_produced_trees = [orig_produced_tree for i, orig_produced_tree in enumerate(orig_produced_trees) if i not in indices_to_remove]
+
     # double-check underlying word/phn sequence match 
     orig_gold_trees_text = [_retrieve_text_from_tree(orig_gold_tree) for orig_gold_tree in orig_gold_trees]
     orig_produced_trees_text = [_retrieve_text_from_tree(orig_produced_tree) for orig_produced_tree in orig_produced_trees]
