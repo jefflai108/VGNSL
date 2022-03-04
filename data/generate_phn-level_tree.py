@@ -209,10 +209,10 @@ if __name__ == '__main__':
                                   osp.join(args.data_dir, args.data_split + '_phn_caps-' + basename + '.txt'))
 
     # convert word_list to phn_list for logmelspec/hubert based on force alignments 
-    #if args.feature == 'logmelspec' or (args.feature == 'hubert' and args.layer_num == 12): # naming convention 
-    #    phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_phn_list-' + basename + '.npy')
-    #    word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_word_list-' + basename + '.npy')
-    #else:
-    #    phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_phn_list-' + basename + '.npy')
-    #    word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
-    #writer.write_phn_list_to_numpy(phn_list_pth, word_list_pth, args.feature)
+    if args.feature == 'logmelspec' or (args.feature == 'hubert' and args.layer_num == 12): # naming convention 
+        phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_phn_list-' + basename + '.npy')
+        word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_word_list-' + basename + '.npy')
+    else:
+        phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_phn_list-' + basename + '.npy')
+        word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
+    writer.write_phn_list_to_numpy(phn_list_pth, word_list_pth, args.feature)
