@@ -1,0 +1,29 @@
+
+word boundaries (max & avg segment length): 
+
+train: 
+    logmelspec 788 & 31.02 frames 
+    hubert 394 & 15.51 frames 
+
+val: 
+    logmelspec 626 & 30.97 frames 
+    hubert 314 & 15.48 frames 
+
+test: 
+    logmelspec 471 & 31.03 frames 
+    hubert 236 & 15.52 frames 
+
+------------------------------------------
+phone boundaries (max & avg segment length): 
+
+train: 
+    logmelspec 788 & 9.50 frames 
+    hubert 394 & 4.74 frames 
+
+val: 
+    logmelspec 598 & 9.49 frames 
+    hubert 300 & 4.74 frames 
+
+test: 
+    logmelspec 465 & 9.50 frames 
+    hubert 233 & 4.74 frames 

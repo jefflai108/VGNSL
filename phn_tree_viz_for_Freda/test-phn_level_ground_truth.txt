@@ -1,6 +1,7 @@
 processing 83k-5k-5k
 pre-store ordered image_key to ensure the storing order is consistent
 writing phone-level tree to data/SpokenCOCO/Freda-formatting/test_phn-level-ground-truth-83k-5k-5k.txt and word-level tree to data/SpokenCOCO/Freda-formatting/test_word-level-ground-truth-83k-5k-5k.txt
+writing phone-level captions to data/SpokenCOCO/Freda-formatting/test_phn_caps-83k-5k-5k.txt
 
  ground-truth word-level tree
                                          NT                                                                                                                                            
@@ -57,7 +58,7 @@ writing phone-level tree to data/SpokenCOCO/Freda-formatting/test_phn-level-grou
  |    ___|___     ___|___     ___|___    |    ___|___     _______|_______     ___|___    |    ___|_______     ___|___     _______|_______     ___|___     ___|___     ___________|_______________     ___|___    |    _______|___________     ___|_______     ___|___    |    ___|_______     ___|___    |    ___________|_______________     ___|___    |    ___________|___________   
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |       |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |  
-AH0  D  ER1  T   P  AE1  TH  W  IH0  TH AH0  Y  AH1  NG  P  ER1  S  AH0  N  AA1      N  AH0  M  OW1  T  ER0  B  AY1  K   R  EH1  S   T   S   T      IH0  DH     AH0  F  AO1  R   G   R  AW2  N   D  AH1      V  AH0  V  ER1  D  AH0  N   T  EH1  R  IY0 AH0  W  IH0  TH AH0  B   R  IH1  JH AE1  N   D  AH0  B  AE1  K   G   R  AW2  N   D  AH1      V  spn  M  AW1  N   T  AH0  N   Z 
+EY1  D  ER1  T   P  AE1  TH  W  IH0  TH EY1  Y  AH1  NG  P  ER1  S  AH0  N  AA1      N  EY1  M  OW1  T  ER0  B  AY1  K   R  EH1  S   T   S   T      IH0  DH     AH0  F  AO1  R   G   R  AW2  N   D  AH1      V  AH0  V  ER1  D  AH0  N   T  EH1  R  IY0 AH0  W  IH0  TH EY1  B   R  IH1  JH AE1  N   D  AH0  B  AE1  K   G   R  AW2  N   D  AH1      V  spn  M  AW1  N   T  AH0  N   Z 
 
 
  ground-truth word-level tree
@@ -437,7 +438,7 @@ EY1  L  IH1  T  AH0  L   G  ER1  L  IH1      Z   G  IH1  T  IH0  NG  R  EH1  D  
  |    _______|_______     ___|___     _______|_______    |    ___________|___________     ___|___     ___|___     ___|___    |    ___|_______     ___|___     ___|___     ___________|_______________   
  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT      PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |       |   |       |   |   |   |   |   |   |   |   |  
-EY1  P  ER1  S  AH0  N  IH0      Z   R  AY1  D  IH0  NG EY1  B  AY1  S  IH0  K  AH0  L   B  AH1  T   DH EH1  R  IH0      Z  EY1  T   R  EY1  N  IH1      N   DH     AH0  B  AE1  K   G   R  AW2  N   D 
+AH0  P  ER1  S  AH0  N  IH1      Z   R  AY1  D  IH0  NG AH0  B  AY1  S  IH0  K  AH0  L   B  AH1  T   DH EH1  R  IH0      Z  EY1  T   R  EY1  N  IH1      N   DH     AH0  B  AE1  K   G   R  AW2  N   D 
 
 
  ground-truth word-level tree
@@ -467,7 +468,7 @@ EY1  P  ER1  S  AH0  N  IH0      Z   R  AY1  D  IH0  NG EY1  B  AY1  S  IH0  K  
  |    ___|___     ___|___     ___|___     ___|_______     ___|___    |    _______|___     _______|_______    |    ___________|___________   
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |  
-EY1  R  EH1  D  AE1  N   D   W  AY1  T   T   R  EY1  N  AE1  N   D  EY1  M      AE1  N   R  AY1  D  IH0  NG EY1  B  AY1  S  IH0  K  AH0  L 
+AH0  R  EH1  D  AH0  N   D   W  AY1  T   T   R  EY1  N  AE1  N   D  AH0  M      AE1  N   R  AY1  D  IH0  NG EY1  B  AY1  S  IH0  K  AH0  L 
 
 
  ground-truth word-level tree
@@ -581,7 +582,7 @@ AH0  M      AE1  N   R  AY1  D  IH0  NG AH0  B      AY1  K   P  AE1  S   T  AH0 
  |    _______|___     ___|___    |    ___________|___________     _______|_______     _______|_______     ___|___    |    ___|_______   
  PT  PT      PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT
  |   |       |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |  
-AH0  M      AE1  N  AA1      N  AH0  B  AY1  S  IH0  K  AH0  L   R  AY1  D  IH0  NG  N  EH1  K   S   T   T      UW1 AH0  T   R  EY1  N 
+EY1  M      AE1  N  AA1      N  AH0  B  AY1  S  IH0  K  AH0  L   R  AY1  D  IH0  NG  N  EH1  K   S   T   T      UW1 AH0  T   R  EY1  N 
 
 
  ground-truth word-level tree
@@ -925,7 +926,7 @@ wooden     spoons are lined  up  on  a      table
  |    _______|_______     ___|___     ___|___     ___|___     ___|___    |    _______|_______     ___|_______   
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |   |   |   |   |       |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |  
-AH0  W  UH1  D  AH0  N   B  AO1  L  AO1      N   T  AO1  P  AH1      V  AH0  W  UH1  D  AH0  N   S   T  IH1  K 
+EY1  W  UH1  D  AH0  N   B  AO1  L  AO1      N   T  AO1  P  AH1      V  AH0  W  UH1  D  AH0  N   S   T  IH1  K 
 
 
  ground-truth word-level tree
@@ -1151,7 +1152,7 @@ AH0  B  AE1  TH  R  UW2  M   DH AH0  T   HH AH0  Z  AH0  B   R  OW1  K  AH0  N  
  |    ___|_______     ___|___     ___|___     ___|_______     ___|___     ___|___    |    ___|_______     _______|_______     ___|___   
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |  
-EY1  V  EH1  R  IY0  B  IH1  G   W  IH1  T   R  EH1  S   T   R  UW1  M   W  IH0  DH EY1  SH AE1  B  IY0  L  UH1  K  IH0  NG  SH AW1 ER0
+AH0  V  EH1  R  IY0  B  IH1  G   W  IH1  T   R  EH1  S   T   R  UW1  M   W  IH0  DH EY1  SH AE1  B  IY0  L  UH1  K  IH0  NG  SH AW1 ER0
 
 
  ground-truth word-level tree
@@ -1435,7 +1436,7 @@ there are  a      toilet      a      sink and  a  shower stall  in  a      large
   ___|___     ___|___    |    _______|_______    |    ___|_______     ___|___    |    ___|___     ___|_______     ___|___    |    ___|_______     _______|___________   
  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |  
- DH EH1  R  AA1      R  AH0  T  OY1  L  AH0  T  AH0  S  IH1  NG  K  AE1  N   D  AH0  SH AW1 ER0  S   T  AO1  L  IH0      N  AH0  L  AA1  R   JH  B  AE1  TH  R  UW2  M 
+ DH EH1  R  AA1      R  EY1  T  OY1  L  AH0  T  AH0  S  IH1  NG  K  AE1  N   D  AH0  SH AW1 ER0  S   T  AO1  L  IH0      N  AH0  L  AA1  R   JH  B  AE1  TH  R  UW2  M 
 
 
  ground-truth word-level tree
@@ -1563,7 +1564,7 @@ bicyclists  on  a      city street most not using the     bike lane
  |    ___|_______     ___|___     _______|_______    |    _______|_______     ___|_______     ___|___     ___|___     _______|_______     ___|___    |    ___|___     ___|___   
  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |       |   |   |   |   |   |   |   |  
-AH0  G   R  UW1  P  AH0      V   P  IY1  P  AH0  L  ER0  R  AY1  D  IH0  NG  B  AY1  K   S   D  AW1  N   DH     AH1  S   T   R  IY1  T  IH0      N  AH0  B  AY1  K   L  EY1  N 
+EY1  G   R  UW1  P  AH0      V   P  IY1  P  AH0  L  ER0  R  AY1  D  IH0  NG  B  AY1  K   S   D  AW1  N   DH     AH1  S   T   R  IY1  T  IH0      N  AH0  B  AY1  K   L  EY1  N 
 
 
  ground-truth word-level tree
@@ -1793,7 +1794,7 @@ EY1  W  AY1  T   T  OY1  L  AH0  T   S  IH1  T  IH0  NG  N  EH1  K   S   T   T  
  |    _______|___________     _______|_______     ___|___     _______|___________    |    _______|_______     ___|___    |    _______|___________     ___|_______   
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |  
-EY1  SH EH1  L   V  IH0  NG  Y  UW1  N  IH0  T  IH1      Z   B  IH0  T   W  IY1  N  EY1  T  OY1  L  AH0  T  AE1  N   D  EY1  B  AE1  TH  R  UW2  M   S  IH1  NG  K 
+AH0  SH EH1  L   V  IH0  NG  Y  UW1  N  IH0  T  IH1      Z   B  IH0  T   W  IY1  N  AH0  T  OY1  L  AH0  T  AE1  N   D  EY1  B  AE1  TH  R  UW2  M   S  IH1  NG  K 
 
 
  ground-truth word-level tree
@@ -2009,7 +2010,7 @@ EY1  P  ER1  S  AH0  N   DH AE1  T  IH0      Z   D   R  EH1  S   T  AH1      P  
  |    _______|___     ___|___     _______|___________     ___|___     ___|___     ___|___     _______|_______     _______|_______     ___|___    |    ___|_______     ___|___     ___|___    |    _______|_______   
  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |  
-AH0  M      AE1  N   W  IH0  DH  G   L  AE1  S  IH0  Z  AH0  N   D   HH IH0  Z  AY1      Z   K   L  OW1  Z   D   D   R  EH1  S   T  IH0      N  AH0  B   L  AE1  K   SH ER1  T  AH0  N   D  AH0  N  EH1  K   T  AY2
+EY1  M      AE1  N   W  IH0  DH  G   L  AE1  S  IH0  Z  AE1  N   D   HH IH0  Z  AY1      Z   K   L  OW1  Z   D   D   R  EH1  S   T  IH0      N  EY1  B   L  AE1  K   SH ER1  T  AH0  N   D  AH0  N  EH1  K   T  AY2
 
 
  ground-truth word-level tree
@@ -2107,7 +2108,7 @@ smiling     man wearing black     shirt and pale     green tie
  |    ___|___     ___|___     _______|_______     ___|_______     ___|_______     ___|___    |    _______|_______     ___|___     ___|___     ___________|___________     ___|___     _______|___________   
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |  
-AH0  Y  AH1  NG  M  AE1  N   W  EH1  R  IH0  NG  B   L  AE1  K  AH0  T  AY1 ER0 AH0  N   D  AH0  F   L  AW1 ER0  D   T      AY1 IH1      Z   S   T  AE1  N   D  IH0  NG AH0  N   D   S   M  AY1  L  IH0  NG
+EY1  Y  AH1  NG  M  AE1  N   W  EH1  R  IH0  NG  B   L  AE1  K  AH0  T  AY1 ER0 AH0  N   D  AH0  F   L  AW1 ER0  D   T      AY1 IH1      Z   S   T  AE1  N   D  IH0  NG AH0  N   D   S   M  AY1  L  IH0  NG
 
 
  ground-truth word-level tree
@@ -2443,7 +2444,7 @@ EY1  B  AH1  N   CH AH0      V   M  OW1  T  ER0  S  AY2  K  AH0  L   Z   P  AA1 
  |    ___|___     ___|___     ___________|___________     ___|___     ___|_______     ___|_______     ___|___    |    ___|___   
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT      PT
  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |       |  
-AH0  B  AE1  K  AE1  L  AY0  N  EY1  B  ER0  HH UH2  D   W  IH0  TH  M  OW1  T  ER0  B  AY1  K   S  IH1      N  AH0  R      OW1
+EY1  B  AE1  K  AE1  L  AY0  N  EY1  B  ER0  HH UH2  D   W  IH0  TH  M  OW1  T  ER0  B  AY1  K   S  IH1      N  AH0  R      OW1
 
 
  ground-truth word-level tree
@@ -2477,7 +2478,7 @@ AH0  B  AE1  K  AE1  L  AY0  N  EY1  B  ER0  HH UH2  D   W  IH0  TH  M  OW1  T  
  |    ___|_______     _______|_______     _______|_______     ___|___     ___|___     ___|___     _______|_______     ___|___     ___|___     _______|_______     ___|___   
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT      PT  PT  PT  PT  PT  PT  PT      PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |       |   |   |   |   |   |   |       |   |       |   |   |   |   |   |   |   |   |  
-AH0  P  IH1  L  OW0  K  AH1  V  ER0  D   R  IY1  D  IH0  NG  CH EH1  R  IH0      N   DH     AH1  K  AO1  R   N  ER0 AH1      V   DH     AH1  L  IH1  V  IH0  NG  R  UW1  M 
+AH0  P  IH1  L  OW0  K  AH1  V  ER0  D   R  IY1  D  IH0  NG  CH EH1  R  IH0      N   DH     AH0  K  AO1  R   N  ER0 AH1      V   DH     AH1  L  IH1  V  IH0  NG  R  UW1  M 
 
 
  ground-truth word-level tree
@@ -2575,7 +2576,7 @@ the living room  is empty with the     television  on
   ___|___     _______|_______     ___|___     ___|___     _______|_______     ___|___     ___|___     _______________|_______________     ___|___   
  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT
  |       |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |       |  
- DH     AH0  L  IH1  V  IH0  NG  R  UW1  M  IH0      Z  EH1  M   P   T  IY0  W  IH1  TH  DH     AH0  T  EH1  L  AH0  V  IH2  ZH AH0  N  AO1      N 
+ DH     AH1  L  IH1  V  IH0  NG  R  UW1  M  IH0      Z  EH1  M   P   T  IY0  W  IH1  TH  DH     AH0  T  EH1  L  AH0  V  IH2  ZH AH0  N  AO1      N 
 
 
  ground-truth word-level tree
@@ -2639,7 +2640,7 @@ EY1  F   L  AH1  F  IY0  W  AY1  T   CH EH1  R   DH AH0  T   F  EY1  S  IH0  Z  
  |    _______|___________     ___|___     ___|___    |    ___|_______     ___|_______     ___|___         ___|___   
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT      PT      PT
  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |       |       |  
-AH0  P  EY1  N   T  IH0  NG  DH AE1  T   HH AE1  Z  AH0  G  OW1  L   D   F   R  EY1  M  AO1      N      IH0      T 
+EY1  P  EY1  N   T  IH0  NG  DH AE1  T   HH AE1  Z  AH0  G  OW1  L   D   F   R  EY1  M  AO1      N      IH0      T 
 
 
  ground-truth word-level tree
@@ -2669,7 +2670,7 @@ AH0  P  EY1  N   T  IH0  NG  DH AE1  T   HH AE1  Z  AH0  G  OW1  L   D   F   R  
  |    _______|___________     ___|___     ___|_______     ___|___    |    _______|___________     ___|___    |    _______|___   
  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT
  |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |  
-AH0  P  EY1  N   T  IH0  NG AH0      V   F   R  UW1  T  AE1  N   D  AH0  K  AE1  N   D  AH0  L   W  IH0  DH AH0  V      EY1  S 
+AH0  P  EY1  N   T  IH0  NG AH0      V   F   R  UW1  T  AE1  N   D  EY1  K  AE1  N   D  AH0  L   W  IH0  DH AH0  V      EY1  S 
 
 
  ground-truth word-level tree
@@ -2715,7 +2716,7 @@ AH0  P  EY1  N   T  IH0  NG AH0      V   F   R  UW1  T  AE1  N   D  AH0  K  AE1 
  |    _______|___________     ___|___    |    _______|_______     ___|___     ___|_______     ___|___     ___|___     ___|___         ___|___   
  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT      PT      PT      PT
  |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |       |       |       |  
-AH0  P  EY1  N   T  IH0  NG AH0      V  AH0  T  EY1  B  AH0  L   W  IH1  TH  F   R  UW1  T  AA1      N   T  AA1  P  AH0      V      IH0      T 
+EY1  P  EY1  N   T  IH0  NG AH0      V  AH0  T  EY1  B  AH0  L   W  IH1  TH  F   R  UW1  T  AA1      N   T  AA1  P  AH0      V      IH0      T 
 
 
  ground-truth word-level tree
@@ -2791,7 +2792,7 @@ painting  of     oranges  a  bowl candle and  a      pitcher
  |    _______|___________     ___|___    |    _______________|___________________     _______|_______     ___|___    |    _______|___________     _______|___________     _______|_______     ___|___     ___|_______     ___|___    |    _______|___     ___|___    |    ___|_______     ___|_______     ___|___     ___|___     _______|___________   
  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |  
-EY1  P  EY1  N   T  IH0  NG AH0      V  EY1  K  AE1  N   D  AH0  L   S   T  IH2  K   HH OW1  L   D  ER0  W  IH0  TH EY1  K  AE1  N   D  AH0  L   S  EH1  V  ER0 AH0  L   P  IY1  S  IH0  Z  AH0      V   F   R  UW1  T  AE1  N   D  EY1  V      EY1  S   W  IH0  TH EY1  G  OW1  L   D   F   R  EY1  M  ER0 AW1  N   DH     AH1  P  EY1  N   T  IH0  NG
+EY1  P  EY1  N   T  IH0  NG AH0      V  EY1  K  AE1  N   D  AH0  L   S   T  IH2  K   HH OW1  L   D  ER0  W  IH1  TH EY1  K  AE1  N   D  AH0  L   S  EH1  V  ER0 AH0  L   P  IY1  S  IH0  Z  AH0      V   F   R  UW1  T  AE1  N   D  EY1  V      EY1  S   W  IH0  TH EY1  G  OW1  L   D   F   R  EY1  M  ER0 AW1  N   DH     AH1  P  EY1  N   T  IH0  NG
 
 
  ground-truth word-level tree
@@ -2953,7 +2954,7 @@ AH0  B  AH1  N   CH AH1      V   B  AH0  N  AE1  N  AH0  Z  AA1      R   S  IH1 
  |    ___|_______     ___|___     ___|_______     ___________|___________     ___|___    |    ___|_______     ___|___     ___|___     ___________|___________   
  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |  
-EY1  B  AA1  K   S  AH1      V   G   R  IY1  N   B  AH0  N  AE1  N  AH0  Z  AE1  N   D  EY1  B  AA1  K   S  AH1      V   R  AY1  P   B  AH0  N  AE1  N  AH0  Z 
+AH0  B  AA1  K   S  AH0      V   G   R  IY1  N   B  AH0  N  AE1  N  AH0  Z  AE1  N   D  EY1  B  AA1  K   S  AH1      V   R  AY1  P   B  AH0  N  AE1  N  AH0  Z 
 
 
  ground-truth word-level tree
@@ -3051,7 +3052,7 @@ AH0  B      AY1  K   S  IH1  T   S  AH0  M  AH1  NG  B  AA1  T  AH0  L   Z  AH1 
  |    ___|___     ___|___     _______|_______     ___|___    |    _______|_______     ___|___     ___|___     ___|___     _______|___________   
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT
  |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |  
-AH0  D  ER1  T   B  AY1  K   S  IH1  T  IH0  NG AA1      N  AH0  K  AW1  N   T  ER0  B      AY1  S  AH1  M   W  AY1  N   B  AA1  T  AH0  L   Z 
+EY1  D  ER1  T   B  AY1  K   S  IH1  T  IH0  NG AA1      N  AH0  K  AW1  N   T  ER0  B      AY1  S  AH1  M   W  AY1  N   B  AA1  T  AH0  L   Z 
 
 
  ground-truth word-level tree
@@ -3077,7 +3078,7 @@ AH0  D  ER1  T   B  AY1  K   S  IH1  T  IH0  NG AA1      N  AH0  K  AW1  N   T  
  |    _______________|_______________     ___________|___________     ___|___     _______|_______     ___|___   
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT      PT
  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |       |  
-EY1  M  OW1  T  ER0  S  AY2  K  AH0  L   S   T  AE1  N   D  IH0  NG IH1      N   F   R  AH1  N   T  EY1     spn
+AH0  M  OW1  T  ER0  S  AY2  K  AH0  L   S   T  AE1  N   D  IH0  NG IH1      N   F   R  AH1  N   T  EY1     spn
 
 
  ground-truth word-level tree
@@ -3119,7 +3120,7 @@ EY1  M  OW1  T  ER0  S  AY2  K  AH0  L   S   T  AE1  N   D  IH0  NG IH1      N  
   ___|___     _______|_______     ___|___     _______|_______     ___|___    |    ___|___     _______|___________     ___|___   
  PT      PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT
  |       |   |   |   |   |   |   |       |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |  
-AH0     spn  S  IH1  T  IH0  NG IH0      N   F   R  AH1  N   T  AH0      V  AH0  W  AY1  N   D  IH0  S   P   L  EY1  K  EY1  S 
+EY1     spn  S  IH1  T  IH0  NG IH0      N   F   R  AH1  N   T  AH0      V  AH0  W  AY1  N   D  IH0  S   P   L  EY1  K  EY1  S 
 
 
  ground-truth word-level tree
@@ -3161,7 +3162,7 @@ the     plane  is parked  at the     gate  at the     airport terminal
   ___|___     ___|_______     ___|___     _______|_______     ___|___     ___|___     ___|___     ___|___     ___|___     _______|___________     ___________|___________   
  PT      PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT      PT  PT      PT  PT  PT  PT  PT      PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT
  |       |   |   |   |   |   |       |   |   |   |   |   |   |       |   |       |   |   |   |   |       |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |  
- DH     IY0  P   L  EY1  N  IH0      Z   P  AA1  R   K   T  AE1      T   DH     IY0  G  EY1  T  AE1      T   DH     IY0 EH1  R   P  AO2  R   T   T  ER1  M  AH0  N  AH0  L 
+ DH     AH1  P   L  EY1  N  IH0      Z   P  AA1  R   K   T  AE1      T   DH     IY0  G  EY1  T  AE1      T   DH     IY0 EH1  R   P  AO2  R   T   T  ER1  M  AH0  N  AH0  L 
 
 
  ground-truth word-level tree
@@ -3199,7 +3200,7 @@ view from gate      of     jet connected  to jet     way for passengers  to boar
   ___|___     ___|_______     ___|___     ___|___     ___|___     ___________|_______________     ___|___     ___|___     ___|___     ___|___     ___________|_______________     ___|___     ___|_______     ___|___    |  
  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT      PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT      PT  PT
  |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |       |   |       |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |       |   |  
- V   Y  UW1  F   R  AH1  M   G  EY1  T  AH1      V   JH EH1  T   K  AH0  N  EH1  K   T  AH0  D   T      IH0  JH EH1  T   W      EY1  F      ER0  P  AE1  S  AH0  N   JH ER0  Z   T      IH0  B  AO1  R   D  AO1      R  spn
+ V   Y  UW1  F   R  AH1  M   G  EY1  T  AH1      V   JH EH1  T   K  AH0  N  EH1  K   T  AH0  D   T      UW1  JH EH1  T   W      EY1  F      ER0  P  AE1  S  AH0  N   JH ER0  Z   T      IH0  B  AO1  R   D  AO1      R  spn
 
 
  ground-truth word-level tree
@@ -3419,7 +3420,7 @@ the     view  of     runway from behind the     windows      of     airport
   ___|___     ___|___     ___|___     _______|_______     ___|___     _______|___________     ___|___     _______|___________     ___|___     _______|___________   
  PT      PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT  PT      PT  PT  PT  PT  PT  PT  PT
  |       |   |   |   |   |       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |       |   |   |   |   |   |   |   |       |   |   |   |   |   |   |  
- DH     AH1  V   Y  UW1 AH0      V   R  AH1  N   W  EY2  F  ER0  M   B  IH0  HH AY1  N   D   DH     AH1  W  IH1  N   D  OW0  Z  AH0      V  EH1  R   P  AO2  R   T 
+ DH     AH0  V   Y  UW1 AH1      V   R  AH1  N   W  EY2  F  ER0  M   B  IH0  HH AY1  N   D   DH     AH1  W  IH1  N   D  OW0  Z  AH0      V  EH1  R   P  AO2  R   T 
 
 
  ground-truth word-level tree

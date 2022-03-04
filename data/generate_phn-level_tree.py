@@ -49,7 +49,7 @@ class PhoneTreeWriter(object):
                 tree_cnt += 1
 
                 # ensure the underlying sentence from tree == ground-truth sentence 
-                words_from_gt_tree = ' '.join([_x for _x in gt_word_level_tree.split() if _x.isalnum()])
+                words_from_gt_tree = self._retrieve_sentence_from_tree(gt_word_level_tree)
                 word2phn, gt_text, phn_string = self._construct_word2phn_mapping(textgrid_file, transcript_file)
                 if words_from_gt_tree != gt_text: 
                     # if there's sentence mismatch, add a placeholder string. This will be handy during training/testing tree eval. 
@@ -59,11 +59,16 @@ class PhoneTreeWriter(object):
                 else:
                     # if no sentence mismatch, generate phn-level tree
                     phn_level_tree = self._convert_tree_via_word2phn(word_level_tree, word2phn, tree_cnt, viz=False)
-
+                    phns_from_gt_tree = self._retrieve_sentence_from_tree(phn_level_tree)
+                    assert phns_from_gt_tree == phn_string
+            
                 phn_tree_f.write('%s\n' % phn_level_tree)
                 new_word_tree_f.write('%s\n' % gt_word_level_tree)
                 phn_cap_f.write('%s\n' % phn_string)
         print('number of MISMATCH is %d' % _mismatch_cnt)
+   
+    def _retrieve_sentence_from_tree(self, tree): 
+        return ' '.join([_x for _x in tree.split() if _x.isalnum()])
     
     def __deduplicate__(self, captions_list, image_key):
         # ensure image:captions == 1:5
@@ -102,7 +107,10 @@ class PhoneTreeWriter(object):
                 continue 
             tmp_phn_list.append(phn)
             if phn_tg.maxTime == word_list[word_cnt][2]: # end-point detector 
-                word2phn[word_list[word_cnt][0]] = tmp_phn_list 
+                curr_word = word_list[word_cnt][0] 
+                # use (word, word_cnt) as key, because a word can be mapped to different sets of phones 
+                # depending on punctuations. e.g. a --> EY1 or a --> AH0. 
+                word2phn[(curr_word, word_cnt)] = tmp_phn_list 
                 tmp_phn_list = []
                 word_cnt += 1
             phn_string.append(phn)
@@ -112,17 +120,19 @@ class PhoneTreeWriter(object):
         with open(text_pth, 'r') as f: 
             gt_text = f.readline()
         assert gt_text == word_string, print(f'{word_string}\n{gt_text}')
-
+        
         return word2phn, gt_text, phn_string 
 
     def _convert_tree_via_word2phn(self, word_level_tree, word2phn, tree_cnt, viz=False): 
         word_level_tree_list = word_level_tree.split()
         phn_level_tree_list = []
+        word_cnt = 0
         for idx, word_token in enumerate(word_level_tree_list): 
             if word_token in ['(', ')']: 
                 phn_level_tree_list.append(word_token)
                 continue 
-            phns = word2phn[word_token]
+            phns = word2phn[(word_token, word_cnt)]
+            word_cnt += 1
             if len(phns) == 1: 
                 phn_level_tree_list.append(phns[0])
             else: 
@@ -202,17 +212,17 @@ if __name__ == '__main__':
         data_summary = json.load(f)[args.data_split]
 
     writer = PhoneTreeWriter(data_summary)
-    # convert word-level tree to phn-level based on force alignments
+    # Step 1: convert word-level tree to phn-level based on force alignments
     writer.write_phn_tree_to_file(osp.join(args.data_dir, args.data_split + '_phn-level-ground-truth-' + basename + '.txt'), 
                                   osp.join(args.data_dir, args.data_split + '_ground-truth-' + basename + '.txt'), 
                                   osp.join(args.data_dir, args.data_split + '_word-level-ground-truth-' + basename + '.txt'), 
                                   osp.join(args.data_dir, args.data_split + '_phn_caps-' + basename + '.txt'))
 
-    # convert word_list to phn_list for logmelspec/hubert based on force alignments 
-    if args.feature == 'logmelspec' or (args.feature == 'hubert' and args.layer_num == 12): # naming convention 
-        phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_phn_list-' + basename + '.npy')
-        word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_word_list-' + basename + '.npy')
-    else:
-        phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_phn_list-' + basename + '.npy')
-        word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
-    writer.write_phn_list_to_numpy(phn_list_pth, word_list_pth, args.feature)
+    # Step 2: convert word_list to phn_list for logmelspec/hubert based on force alignments 
+    #if args.feature == 'logmelspec' or (args.feature == 'hubert' and args.layer_num == 12): # naming convention 
+    #    phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_phn_list-' + basename + '.npy')
+    #    word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}_word_list-' + basename + '.npy')
+    #else:
+    #    phn_list_pth  = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_phn_list-' + basename + '.npy')
+    #    word_list_pth = osp.join(args.data_dir, f'{args.data_split}_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
+    #writer.write_phn_list_to_numpy(phn_list_pth, word_list_pth, args.feature)
