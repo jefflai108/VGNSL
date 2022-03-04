@@ -68,7 +68,7 @@ class LogCollector(object):
         return s
 
 
-def encode_data(data_path, basename, model, data_loader, log_step=10, logging=print, vocab=None, stage='dev', speech_hdf5=False):
+def encode_data(data_path, basename, model, data_loader, log_step=10, logging=print, vocab=None, stage='dev', speech_hdf5=False, phn_force_align=False):
     """Encode all images and captions loadable by `data_loader`
     """
     batch_time = AverageMeter()
@@ -126,12 +126,12 @@ def encode_data(data_path, basename, model, data_loader, log_step=10, logging=pr
                         e_log=str(model.logger)))
         del images, captions, audios
 
-    val_trees(data_path, model, logging, data_loader, vocab, basename, speech_hdf5)
+    val_trees(data_path, model, logging, data_loader, vocab, basename, speech_hdf5, phn_force_align)
     
     return img_embs, cap_embs
 
 
-def val_trees(data_path, model, logging, val_loader, vocab, basename, speech_hdf5):
+def val_trees(data_path, model, logging, val_loader, vocab, basename, speech_hdf5, phn_force_align):
     """ use the trained model to generate parse trees for text """
     cap_embs = None
     trees = list()
@@ -154,9 +154,12 @@ def val_trees(data_path, model, logging, val_loader, vocab, basename, speech_hdf
         trees.extend(appended_trees)
         cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
         del images, captions, img_emb, cap_emb, audios, audio_masks
-
-    ground_truth = [line.strip() for line in open(
-        os.path.join(data_path, f'val_ground-truth-{basename}.txt'))]
+    if phn_force_align: 
+        ground_truth = [line.strip().lower() for line in open(
+            os.path.join(data_path, f'val_phn-level-ground-truth-{basename}.txt'))]
+    else: 
+        ground_truth = [line.strip() for line in open(
+            os.path.join(data_path, f'val_word-level-ground-truth-{basename}.txt'))]
     
     f1, _, _ =  f1_score(trees, ground_truth)
     logging(f'validation tree f1 score is {f1}')
@@ -287,13 +290,20 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
     data_loader = get_eval_loader(
         data_path, data_split, vocab, basename, eval_batch_size, 1,
         feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5, 
-        discretized_phone=use_discretized_phone, discretized_word=use_discretized_word, km_clusters=km_clusters
+        discretized_phone=use_discretized_phone, discretized_word=use_discretized_word, km_clusters=km_clusters, 
+        phn_force_align=opt.phn_force_align
     )
 
-    ground_truth = [line.strip() for line in open(
-        os.path.join(data_path, f'{data_split}_ground-truth-{basename}.txt'))]
-    all_captions = [line.strip() for line in open(
-        os.path.join(data_path, f'{data_split}_caps-{basename}.txt'))]
+    if opt.phn_force_align: # phn-level alignment 
+        ground_truth = [line.strip().lower() for line in open(
+            os.path.join(data_path, f'{data_split}_phn-level-ground-truth-{basename}.txt'))]
+        all_captions = [line.strip() for line in open(
+            os.path.join(data_path, f'{data_split}_phn_caps-{basename}.txt'))]
+    else: # word-level alignment 
+        ground_truth = [line.strip() for line in open(
+            os.path.join(data_path, f'{data_split}_word-level-ground-truth-{basename}.txt'))]
+        all_captions = [line.strip() for line in open(
+            os.path.join(data_path, f'{data_split}_caps-{basename}.txt'))]
     if visual_tree: 
         ground_truth = ground_truth[:visual_samples]
         all_captions = all_captions[:visual_samples]
@@ -356,11 +366,21 @@ def viz_tree(bare_tree):
     nltk_tree = Tree.fromstring(nt_tree)
     nltk_tree.pretty_print()
 
+def _retrieve_text_from_tree(tree): 
+    return ' '.join(tree.replace('(', '').replace(')', '').split())
 
 def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False):
-    orig_gold_trees[:] = [sentence for sentence in orig_gold_trees if sentence != 'MISMATCH'] # remove mismatch
-    orig_produced_trees[:] = [sentence for sentence in orig_produced_trees if sentence != 'MISMATCH'] # remove mismatch
+    # remove word-level mismatch (from pre-processing)
+    for i in range(len(orig_gold_trees)): 
+        if orig_gold_trees[i] == 'MISMATCH': 
+            orig_gold_trees.pop(i)
+            orig_produced_trees.pop(i)
+    # double-check underlying word/phn sequence match 
+    orig_gold_trees_text = [_retrieve_text_from_tree(orig_gold_tree) for orig_gold_tree in orig_gold_trees]
+    orig_produced_trees_text = [_retrieve_text_from_tree(orig_produced_tree) for orig_produced_tree in orig_produced_trees]
+    assert orig_gold_trees_text == orig_produced_trees_text # underlying words/phones should match. 
 
+    # compute f1 score over spans 
     gold_trees = list(map(lambda tree: extract_spans(tree), orig_gold_trees))
     produced_trees = list(map(lambda tree: extract_spans(tree), orig_produced_trees))
     assert len(produced_trees) == len(gold_trees), print(len(produced_trees), len(gold_trees))

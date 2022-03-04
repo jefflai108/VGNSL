@@ -58,7 +58,7 @@ def train(opt, train_loader, model, epoch, val_loader, vocab):
 def validate(opt, val_loader, model, vocab):
     # compute the encoding for all the validation images and captions
     img_embs, cap_embs = encode_data(
-        opt.data_path, opt.basename, model, val_loader, opt.log_step, logger.info, vocab, speech_hdf5=opt.speech_hdf5)
+        opt.data_path, opt.basename, model, val_loader, opt.log_step, logger.info, vocab, speech_hdf5=opt.speech_hdf5, phn_force_align=opt.phn_force_align)
     # caption retrieval
     (r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, measure='cosine')
     logger.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
@@ -140,6 +140,8 @@ if __name__ == '__main__':
                         help='dimensionality of the feature')
     parser.add_argument('--word_dim', default=512, type=int,
                         help='dimensionality of the word embedding')
+    parser.add_argument('--phn_force_align', action='store_true',
+                        help='force alignment in the phone-level')
     parser.add_argument('--discretized_word', action='store_true',
                         help='discretize input speech sequence with word-level input \
                              aka discrete ID + force alignment --> VGNSL')
@@ -241,7 +243,7 @@ if __name__ == '__main__':
     # Load data loaders
     train_loader, val_loader = data.get_train_loaders(
         opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.feature, opt.feature_cmvn, opt.speech_hdf5, 
-        opt.discretized_phone, opt.discretized_word, opt.km_clusters
+        opt.discretized_phone, opt.discretized_word, opt.km_clusters, opt.phn_force_align
     )
 
     # construct the model

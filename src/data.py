@@ -26,10 +26,14 @@ class PrecompDataset(data.Dataset):
         # load image features
         self._load_img_feature(data_path, data_split, basename, load_img)
 
-    def _load_captions(self, data_path, data_split, basename): 
+    def _load_captions(self, data_path, data_split, basename, phn_force_align=False): 
         # captions
         self.captions = list()
-        with open(os.path.join(data_path, f'{data_split}_caps-{basename}.txt'), 'r') as f:
+        if phn_force_align: # phn-level caption 
+            cap_pth = f'{data_split}_phn_caps-{basename}.txt'
+        else: # word-level caption 
+            cap_pth = f'{data_split}_caps-{basename}.txt'
+        with open(os.path.join(data_path, cap_pth), 'r') as f:
             for line in f:
                 self.captions.append(line.strip().lower().split())
             f.close()
@@ -133,13 +137,15 @@ class H5PrecompDataset(PrecompDataset):
     """
 
     def __init__(self, data_path, data_split, vocab, basename,
-                 load_img=True, img_dim=2048, feature='logmelspec', utt_cmvn=False):
+                 load_img=True, img_dim=2048, feature='logmelspec', utt_cmvn=False, phn_force_align=False):
         self.data_split = data_split 
         self.vocab = vocab
         self.img_dim = img_dim
+        self.feature = feature
+        self.phn_force_align = phn_force_align
 
         # load captions
-        self._load_captions(data_path, data_split, basename)
+        self._load_captions(data_path, data_split, basename, self.phn_force_align)
     
         # load speech features
         self._load_speech_feature(data_path, data_split, basename, feature, utt_cmvn)
@@ -150,7 +156,10 @@ class H5PrecompDataset(PrecompDataset):
     def _load_speech_feature(self, data_path, data_split, basename, feature='logmelspec', utt_cmvn=False): 
         # whole hubert
         self.feature_embed_obj = h5py.File(os.path.join(data_path, f'{data_split}_segment-{feature}_embed-{basename}.hdf5'), 'r')
-        self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
+        if self.phn_force_align: # use phn-level alignment 
+            self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_phn_list-{basename}.npy'), allow_pickle=True)[0]
+        else: # default alignment is word-level 
+            self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
         #print(self.feature_embed_obj[str(22)][:].shape)
         #print(self.feature_wordlist[22])
         
@@ -165,11 +174,15 @@ class H5PrecompDataset(PrecompDataset):
 
     def _slice_speech_feature(self, feat, word_list, max_segment_len=50):
         # return (n-th word, word segment # frames, feature-dim), where 1st dim is padded to longest segment frame for an given utterance
+        if self.phn_force_align: # avg phn_segment duration is ~5 frames for hubert and ~10 frames for logmelspec. 20 should be enough. 
+            max_segment_len = 20
+        else: # # avg word_segment duration is ~15 frames for hubert and ~30 frames for logmelspec. 50 should be enough.
+            max_segment_len = 50 
 
         assert len(feat) >= round(word_list[-1][-1]), print(word_list, len(feat))
         word2len = [round(z)-round(y) for (_,y,z) in word_list]
-        #sliced_feat = np.zeros((len(word_list), max(word2len), self.feature_dim)) # e.g. (9, 33, 768)
-        sliced_feat = np.zeros((len(word_list), max_segment_len, self.feature_dim)) # limit the segment-dimension length
+        max_segment_len = min(max_segment_len, max(word2len)) # limit the segment-dimension length
+        sliced_feat = np.zeros((len(word_list), max_segment_len, self.feature_dim)) 
 
         for i, (word, start_frame, end_frame) in enumerate(word_list):
             start_frame, end_frame = round(start_frame), round(end_frame)
@@ -181,7 +194,7 @@ class H5PrecompDataset(PrecompDataset):
             else: 
                 segment_len = word2len[i]
             sliced_feat[i, :segment_len] = feat[start_frame:end_frame, :]
-
+        
         return sliced_feat, len(word_list)
  
     def _get_speech_item(self, index): 
@@ -224,8 +237,9 @@ def h5_collate_fn(data):
 
     # padding in the sentence-level and segment-level
     max_audio_segment_len = max(list(audio_segment_lens))
+    max_audio_sentence_len = max_sentence_len
     feature_dim = audios[0].shape[-1]
-    target_audios = torch.zeros(len(captions), max_sentence_len, max_audio_segment_len, feature_dim).float()
+    target_audios = torch.zeros(len(captions), max_audio_sentence_len, max_audio_segment_len, feature_dim).float()
     for i, audio in enumerate(audios):
         true_sentence_len = true_audio_lens[i]
         true_audio_segment_len = audio_segment_lens[i]
@@ -236,14 +250,14 @@ def h5_collate_fn(data):
     #print(target_audios.shape, audio_masks.shape) # torch.Size([256, 27, 71, 768]) torch.Size([256, 27, 71])
     assert sentence_level_speech_masks.tolist() == lengths # ensure we can match segment embed to words
 
-    return images, targets, target_audios, audio_masks, lengths, ids
+    return images, targets, target_audios, audio_masks, sentence_level_speech_masks.tolist(), ids
 
 def h5_collate_fn_eval(data):
     """disable sorting during eval"""
     zipped_data = list(zip(*data))
     images, captions, audios, true_audio_lens, audio_segment_lens, ids, img_ids = zipped_data
     images = torch.stack(images, 0)
-    max_sentence_len = max([len(caption) for caption in captions])
+    max_sentence_len = len(captions[0])
     targets = torch.zeros(len(captions), max_sentence_len).long()
     lengths = [len(cap) for cap in captions] # --> ensure this match with true_audio_lens
     for i, cap in enumerate(captions):
@@ -252,8 +266,9 @@ def h5_collate_fn_eval(data):
 
     # padding in the sentence-level and segment-level
     max_audio_segment_len = max(list(audio_segment_lens))
+    max_audio_sentence_len = max_sentence_len
     feature_dim = audios[0].shape[-1]
-    target_audios = torch.zeros(len(captions), max_sentence_len, max_audio_segment_len, feature_dim).float()
+    target_audios = torch.zeros(len(captions), max_audio_sentence_len, max_audio_segment_len, feature_dim).float()
     for i, audio in enumerate(audios):
         true_sentence_len = true_audio_lens[i]
         true_audio_segment_len = audio_segment_lens[i]
@@ -264,7 +279,7 @@ def h5_collate_fn_eval(data):
     #print(target_audios.shape, audio_masks.shape) # torch.Size([256, 27, 71, 768]) torch.Size([256, 27, 71])
     assert sentence_level_speech_masks.tolist() == lengths # ensure we can match segment embed to words
 
-    return images, targets, target_audios, audio_masks, lengths, ids
+    return images, targets, target_audios, audio_masks, sentence_level_speech_masks.tolist(), ids
 
 class H5DiscretePrecompDataset(PrecompDataset):
     """ default + whole speech (.hdf5) with Discrete IDs as input
@@ -273,16 +288,18 @@ class H5DiscretePrecompDataset(PrecompDataset):
 
     def __init__(self, data_path, data_split, vocab, basename,
                  load_img=True, img_dim=2048, feature='logmelspec', utt_cmvn=False, 
-                 discretized_phone=False, discretized_word=False, km_clusters=0):
+                 discretized_phone=False, discretized_word=False, km_clusters=0, 
+                 phn_force_align=False):
         self.data_split = data_split 
         self.vocab = vocab
         self.img_dim = img_dim
         self.discretized_phone = discretized_phone
         self.discretized_word  = discretized_word
         self.km_clusters = km_clusters
+        self.phn_force_align = phn_force_align
 
         # load captions
-        self._load_captions(data_path, data_split, basename)
+        self._load_captions(data_path, data_split, basename, self.phn_force_align)
     
         # load speech features
         self._load_speech_feature(data_path, data_split, basename, feature, utt_cmvn, km_clusters)
@@ -295,7 +312,11 @@ class H5DiscretePrecompDataset(PrecompDataset):
     def _load_speech_feature(self, data_path, data_split, basename, feature='logmelspec', utt_cmvn=False, km_clusters=0): 
         # whole hubert
         self.feature_embed_obj = h5py.File(os.path.join(data_path, f'{data_split}_segment-{feature}_embed-km{km_clusters}-{basename}.hdf5'), 'r')
-        self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
+        if self.phn_force_align: # use phn-level alignment 
+            self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_phn_list-{basename}.npy'), allow_pickle=True)[0]
+        else: # default alignment is word-level 
+            self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
+
         #print(self.feature_embed_obj[str(22)][:])
         #print(self.feature_wordlist[22])
         
@@ -303,6 +324,10 @@ class H5DiscretePrecompDataset(PrecompDataset):
 
     def _slice_speech_feature(self, feat, word_list, max_segment_len=50):
         # return (n-th word, word segment # frames), where 1st dim is padded to longest segment frame for an given utterance
+        if self.phn_force_align: # avg phn_segment duration is ~5 frames for hubert and ~10 frames for logmelspec. 20 should be enough. 
+            max_segment_len = 20 
+        else: # # avg word_segment duration is ~15 frames for hubert and ~30 frames for logmelspec. 50 should be enough.
+            max_segment_len = 50 
 
         assert len(feat) >= round(word_list[-1][-1]), print(word_list, len(feat))
         word2len = [round(z)-round(y) for (_,y,z) in word_list]
@@ -386,7 +411,8 @@ def h5_discrete_collate_fn(data):
     if len(audios[0].shape) == 2: # discretized_word == True 
         # padding in the sentence-level and segment-level
         max_audio_segment_len = 50
-        target_audios = pad_discrete_token_id * torch.ones(len(captions), max_sentence_len, max_audio_segment_len).long()
+        max_audio_sentence_len = max_sentence_len
+        target_audios = pad_discrete_token_id * torch.ones(len(captions), max_audio_sentence_len, max_audio_segment_len).long()
         for i, audio in enumerate(audios):
             true_sentence_len = true_audio_lens[i]
             target_audios[i, :true_sentence_len] = audio
@@ -395,10 +421,11 @@ def h5_discrete_collate_fn(data):
         #print(target_audios.shape, audio_masks.shape) # torch.Size([128, 22, 50]) torch.Size([128, 22, 50])
         #print(target_audios[22, 0:3], audio_masks[22, 0:3]) # torch.Size([128, 502]) torch.Size([128, 502])
         assert sentence_level_speech_masks.tolist() == lengths # ensure we can match segment embed to words
+
     elif len(audios[0].shape) == 1: # discretized_phone == True
         # padding in the sentence-level 
-        max_sentence_len = max(true_audio_lens)
-        target_audios = pad_discrete_token_id * torch.ones(len(captions), max_sentence_len).long()
+        max_audio_sentence_len = max_sentence_len
+        target_audios = pad_discrete_token_id * torch.ones(len(captions), max_audio_sentence_len).long()
         for i, audio in enumerate(audios):
             true_sentence_len = true_audio_lens[i]
             target_audios[i, :true_sentence_len] = audio
@@ -406,14 +433,14 @@ def h5_discrete_collate_fn(data):
         audio_masks = torch.where(target_audios==pad_discrete_token_id, -100000, 0) # mask==-inf indicates padding 
         #print(target_audios.shape, audio_masks.shape) # torch.Size([128, 502]) torch.Size([128, 502])
 
-    return images, targets, target_audios, audio_masks, lengths, ids
+    return images, targets, target_audios, audio_masks, sentence_level_speech_masks.tolist(), ids
 
 def h5_discrete_collate_fn_eval(data):
     """disable sorting during eval"""
     zipped_data = list(zip(*data))
     images, captions, audios, true_audio_lens, ids, img_ids, km_clusters = zipped_data
     images = torch.stack(images, 0)
-    max_sentence_len = max([len(caption) for caption in captions])
+    max_sentence_len = len(captions[0])
     targets = torch.zeros(len(captions), max_sentence_len).long()
     lengths = [len(cap) for cap in captions] # --> ensure this match with true_audio_lens
     for i, cap in enumerate(captions):
@@ -424,7 +451,8 @@ def h5_discrete_collate_fn_eval(data):
     if len(audios[0].shape) == 2: # discretized_word == True 
         # padding in the sentence-level and segment-level
         max_audio_segment_len = 50
-        target_audios = pad_discrete_token_id * torch.ones(len(captions), max_sentence_len, max_audio_segment_len).long()
+        max_audio_sentence_len = max_sentence_len
+        target_audios = pad_discrete_token_id * torch.ones(len(captions), max_audio_sentence_len, max_audio_segment_len).long()
         for i, audio in enumerate(audios):
             true_sentence_len = true_audio_lens[i]
             target_audios[i, :true_sentence_len] = audio
@@ -433,10 +461,11 @@ def h5_discrete_collate_fn_eval(data):
         #print(target_audios.shape, audio_masks.shape) # torch.Size([128, 22, 50]) torch.Size([128, 22, 50])
         #print(target_audios[22, 0:3], audio_masks[22, 0:3]) # torch.Size([128, 502]) torch.Size([128, 502])
         assert sentence_level_speech_masks.tolist() == lengths # ensure we can match segment embed to words
+
     elif len(audios[0].shape) == 1: # discretized_phone == True
         # padding in the sentence-level 
-        max_sentence_len = max(true_audio_lens)
-        target_audios = pad_discrete_token_id * torch.ones(len(captions), max_sentence_len).long()
+        max_audio_sentence_len = max_sentence_len
+        target_audios = pad_discrete_token_id * torch.ones(len(captions), max_audio_sentence_len).long()
         for i, audio in enumerate(audios):
             true_sentence_len = true_audio_lens[i]
             target_audios[i, :true_sentence_len] = audio
@@ -444,23 +473,24 @@ def h5_discrete_collate_fn_eval(data):
         audio_masks = torch.where(target_audios==pad_discrete_token_id, -100000, 0) # mask==-inf indicates padding 
         #print(target_audios.shape, audio_masks.shape) # torch.Size([128, 502]) torch.Size([128, 502])
 
-    return images, targets, target_audios, audio_masks, lengths, ids
+    return images, targets, target_audios, audio_masks, sentence_level_speech_masks.tolist(), ids
 
 def get_precomp_loader(data_path, data_split, vocab, basename, 
                        batch_size=128, shuffle=True, num_workers=2, load_img=True, img_dim=2048, 
                        feature='logmelspec', utt_cmvn=False, speech_hdf5=False, 
-                       discretized_phone=False, discretized_word=False, km_clusters=0, no_collate_fn_sorting=False):
+                       discretized_phone=False, discretized_word=False, km_clusters=0, no_collate_fn_sorting=False, 
+                       phn_force_align=False):
     if speech_hdf5: # whole utterance, support for logmelspec and hubert 
         if discretized_phone or discretized_word: 
             dset = H5DiscretePrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn, 
-                                            discretized_phone, discretized_word, km_clusters)
+                                            discretized_phone, discretized_word, km_clusters, phn_force_align)
             data_loader = torch.utils.data.DataLoader(
                 dataset=dset, batch_size=batch_size, shuffle=shuffle,
                 pin_memory=True, num_workers=num_workers, 
                 collate_fn=h5_discrete_collate_fn_eval if no_collate_fn_sorting else h5_discrete_collate_fn
             )
         else:
-            dset = H5PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn)
+            dset = H5PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn, phn_force_align)
             data_loader = torch.utils.data.DataLoader(
                 dataset=dset, batch_size=batch_size, shuffle=shuffle,
                 pin_memory=True, num_workers=num_workers,
@@ -478,30 +508,33 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
 
 
 def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='logmelspec', utt_cmvn=False, speech_hdf5=False, 
-                     discretized_phone=False, discretized_word=False, km_clusters=0):
-    
+                     discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False):
+
     assert discretized_phone & discretized_word == False
 
     train_loader = get_precomp_loader(
         data_path, 'train', vocab, basename, batch_size, True, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5, 
-        discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=False
+        discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=False, 
+        phn_force_align=phn_force_align
     )
     val_loader = get_precomp_loader(
         data_path, 'val', vocab, basename, batch_size, False, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5, 
-        discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=False
+        discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=False, 
+        phn_force_align=phn_force_align
     )
     return train_loader, val_loader
 
 
 def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
                     feature='logmelspec', speech_hdf5=False, load_img=False, img_dim=2048, utt_cmvn=False, 
-                    discretized_phone=False, discretized_word=False, km_clusters=0):
+                    discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False):
 
     assert discretized_phone & discretized_word == False
     
     eval_loader = get_precomp_loader(
         data_path, split_name, vocab, basename, batch_size, False, num_workers=0, feature=feature, 
         speech_hdf5=speech_hdf5, load_img=load_img, img_dim=img_dim, utt_cmvn=utt_cmvn, 
-        discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=True
+        discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=True, 
+        phn_force_align=phn_force_align
     )
     return eval_loader

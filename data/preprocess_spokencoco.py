@@ -74,7 +74,7 @@ def _write_to_file(string, fpath):
     f.write(string)
     f.close()
 
-def _collect_transcript(input_file, transcripts): 
+def _collect_json_transcript(input_file, transcripts): 
     data = json.load(open(input_file))
 
     for pair in tqdm(data['data']):
@@ -85,12 +85,23 @@ def _collect_transcript(input_file, transcripts):
 
     return transcripts
 
+def _collect_phn_transcript(input_file, transcripts): 
+    with open(input_file, 'r') as f: 
+        lines = f.readlines()
+    lines = [x.strip('\n') for x in lines]
+    transcripts.extend(lines)
+    return transcripts
+
 def create_and_store_vocab(args):
     transcripts = []
-    transcripts = _collect_transcript(args.input_val_file, transcripts)
-    transcripts = _collect_transcript(args.input_train_file, transcripts)
+    if args.input_val_file.endswith('json'):
+        transcripts = _collect_json_transcript(args.input_val_file, transcripts)
+        transcripts = _collect_json_transcript(args.input_train_file, transcripts)
+    elif args.input_val_file.endswith('txt'): 
+        transcripts = _collect_phn_transcript(args.input_val_file, transcripts)
+        transcripts = _collect_phn_transcript(args.input_train_file, transcripts)
 
-    vocab = build_vocab(transcripts, threshold=4)
+    #vocab = build_vocab(transcripts, threshold=4)
     vocab = build_vocab(transcripts, threshold=1) # try this 
     with open(args.vocab_output_pickle, 'wb') as f:
         pickle.dump(vocab, f, pickle.HIGHEST_PROTOCOL)
@@ -113,4 +124,4 @@ if __name__ == '__main__':
     #export_transcript_and_tree(args) 
     
     # Step 3: create vocab dictionary based on the transcripts
-    #create_and_store_vocab(args)
+    create_and_store_vocab(args)
