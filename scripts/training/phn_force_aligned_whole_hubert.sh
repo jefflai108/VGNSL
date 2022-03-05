@@ -18,6 +18,7 @@ datadir=data/SpokenCOCO
 expdir=exp/spokencoco/phn_force_aligned_whole_${feature}_embed${embed_size}_lr${lr}_margin${margin}_lambdahi${head_init_bias}_${basename}
 # reduce num_epochs from 20 --> 10 to speed up model dev cycle 
 # reduce batch_size from 128 --> 64 to avoid mem error on SLS machines 
+# increase val_step from 500 --> 1500 to speed up model dev cycle 
 python src/train.py --logger_name $expdir \
     --data_path ${datadir}/Freda-formatting --vocab_path ${datadir}/SpokenCOCO_phn_vocab-threshold1.pkl --basename ${basename} \
     --init_embeddings 0 --img_dim 2048 --scoring_hidden_dim 128 \

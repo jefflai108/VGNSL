@@ -12,7 +12,7 @@ from vocab import Vocabulary
 from model import VGNSL
 from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data
 
-def train(opt, train_loader, model, epoch, val_loader, vocab):
+def train(opt, train_loader, model, epoch, val_loader, vocab, best_rsum):
     # average meters to record the training statistics
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -50,9 +50,23 @@ def train(opt, train_loader, model, epoch, val_loader, vocab):
                     epoch, i, len(train_loader), batch_time=batch_time,
                     data_time=data_time, e_log=str(model.logger)))
 
-        # validate at every val_step
+        # validate at every val_step -- do this less frequently as it takes long to validate 
+        # and slow down model dev cycle. also save model ckpt whenever it's possible 
         if model.Eiters % opt.val_step == 0:
-            validate(opt, val_loader, model, vocab)
+            rsum = validate(opt, val_loader, model, vocab)
+
+            # remember best R@ sum and save checkpoint
+            is_best = rsum > best_rsum
+            best_rsum = max(rsum, best_rsum)
+            save_checkpoint({
+                'epoch': epoch, # save as 'epoch' instead of 'epoch + 1'
+                'model': model.state_dict(),
+                'best_rsum': best_rsum,
+                'opt': opt,
+                'Eiters': model.Eiters,
+            }, is_best, epoch, prefix=opt.logger_name + '/')
+    
+    return best_rsum
 
 
 def validate(opt, val_loader, model, vocab):
@@ -257,18 +271,19 @@ if __name__ == '__main__':
         if last_ckpt == -1: 
             print('no pretrained model found') 
             starting_epoch = 0
+            best_rsum = 0
         else: 
             print(f'loading pretrained model from {pretrained_model_pth}')
             checkpoint = torch.load(pretrained_model_pth, map_location='cpu')
             model.load_state_dict(checkpoint['model']) 
             starting_epoch = checkpoint['epoch']
+            best_rsum = checkpoint['best_rsum']
 
-    best_rsum = 0
     for epoch in range(starting_epoch, opt.num_epochs):
         adjust_learning_rate(opt, model.optimizer, epoch)
 
         # train for one epoch
-        train(opt, train_loader, model, epoch, val_loader, vocab)
+        best_rsum = train(opt, train_loader, model, epoch, val_loader, vocab, best_rsum)
 
         # evaluate on validation set using VSE metrics
         rsum = validate(opt, val_loader, model, vocab)
