@@ -174,8 +174,8 @@ class H5PrecompDataset(PrecompDataset):
 
     def _slice_speech_feature(self, feat, word_list, max_segment_len=50):
         # return (n-th word, word segment # frames, feature-dim), where 1st dim is padded to longest segment frame for an given utterance
-        if self.phn_force_align: # avg phn_segment duration is ~5 frames for hubert and ~10 frames for logmelspec. 20 should be enough. 
-            max_segment_len = 20
+        if self.phn_force_align: # avg phn_segment duration is ~5 frames for hubert and ~10 frames for logmelspec. 15 should be enough. 
+            max_segment_len = 15
         else: # # avg word_segment duration is ~15 frames for hubert and ~30 frames for logmelspec. 50 should be enough.
             max_segment_len = 50 
 
