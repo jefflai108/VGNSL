@@ -59,7 +59,7 @@ def train(opt, train_loader, model, epoch, val_loader, vocab, best_rsum):
             is_best = rsum > best_rsum
             best_rsum = max(rsum, best_rsum)
             save_checkpoint({
-                'epoch': epoch, # save as 'epoch' instead of 'epoch + 1'
+                'epoch': epoch + 1,
                 'model': model.state_dict(),
                 'best_rsum': best_rsum,
                 'opt': opt,
