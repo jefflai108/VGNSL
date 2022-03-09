@@ -296,16 +296,15 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
     if visual_tree: 
         ground_truth = ground_truth[:visual_samples]
         all_captions = all_captions[:visual_samples]
-
     if export_tree: 
         export_tree_writer = open(export_tree_path, 'w')
     cap_embs = None
     logged = False
     trees = list()
-    for i, (images, captions, audios, audio_masks, lengths, ids) in enumerate(tqdm(data_loader)):
+
+    for i, (images, captions, audios, audio_masks, lengths, ids) in enumerate(data_loader):
         if visual_tree and i == visual_samples: 
             break 
-
         # make sure val logger is used
         model.logger = print
         lengths = torch.Tensor(lengths).long()

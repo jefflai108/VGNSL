@@ -178,6 +178,8 @@ class H5PrecompDataset(PrecompDataset):
             max_segment_len = 15
         else: # # avg word_segment duration is ~15 frames for hubert and ~30 frames for logmelspec. 50 should be enough.
             max_segment_len = 50 
+        if self.data_split == 'test': # avoid over-cropping during test-time
+            max_segmnet_len = 50
 
         assert len(feat) >= round(word_list[-1][-1]), print(word_list, len(feat))
         word2len = [round(z)-round(y) for (_,y,z) in word_list]
@@ -257,7 +259,7 @@ def h5_collate_fn_eval(data):
     zipped_data = list(zip(*data))
     images, captions, audios, true_audio_lens, audio_segment_lens, ids, img_ids = zipped_data
     images = torch.stack(images, 0)
-    max_sentence_len = len(captions[0])
+    max_sentence_len = max([len(caption) for caption in captions])
     targets = torch.zeros(len(captions), max_sentence_len).long()
     lengths = [len(cap) for cap in captions] # --> ensure this match with true_audio_lens
     for i, cap in enumerate(captions):
@@ -440,7 +442,7 @@ def h5_discrete_collate_fn_eval(data):
     zipped_data = list(zip(*data))
     images, captions, audios, true_audio_lens, ids, img_ids, km_clusters = zipped_data
     images = torch.stack(images, 0)
-    max_sentence_len = len(captions[0])
+    max_sentence_len = max([len(caption) for caption in captions])
     targets = torch.zeros(len(captions), max_sentence_len).long()
     lengths = [len(cap) for cap in captions] # --> ensure this match with true_audio_lens
     for i, cap in enumerate(captions):
