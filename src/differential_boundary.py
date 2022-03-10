@@ -155,6 +155,8 @@ class DifferentialWordSegmentation(nn.Module):
         W = 1 - torch.tanh(100000 * torch.abs(V))
         W = W / torch.sum(W, dim=1).unsqueeze(1)
         W = torch.nan_to_num(W)
+
+        # these two are good way to debug 
         #print(b[-1])
         #print(W[-1])
         print(W.shape) # B, N, # of segments 
