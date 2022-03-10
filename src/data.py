@@ -176,6 +176,8 @@ class H5PrecompDataset(PrecompDataset):
         # return (n-th word, word segment # frames, feature-dim), where 1st dim is padded to longest segment frame for an given utterance
         if self.phn_force_align: # avg phn_segment duration is ~5 frames for hubert and ~10 frames for logmelspec. 15 should be enough. 
             max_segment_len = 15
+            if self.feature == 'logmelspec': 
+                max_segment_len = 30 
         else: # # avg word_segment duration is ~15 frames for hubert and ~30 frames for logmelspec. 50 should be enough.
             max_segment_len = 50 
         if self.data_split == 'test': # avoid over-cropping during test-time

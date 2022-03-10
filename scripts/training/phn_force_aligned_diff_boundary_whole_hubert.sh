@@ -1,8 +1,8 @@
 #!/bin/bash
 
-basename=$1
-embed_size=$2
-lr=$3
+basename=100-100-100
+embed_size=78
+lr=1e-6
 feature=logmelspec; feature_dim=40
 feature=hubert; feature_dim=768
 feature=hubert2; feature_dim=768
@@ -12,10 +12,10 @@ feature=hubert8; feature_dim=768
 feature=hubert10; feature_dim=768
 feature=content_vec_v07_1112; feature_dim=768
 feature=content_vec_v12_0512; feature_dim=768
-feature=$4
+feature=hubert
 if [[ "$feature" = "logmelspec" ]]; then feature_dim=40 ; fi
-margin=$5
-head_init_bias=$6
+margin=0.2
+head_init_bias=0
 rl_loss=$7
 
 datadir=data/SpokenCOCO
@@ -32,6 +32,6 @@ fi
 python src/train.py --logger_name $expdir \
     --data_path ${datadir}/Freda-formatting --vocab_path ${datadir}/SpokenCOCO_phn_vocab-threshold1.pkl --basename ${basename} \
     --init_embeddings 0 --img_dim 2048 --scoring_hidden_dim 128 \
-    --num_epochs 10 --workers 0 --batch_size 64 --margin ${margin} --val_step 1500 \
+    --num_epochs 10 --workers 0 --batch_size 10 --margin ${margin} --val_step 1500 \
     --embed_size ${embed_size} --feature_dim ${feature_dim} --learning_rate ${lr} --lambda_hi ${head_init_bias} --vse_reward_alpha $vse_reward_alpha \
     --speech_hdf5 --feature ${feature} --load_pretrained --phn_force_align
