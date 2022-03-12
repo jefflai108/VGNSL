@@ -50,6 +50,10 @@ def train(opt, train_loader, model, epoch, val_loader, vocab, best_rsum):
                     epoch, i, len(train_loader), batch_time=batch_time,
                     data_time=data_time, e_log=str(model.logger)))
 
+        if opt.diffbound_gtword: # trick, as intermediate ckpt may be better --> see if this is better first. Possibly take as the default. 
+            if model.Eiters % opt.val_step == 0: 
+                break 
+
         # validate at every val_step -- do this less frequently as it takes long to validate 
         # and slow down model dev cycle. also save model ckpt whenever it's possible 
         if model.Eiters % opt.val_step == 0:
@@ -65,14 +69,14 @@ def train(opt, train_loader, model, epoch, val_loader, vocab, best_rsum):
                 'opt': opt,
                 'Eiters': model.Eiters,
             }, is_best, epoch, prefix=opt.logger_name + '/')
-    
+
     return best_rsum
 
 
 def validate(opt, val_loader, model, vocab):
     # compute the encoding for all the validation images and captions
     img_embs, cap_embs = encode_data(
-        opt.data_path, opt.basename, model, val_loader, opt.log_step, logger.info, vocab, speech_hdf5=opt.speech_hdf5, phn_force_align=opt.phn_force_align)
+        opt.data_path, opt.basename, model, val_loader, opt.log_step, logger.info, vocab, speech_hdf5=opt.speech_hdf5, phn_force_align=opt.phn_force_align, diffbound_gtword=opt.diffbound_gtword)
     # caption retrieval
     (r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, measure='cosine')
     logger.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
@@ -156,6 +160,8 @@ if __name__ == '__main__':
                         help='dimensionality of the word embedding')
     parser.add_argument('--phn_force_align', action='store_true',
                         help='force alignment in the phone-level')
+    parser.add_argument('--diffbound_gtword', action='store_true',
+                        help='differential boundary detector given gtword segments. Use with --phn_force_align')
     parser.add_argument('--discretized_word', action='store_true',
                         help='discretize input speech sequence with word-level input \
                              aka discrete ID + force alignment --> VGNSL')
@@ -257,7 +263,7 @@ if __name__ == '__main__':
     # Load data loaders
     train_loader, val_loader = data.get_train_loaders(
         opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.feature, opt.feature_cmvn, opt.speech_hdf5, 
-        opt.discretized_phone, opt.discretized_word, opt.km_clusters, opt.phn_force_align
+        opt.discretized_phone, opt.discretized_word, opt.km_clusters, opt.phn_force_align, opt.diffbound_gtword
     )
 
     # construct the model

@@ -50,7 +50,7 @@ def relatvie_segment_dissimilarity(segment_similarity):
     relative_similarity = torch.div((segment_similarity - min_segment_similarity[:, None]), \
                                     (max_segment_similarity[:, None] - min_segment_similarity[:, None]))
 
-    relative_dissimilarity = torch.ones(relative_similarity.shape) - relative_similarity
+    relative_dissimilarity = torch.ones_like(relative_similarity) - relative_similarity
     return relative_dissimilarity
 
 def segment_peak_detector(segment_dissimilarity, threshold): 
@@ -86,7 +86,7 @@ def segment_peak_detector(segment_dissimilarity, threshold):
     # p based on p_1, p_2, threshold
     peak_detector = torch.minimum( \
         torch.maximum( \
-            torch.maximum(first_order_detector, second_order_detector) - threshold * torch.ones(segment_dissimilarity.shape), \
+            torch.maximum(first_order_detector, second_order_detector) - threshold * torch.ones_like(segment_dissimilarity), \
             torch.zeros_like(segment_dissimilarity) \
         ), first_order_detector \
     )
@@ -113,7 +113,7 @@ def top_k_peak_sampling(P, phn_mask, gt_word_lens, proxy_large_num=10):
         topk_Pi, topk_Pi_idx = torch.topk(P[i, :num_of_phns], num_of_words) # for the corner case of under-segmentation. trivial solve by randomly uniform segment the rest (return from topk sampling)
         P[i, topk_Pi_idx] = proxy_large_num
     
-    P = torch.where(P != proxy_large_num, torch.tensor(0.0), P) # rest of P set to 0. This will avoid over-segmentation.
+    P = torch.where(P != proxy_large_num, torch.tensor(0.0, device=P.device), P) # rest of P set to 0. This will avoid over-segmentation.
 
     # good way to debug
     #print(P)
@@ -144,31 +144,35 @@ class DifferentialWordSegmentation(nn.Module):
         '''
         batch_size, num_phns, hidden_dim = segment_rep.shape
         
-        print(phn_mask)
+        #print(phn_mask)
         # 1. Compute D, phn-segment-wise dissimilarity 
         S = self.adjacent_segment_sim_measure(segment_rep[:, :-1, :], segment_rep[:, 1:, :])
-        print(S.shape) # B, N-1
+        #print(S.shape) # B, N-1
         D = relatvie_segment_dissimilarity(S)
-        print(D.shape) # B, N-1
+        #print(D.shape) # B, N-1
     
         # 2. Run first/second-order peak detector on D 
         P = segment_peak_detector(D, self.peak_detection_threshold)
         P = F.pad(P, (0, 1), value=0) # for matching input_shape. Since there's no next frame for last, Pt should be 0.
-        print(P.shape) # B, N
-
+        #print(P.shape) # B, N
+        
         # 2.1 filter out padded phn from P accroding to phn_mask
-        P = P + torch.sub(phn_mask, torch.ones_like(phn_mask))
-        F.relu(P, inplace=True)
-        print(P)
+        #P = P + torch.sub(phn_mask, torch.ones_like(phn_mask)) # phn_mask consists of 1 and 1e-5
+        #print(P)
+        P = P + phn_mask # phn_mask consists of 0 and 1e-5
+        with torch.no_grad():
+            P = F.relu(P)
+        #print(gt_word_lens)
 
         # 2.2 top-k sampling for enforcing # of word segment
         P = top_k_peak_sampling(P, phn_mask, gt_word_lens)
+        #print(P)
 
         # 3. make P binary and differentiable via straight-through
         b_soft = torch.tanh(10 * P)
         b_hard = torch.tanh(100000 * P)
         b = b_soft + (b_hard - b_soft).detach()
-        print(b.shape) # B, N 
+        #print(b.shape) # B, N 
 
         # these two are good way to debug 
         #print(b)
@@ -177,16 +181,16 @@ class DifferentialWordSegmentation(nn.Module):
         # 4. vectorize b for mean-pooling 
         b = torch.cumsum(b, dim=1) 
         #print(b)
-        assert b[:, -1].tolist() == gt_word_lens, print('num of word segments should equal the number of words')
+        assert torch.all(b[:, -1] == gt_word_lens), print('num of word segments should equal the number of words')
         num_word_segments = b[:, -1].int()
-        U = -100000 * torch.ones(batch_size, num_phns, max(num_word_segments))
+        U = -100000 * torch.ones(batch_size, num_phns, max(num_word_segments), device=b.device)
         for i in range(batch_size): 
             num_word_segment = num_word_segments[i]
             U[i, :, :num_word_segment] = torch.arange(1, num_word_segment+1).repeat(num_phns, 1)
-        print(U.shape) # B, N, M 
+        #print(U.shape) # B, N, M 
         V = U - b.unsqueeze(-1)
         #print(V)
-        print(V.shape) # B, N, M
+        #print(V.shape) # B, N, M
         W = 1 - torch.tanh(100000 * torch.abs(V))
         W = W / torch.sum(W, dim=1).unsqueeze(1)
         W = torch.nan_to_num(W)
@@ -199,13 +203,13 @@ class DifferentialWordSegmentation(nn.Module):
         # 5. word segment representation via W
         W = W.permute(0, 2, 1) # B, M, N 
         word_segment_rep = torch.bmm(W, segment_rep)
-        print(word_segment_rep.shape) # B, M, H
+        #print(word_segment_rep.shape) # B, M, H
         #print(word_segment_rep[-1])
         word_masks = torch.where(word_segment_rep==0, 0, 1)
         #print(word_masks[-1])
         word_segment_rep = self.word_enc(word_segment_rep)
         word_segment_rep = torch.mul(word_segment_rep, word_masks)
-        print(word_segment_rep.shape) # B, M, H
+        #print(word_segment_rep.shape) # B, M, H
         #print(word_segment_rep[-1, 5:])
         return word_segment_rep
 
@@ -220,6 +224,8 @@ some to-dos:
 some potential improvements: 
 1. run an RNN on phn-segments (like SCPC). This way we can have both the loss, and word similarity comes from 
     cos_dist(context_vector, segment_vector). 
+
+2. pre-train diff boundary detector with SCPC. 
 '''
 if __name__ == '__main__': 
     batch_size = 10

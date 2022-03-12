@@ -68,12 +68,15 @@ class LogCollector(object):
         return s
 
 
-def encode_data(data_path, basename, model, data_loader, log_step=10, logging=print, vocab=None, stage='dev', speech_hdf5=False, phn_force_align=False):
+def encode_data(data_path, basename, model, data_loader, log_step=10, logging=print, vocab=None, stage='dev', speech_hdf5=False, phn_force_align=False, diffbound_gtword=False):
     """Encode all images and captions loadable by `data_loader`
     """
     if phn_force_align: 
         ground_truth = [line.strip().lower() for line in open(
             os.path.join(data_path, f'val_phn-level-ground-truth-{basename}.txt'))]
+        if diffbound_gtword: 
+            ground_truth = [line.strip() for line in open(
+                os.path.join(data_path, f'val_word-level-ground-truth-{basename}.txt'))]
     else: 
         ground_truth = [line.strip() for line in open(
             os.path.join(data_path, f'val_word-level-ground-truth-{basename}.txt'))]
@@ -270,6 +273,12 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
     if hasattr(opt, 'km_clusters'): 
         km_clusters = opt.km_clusters
     else: km_clusters = 0
+    if hasattr(opt, 'phn_force_align'): 
+        phn_force_align = opt.phn_force_align
+    else: phn_force_align = False 
+    if hasattr(opt, 'diffbound_gtword'): 
+        diffbound_gtword = opt.diffbound_gtword
+    else: diffbound_gtword = False
     if visual_tree: 
         eval_batch_size = 1 
     elif export_tree: # smaller batch size to avoid mem error
@@ -280,14 +289,21 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
         data_path, data_split, vocab, basename, eval_batch_size, 1,
         feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5, 
         discretized_phone=use_discretized_phone, discretized_word=use_discretized_word, km_clusters=km_clusters, 
-        phn_force_align=opt.phn_force_align
+        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword
     )
 
-    if opt.phn_force_align: # phn-level alignment 
+    if phn_force_align: # phn-level alignment 
         ground_truth = [line.strip().lower() for line in open(
             os.path.join(data_path, f'{data_split}_phn-level-ground-truth-{basename}.txt'))]
         all_captions = [line.strip() for line in open(
             os.path.join(data_path, f'{data_split}_phn_caps-{basename}.txt'))]
+
+        if diffbound_gtword: # differential boundary setup: use word-level text captions
+            ground_truth = [line.strip() for line in open(
+                os.path.join(data_path, f'{data_split}_word-level-ground-truth-{basename}.txt'))]
+            all_captions = [line.strip() for line in open(
+                os.path.join(data_path, f'{data_split}_caps-{basename}.txt'))]
+
     else: # word-level alignment 
         ground_truth = [line.strip() for line in open(
             os.path.join(data_path, f'{data_split}_word-level-ground-truth-{basename}.txt'))]

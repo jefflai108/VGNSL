@@ -21,6 +21,7 @@ import utils
 
 from module import AttentivePooling, AttentivePoolingInputNorm, \
                    AttentivePoolingDiscreteInput, create_resdavenet_vq
+from differential_boundary import DifferentialWordSegmentation
 
 class EncoderImagePrecomp(nn.Module):
     """ image encoder """
@@ -78,6 +79,7 @@ class EncoderText(nn.Module):
         #self.sem_embedding = nn.Linear(self.semantics_dim, self.semantics_dim, bias=False)
         self.use_davenet = False
         self.discretize_word = False 
+        self.diffbound_gtword = False
         if opt.speech_hdf5: 
             if hasattr(opt, 'attention_norm') and opt.attention_norm:
                 self.sem_embedding = AttentivePoolingInputNorm(self.semantics_dim, self.embed_size)
@@ -85,7 +87,7 @@ class EncoderText(nn.Module):
                 self.discretize_word = True
                 self.sem_embedding = AttentivePoolingDiscreteInput(discrete_vocab_size=opt.km_clusters+3, 
                                                                    discrete_embed_size=self.embed_size)
-            else:
+            else: # default audio VG-NSL
                 self.sem_embedding = AttentivePooling(self.semantics_dim, self.embed_size)
             if hasattr(opt, 'davenet_embed') and opt.davenet_embed:
                 self.use_davenet = True 
@@ -103,6 +105,9 @@ class EncoderText(nn.Module):
                 self.sem_embedding.train()
                 self.sem_embedding_linear_transformer = nn.Linear(1024, self.embed_size, bias=False)
                 #self.sem_embedding.eval()
+            if hasattr(opt, 'diffbound_gtword') and opt.diffbound_gtword:
+                self.diffbound_gtword = True 
+                self.differential_boundary_module = DifferentialWordSegmentation(self.embed_size, peak_detection_threshold=0.0)
         else: 
             self.sem_embedding = nn.Linear(self.semantics_dim, self.embed_size, bias=False)
 
@@ -149,17 +154,22 @@ class EncoderText(nn.Module):
             else:
                 batch_size, num_word, frame_per_segment, feat_dim = x.shape
                 x = x.reshape(-1, frame_per_segment, feat_dim)
-            audio_masks = audio_masks.reshape(-1, frame_per_segment)
+            batched_audio_masks = audio_masks.reshape(-1, frame_per_segment) # process in minibatches of speech segments
             if self.use_davenet:
-                num_of_true_frames_per_segment = torch.tensor([_y.tolist().index(-100000) if -100000 in _y else frame_per_segment for _y in audio_masks])
+                num_of_true_frames_per_segment = torch.tensor([_y.tolist().index(-100000) if -100000 in _y else frame_per_segment for _y in batched_audio_masks])
                 sem_embeddings, _, _, _ = self.sem_embedding(x, nframes=num_of_true_frames_per_segment)
                 sem_embeddings = self.sem_embedding_linear_transformer(sem_embeddings)
             else:
-                sem_embeddings = self.sem_embedding(x, audio_masks)
+                sem_embeddings = self.sem_embedding(x, batched_audio_masks)
             sem_embeddings = sem_embeddings.reshape(batch_size, num_word, self.embed_size)
+            if self.diffbound_gtword: # transform phn_seg --> word_seg via differential boundary
+                #print(sem_embeddings.shape)
+                #print(audio_masks.shape)
+                sem_embeddings = self.differential_boundary_module(sem_embeddings, audio_masks[:, :, 0], gt_word_lens=lengths)
+                #print(sem_embeddings.shape)
 
             del x
-            del audio_masks
+            del audio_masks, batched_audio_masks
         else: 
             sem_embeddings = self.sem_embedding(x)
         syn_embeddings = sem_embeddings
