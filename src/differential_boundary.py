@@ -194,6 +194,8 @@ class DifferentialWordSegmentation(nn.Module):
         W = 1 - torch.tanh(100000 * torch.abs(V))
         W = W / torch.sum(W, dim=1).unsqueeze(1)
         W = torch.nan_to_num(W)
+        print(W[-1])
+        print(b[-1])
         # these two are good way to debug 
         #print(b[-2])
         #print(W[-2])
@@ -212,6 +214,45 @@ class DifferentialWordSegmentation(nn.Module):
         #print(word_segment_rep.shape) # B, M, H
         #print(word_segment_rep[-1, 5:])
         return word_segment_rep
+
+
+def word_seg_F1(pred_seg_vecs, gt_seg_vecs): 
+
+    word_tolerance = 2
+
+    precision_counter = 0
+    recall_counter = 0
+    pred_counter = 0
+    gt_counter = 0
+    for (y, yhat) in zip(gt_seg_vecs, pred_seg_vecs):
+        for yhat_i in yhat:
+            min_dist = np.abs(y - yhat_i).min()
+            precision_counter += (min_dist <= word_tolerance)
+        for y_i in y:
+            min_dist = np.abs(yhat - y_i).min()
+            recall_counter += (min_dist <= word_tolerance)
+        pred_counter += len(yhat)
+        gt_counter += len(y)
+
+    p, r, f1, rval = get_metrics(precision_counter,
+                                 recall_counter,
+                                 pred_counter,
+                                 gt_counter)
+    print('f1 is %f and rval is %f' % (f1, rval))
+
+def get_metrics(precision_counter, recall_counter, pred_counter, gt_counter):
+    EPS = 1e-7
+    
+    precision = precision_counter / (pred_counter + 1e-5)
+    recall = recall_counter / (gt_counter + 1e-5)
+    f1 = 2 * (precision * recall) / (precision + recall + 1e-5)
+    
+    os = recall / (precision + EPS) - 1
+    r1 = np.sqrt((1 - recall) ** 2 + os ** 2)
+    r2 = (-os + recall - 1) / (np.sqrt(2))
+    rval = 1 - (np.abs(r1) + np.abs(r2)) / 2
+
+    return precision, recall, f1, rval
 
 '''
 some to-dos:
@@ -234,7 +275,7 @@ if __name__ == '__main__':
     feat_dim = 768
     hidden_dim = 512
     word_segment_threshold = 0.00 # for enforcing # of words 
-    gt_word_lens = [2, 3, 5, 2, 6, 3, 4, 9, 7, 4]
+    gt_word_lens = torch.tensor([2, 3, 5, 2, 6, 3, 4, 9, 7, 4])
     
     x = torch.randn(batch_size * num_word, frame_per_segment, feat_dim)
     audio_mask = torch.ones(batch_size, num_word, frame_per_segment)
@@ -249,4 +290,13 @@ if __name__ == '__main__':
      
     differential_boundary_module = DifferentialWordSegmentation(hidden_dim, word_segment_threshold)
     differential_boundary_module(sem_embeddings, audio_mask[:, :, 0], gt_word_lens)
+
+
+    
+    # word segmentation results 
+    pred_seg_vecs = torch.tensor([[1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0]])
+    gt_seg_vecs = torch.tensor([[1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0]])
+    gt_seg_vecs = torch.tensor([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+    word_seg_F1(pred_seg_vecs, gt_seg_vecs)
+
 
