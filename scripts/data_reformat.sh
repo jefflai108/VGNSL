@@ -13,14 +13,28 @@
 # ./scripts/data_reformat.sh 83k-5k-5k 20 2 train
 
 datadir=data/SpokenCOCO
-#for split in 83k-5k-5k 10k-5k-5k 10k-1k-1k; do 
 split=$1
 num_labs=$2
 lab_id=$3
 #for data_split in train val test; do
 data_split=$4
 layer_num=$5
+
 python data/data_reformat_v4.py \
     -j ${datadir}/SpokenCOCO_summary-${split}.json -i ${datadir}/SpokenCOCO_images.h5 \
     -o ${datadir}/Freda-formatting/ --h5_format --parallelize -n $num_labs -l $lab_id \
     --data-split $data_split --feature hubert --layer_num $layer_num
+
+# for writing dino img embeddings only
+split=83k-5k-5k
+num_labs=1
+lab_id=0
+layer_num=12
+vits=vitb16
+for data_split in train val test; do
+python data/data_reformat_v4-dino.py \
+    -j ${datadir}/SpokenCOCO_summary-${split}.json -i ${datadir}/SpokenCOCO_dino_${vits}_images.h5 \
+    -o ${datadir}/Freda-formatting/ --h5_format --parallelize -n $num_labs -l $lab_id \
+    --data-split $data_split --feature hubert --layer_num $layer_num --dino_type $vits 
+done
+

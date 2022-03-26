@@ -256,9 +256,9 @@ def main(args):
         val_json = data_summary['val'] 
         print('loading val_loader')
         val_writer = SummaryJsonReader(val_json, args.image_hdf5, args.feature)
-        #val_writer.write_image_to_file(op.join(args.output_dir, 'val_ims-' + basename + '.npy'))
-        #val_writer.write_text_or_tree_to_file( \
-        #    op.join(args.output_dir, 'val_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'val_caps-' + basename + '.txt'))
+        val_writer.write_image_to_file(op.join(args.output_dir, 'val_ims-' + basename + '.npy'))
+        val_writer.write_text_or_tree_to_file( \
+            op.join(args.output_dir, 'val_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'val_caps-' + basename + '.txt'))
         if args.h5_format:
             seg_embed_h5_obj = h5py.File(op.join(args.output_dir, f'val_segment-{args.feature}{args.layer_num}_embed-' + basename + '.hdf5'), "w")
             word_list_file = op.join(args.output_dir, f'val_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
@@ -275,9 +275,9 @@ def main(args):
         test_json = data_summary['test'] 
         print('loading test_loader')
         test_writer = SummaryJsonReader(test_json, args.image_hdf5, args.feature)
-        #test_writer.write_image_to_file(op.join(args.output_dir, 'test_ims-' + basename + '.npy'))
-        #test_writer.write_text_or_tree_to_file( \
-        #    op.join(args.output_dir, 'test_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'test_caps-' + basename + '.txt'))
+        test_writer.write_image_to_file(op.join(args.output_dir, 'test_ims-' + basename + '.npy'))
+        test_writer.write_text_or_tree_to_file( \
+            op.join(args.output_dir, 'test_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'test_caps-' + basename + '.txt'))
         if args.h5_format:
             seg_embed_h5_obj = h5py.File(op.join(args.output_dir, f'test_segment-{args.feature}{args.layer_num}_embed-' + basename + '.hdf5'), "w")
             word_list_file = op.join(args.output_dir, f'test_segment-{args.feature}{args.layer_num}_word_list-' + basename + '.npy')
@@ -294,9 +294,9 @@ def main(args):
         train_json = data_summary['train']
         print('loading train_loader')
         train_writer = SummaryJsonReader(train_json, args.image_hdf5, args.feature, parallelize=args.parallelize, num_labs=args.num_labs, lab_id=args.lab_id)
-        #train_writer.write_image_to_file(op.join(args.output_dir, 'train_ims-' + basename + '.npy'))
-        #train_writer.write_text_or_tree_to_file( \
-        #    op.join(args.output_dir, 'train_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'train_caps-' + basename + '.txt'))
+        train_writer.write_image_to_file(op.join(args.output_dir, 'train_ims-' + basename + '.npy'))
+        train_writer.write_text_or_tree_to_file( \
+            op.join(args.output_dir, 'train_ground-truth-' + basename + '.txt'), op.join(args.output_dir, 'train_caps-' + basename + '.txt'))
         
         if args.parallelize: 
             if args.h5_format:

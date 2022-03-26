@@ -90,14 +90,17 @@ class FeatureExtractor(nn.Module):
     def __init__(self):
         super().__init__()
         # standard pytorch resnet feature extraction code 
-        self.vits8 = torch.hub.load('facebookresearch/dino:main', 'dino_vits8', pretrained=True)
-        self.vits8.eval()
+        self.vits = torch.hub.load('facebookresearch/dino:main', 'dino_vits8', pretrained=True) # dim 384
+        self.vits = torch.hub.load('facebookresearch/dino:main', 'dino_vits16', pretrained=True) # dim 384
+        self.vits = torch.hub.load('facebookresearch/dino:main', 'dino_vitb16', pretrained=True) # dim 768
+        self.vits = torch.hub.load('facebookresearch/dino:main', 'dino_vitb8', pretrained=True) # dim 768
+        self.vits.eval()
 
     def forward(self, feed_dict, image_filename):
         feed_dict = GView(feed_dict)
         with torch.no_grad(): 
             #f = self.resnet(feed_dict.image).squeeze(-1).squeeze(-1)
-            f = self.vits8(feed_dict.image)
+            f = self.vits(feed_dict.image)
             print(f.shape) # N, 384
 
         f = f.cpu().detach().numpy() # for storing purpose 
