@@ -1,0 +1,3 @@
+[submodule "self-attentive-parser"]
+	path = self-attentive-parser
+	url = https://github.com/nikitakit/self-attentive-parser
