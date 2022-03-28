@@ -10,6 +10,9 @@ import numpy as np
 
 from PIL import Image
 
+import timm
+assert timm.__version__ == "0.3.2"
+
 import torch
 import torch.nn as nn
 import torch.cuda as cuda
@@ -94,6 +97,10 @@ class FeatureExtractor(nn.Module):
         self.vits = torch.hub.load('facebookresearch/dino:main', 'dino_vits16', pretrained=True) # dim 384
         self.vits = torch.hub.load('facebookresearch/dino:main', 'dino_vitb16', pretrained=True) # dim 768
         self.vits = torch.hub.load('facebookresearch/dino:main', 'dino_vitb8', pretrained=True) # dim 768
+        self.vits = torch.hub.load('facebookresearch/dino:main', 'dino_xcit_small_12_p16', pretrained=True) # dim 384
+        self.vits = torch.hub.load('facebookresearch/deit:main', 'deit_base_patch16_224', pretrained=True) # dim 1000
+        self.vits = torch.hub.load('facebookresearch/deit:main', 'deit_base_distilled_patch16_384', pretrained=True) # dim 1000
+
         self.vits.eval()
 
     def forward(self, feed_dict, image_filename):

@@ -169,6 +169,8 @@ def main(args):
         dino_dim = 384
     elif args.dino_type in ['vitb8', 'vitb16']: 
         dino_dim = 768
+    elif args.dino_type in ['deit_base_distilled_patch16_384', 'deit_base_patch16_224']: 
+        dino_dim = 1000
 
     if args.data_split == 'val':
         val_json = data_summary['val'] 
@@ -204,7 +206,8 @@ if __name__ == '__main__':
     parser.add_argument('--feature', '-f', type=str, default='logmelspec', 
                         choices = ['logmelspec', 'hubert', 'hubert_large', 'content_vec_v07_11', 'content_vec_v12_05'])
     parser.add_argument('--layer_num', type=int, default=12)
-    parser.add_argument('--dino_type', type=str, choices=['vits8', 'vits16', 'vitb8', 'vitb16'])
+    parser.add_argument('--dino_type', type=str, choices=['vits8', 'vits16', 'vitb8', 'vitb16', 
+                                                          'deit_base_distilled_patch16_384', 'deit_base_patch16_224'])
     args = parser.parse_args()
 
     main(args)

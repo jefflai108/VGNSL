@@ -25,15 +25,17 @@ python data/data_reformat_v4.py \
     -o ${datadir}/Freda-formatting/ --h5_format --parallelize -n $num_labs -l $lab_id \
     --data-split $data_split --feature hubert --layer_num $layer_num
 
-# for writing dino img embeddings only
+# for writing dino/deit img embeddings only
+datadir=data/SpokenCOCO
 split=83k-5k-5k
 num_labs=1
 lab_id=0
 layer_num=12
-vits=vitb16
+vits=deit_base_distilled_patch16_384
+vits=deit_base_patch16_224
 for data_split in train val test; do
 python data/data_reformat_v4-dino.py \
-    -j ${datadir}/SpokenCOCO_summary-${split}.json -i ${datadir}/SpokenCOCO_dino_${vits}_images.h5 \
+    -j ${datadir}/SpokenCOCO_summary-${split}.json -i ${datadir}/SpokenCOCO_${vits}_images.h5 \
     -o ${datadir}/Freda-formatting/ --h5_format --parallelize -n $num_labs -l $lab_id \
     --data-split $data_split --feature hubert --layer_num $layer_num --dino_type $vits 
 done
