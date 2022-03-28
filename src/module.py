@@ -41,6 +41,45 @@ class AttentivePooling(nn.Module):
 
         return segment_rep
 
+class AttentivePoolingInputNorm(nn.Module):
+    """
+    AttentivePooling with additional input layernorm, for hubert_large features
+    ref: https://github.com/pytorch/fairseq/blob/52658402c5f37ccc4c6b796c44c0115af3b6eca1/fairseq/models/wav2vec/wav2vec2.py#L1215
+    """
+    def __init__(self, feature_dim, output_dim, **kwargs):
+        super(AttentivePoolingInputNorm, self).__init__()
+       
+        self.self_attn_layer_norm = nn.LayerNorm(feature_dim)
+        self.feature_transform = nn.Linear(feature_dim, output_dim)
+        self.W_a = nn.Linear(output_dim, output_dim)
+        self.W = nn.Linear(output_dim, 1)
+        self.act_fn = nn.ReLU()
+        self.softmax = nn.functional.softmax
+
+    def forward(self, batch_rep, att_mask):
+        """
+        input:
+        batch_rep : size (B, T, H), B: batch size, T: sequence length, H: Hidden dimension
+        att_mask:  size (B, T),     Attention Mask logits
+        
+        attention_weight:
+        att_w : size (B, T, 1)
+        
+        return:
+        utter_rep: size (B, H)
+        """
+        batch_rep  = self.self_attn_layer_norm(batch_rep)
+        batch_rep  = self.feature_transform(batch_rep)
+        att_logits = self.W(self.act_fn(self.W_a(batch_rep))).squeeze(-1)
+        att_logits = att_mask + att_logits # masked out frames recieves ~0% prob. 
+        # compute attention att_w
+        # softmax over segment dimension i.e. take the most representation frame to represent word 
+        att_w = self.softmax(att_logits, dim=-1).unsqueeze(-1)
+        # apply att_w to input
+        segment_rep = torch.sum(batch_rep * att_w, dim=1) 
+
+        return segment_rep
+
 class AttentivePoolingDiscreteInput(nn.Module):
     """
     Attentive Pooling module with discrete ID as input (init with an Embedding layer)
@@ -79,55 +118,6 @@ class AttentivePoolingDiscreteInput(nn.Module):
         segment_rep = torch.sum(batch_rep * att_w, dim=1) 
         
         return segment_rep
-
-class AttentivePoolingInputNorm(nn.Module):
-    """
-    Attentive Pooling module incoporate attention mask 
-    """
-    def __init__(self, feature_dim, output_dim, **kwargs):
-        super(AttentivePoolingInputNorm, self).__init__()
-       
-        self.input_feature_transform = nn.Sequential(
-            nn.Linear(feature_dim, feature_dim), 
-            nn.Dropout(p=0.2),
-            nn.ReLU(), 
-            nn.Linear(feature_dim, output_dim), 
-            nn.Dropout(p=0.2),
-            nn.ReLU(), 
-        )
-
-        self.W_a = nn.Linear(output_dim, output_dim)
-        self.W = nn.Linear(output_dim, 1)
-        self.act_fn = nn.ReLU()
-        self.softmax = nn.functional.softmax
-
-    def forward(self, batch_rep, att_mask):
-        """
-        input:
-        batch_rep : size (B, T, H), B: batch size, T: sequence length, H: Hidden dimension
-        att_mask:  size (B, T),     Attention Mask logits
-        
-        attention_weight:
-        att_w : size (B, T, 1)
-        
-        return:
-        utter_rep: size (B, H)
-        """
-        batch_rep  = self.input_feature_transform(batch_rep)
-        att_logits = self.W(self.act_fn(self.W_a(batch_rep))).squeeze(-1)
-        att_logits = att_mask + att_logits # masked out frames recieves ~0% prob. 
-        # compute attention att_w
-        # softmax over segment dimension i.e. take the most representation frame to represent word 
-        att_w = self.softmax(att_logits, dim=-1).unsqueeze(-1)
-        # apply att_w to input
-        segment_rep = torch.sum(batch_rep * att_w, dim=1) 
-
-        return segment_rep
-
-    def _norm(self, x): 
-        x_mean = torch.mean(x, dim=0)
-        x_std = torch.std(x, dim=0)
-        return (x - x_mean) / x_std
 
 def create_resdavenet_vq(args):
     vq_sizes = [int(s) for s in args.VQ_sizes.split(',')]
