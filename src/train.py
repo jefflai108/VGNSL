@@ -154,6 +154,9 @@ if __name__ == '__main__':
                         'hubert_large12', 'hubert_large14', 'hubert_large16',
                         'hubert_large18', 'hubert_large20', 'hubert_large22', 'hubert_large24', 
                         'content_vec_v07_1112', 'content_vec_v12_0512'])
+    parser.add_argument('--dino_feature', type=str, default=None, 
+                        choices = ['vits8', 'vits16', 'vitb8', 'vitb16', 
+                                   'deit_base_patch16_224', 'deit_base_distilled_patch16_384'])
     parser.add_argument('--feature_dim', default=40, type=int,
                         help='dimensionality of the feature')
     parser.add_argument('--word_dim', default=512, type=int,
@@ -263,7 +266,8 @@ if __name__ == '__main__':
     # Load data loaders
     train_loader, val_loader = data.get_train_loaders(
         opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.feature, opt.feature_cmvn, opt.speech_hdf5, 
-        opt.discretized_phone, opt.discretized_word, opt.km_clusters, opt.phn_force_align, opt.diffbound_gtword
+        opt.discretized_phone, opt.discretized_word, opt.km_clusters, opt.phn_force_align, opt.diffbound_gtword, 
+        opt.dino_feature, opt.img_dim
     )
 
     # construct the model

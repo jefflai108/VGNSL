@@ -1,4 +1,5 @@
 import os
+import sys
 import pickle
 import regex
 import time
@@ -15,6 +16,9 @@ from model import VGNSL
 from vocab import Vocabulary
 from data import get_eval_loader
 from utils import generate_tree, clean_tree
+
+sys.path.insert(-1, os.path.join(sys.path[0], '../analysis'))
+from constituent_recall import constituent_recall
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -279,6 +283,9 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
     if hasattr(opt, 'diffbound_gtword'): 
         diffbound_gtword = opt.diffbound_gtword
     else: diffbound_gtword = False
+    if hasattr(opt, 'dino_feature'): 
+        dino_feature = opt.dino_feature
+    else: dino_feature = None
     if visual_tree: 
         eval_batch_size = 1 
     elif export_tree: # smaller batch size to avoid mem error
@@ -289,7 +296,7 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
         data_path, data_split, vocab, basename, eval_batch_size, 1,
         feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5, 
         discretized_phone=use_discretized_phone, discretized_word=use_discretized_word, km_clusters=km_clusters, 
-        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword
+        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, dino_feature=dino_feature
     )
 
     if phn_force_align: # phn-level alignment 
@@ -373,7 +380,7 @@ def viz_tree(bare_tree):
 def _retrieve_text_from_tree(tree): 
     return ' '.join(tree.replace('(', '').replace(')', '').split())
 
-def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False):
+def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False, constituent_recall_analysis=False):
     # remove word-level mismatch (from pre-processing)
     # by keeping track of the indices 
     indices_to_remove = []
@@ -387,6 +394,11 @@ def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=Fa
     orig_gold_trees_text = [_retrieve_text_from_tree(orig_gold_tree) for orig_gold_tree in orig_gold_trees]
     orig_produced_trees_text = [_retrieve_text_from_tree(orig_produced_tree) for orig_produced_tree in orig_produced_trees]
     assert orig_gold_trees_text == orig_produced_trees_text # underlying words/phones should match. 
+
+    # constituency recall analysis 
+    if constituent_recall_analysis:
+        recall = constituent_recall(orig_gold_trees_text, orig_produced_trees)
+        print(recall)
 
     # compute f1 score over spans 
     gold_trees = list(map(lambda tree: extract_spans(tree), orig_gold_trees))
@@ -409,6 +421,7 @@ def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=Fa
     precision = float(precision_cnt) / precision_denom * 100.0
     recall = float(recall_cnt) / recall_denom * 100.0
     f1 = 2 * precision * recall / (precision + recall)
+       
     return f1, precision, recall
 
 

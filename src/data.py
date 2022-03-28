@@ -13,9 +13,12 @@ class PrecompDataset(data.Dataset):
     """ default + segment speech (.npy) """
 
     def __init__(self, data_path, data_split, vocab, basename,
-                 load_img=True, img_dim=2048, utt_cmvn=False):
+                 load_img=True, img_dim=2048, utt_cmvn=False, 
+                 dino_feature=None):
+
         self.vocab = vocab
         self.img_dim = img_dim
+        self.dino_feature = dino_feature
 
         # load captions
         self._load_captions(data_path, data_split, basename)
@@ -48,7 +51,10 @@ class PrecompDataset(data.Dataset):
     def _load_img_feature(self, data_path, data_split, basename, load_img=True):
         # image features
         if load_img:
-            self.images = np.load(os.path.join(data_path, f'{data_split}_ims-{basename}.npy'))
+            if self.dino_feature: 
+                self.images = np.load(os.path.join(data_path, f'{data_split}_{self.dino_feature}_ims-{basename}.npy'))
+            else: 
+                self.images = np.load(os.path.join(data_path, f'{data_split}_ims-{basename}.npy'))
         else:
             self.images = np.zeros((self.length // 5, self.img_dim))
 
@@ -135,13 +141,15 @@ class H5PrecompDataset(PrecompDataset):
 
     def __init__(self, data_path, data_split, vocab, basename,
                  load_img=True, img_dim=2048, feature='logmelspec', utt_cmvn=False, 
-                 phn_force_align=False, diffbound_gtword=False):
+                 phn_force_align=False, diffbound_gtword=False, dino_feature=None):
+
         self.data_split = data_split 
         self.vocab = vocab
         self.img_dim = img_dim
         self.feature = feature
         self.phn_force_align = phn_force_align
         self.diffbound_gtword = diffbound_gtword
+        self.dino_feature = dino_feature
 
         # load captions
         self._load_captions(data_path, data_split, basename, self.phn_force_align, self.diffbound_gtword)
@@ -520,7 +528,8 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
                        batch_size=128, shuffle=True, num_workers=2, load_img=True, img_dim=2048, 
                        feature='logmelspec', utt_cmvn=False, speech_hdf5=False, 
                        discretized_phone=False, discretized_word=False, km_clusters=0, no_collate_fn_sorting=False, 
-                       phn_force_align=False, diffbound_gtword=False):
+                       phn_force_align=False, diffbound_gtword=False, 
+                       dino_feature=None):
     if speech_hdf5: # whole utterance, support for logmelspec and hubert 
         if discretized_phone or discretized_word: 
             dset = H5DiscretePrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn, 
@@ -532,14 +541,14 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
             )
         else:
             dset = H5PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn, \
-                                    phn_force_align, diffbound_gtword)
+                                    phn_force_align, diffbound_gtword, dino_feature)
             data_loader = torch.utils.data.DataLoader(
                 dataset=dset, batch_size=batch_size, shuffle=shuffle,
                 pin_memory=True, num_workers=num_workers,
                 collate_fn=h5_collate_fn_eval if no_collate_fn_sorting else h5_collate_fn
             )
     else: # averaged over segments, support for logmelspec 
-        dset = PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, utt_cmvn)
+        dset = PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, utt_cmvn, dino_feature)
         data_loader = torch.utils.data.DataLoader(
             dataset=dset, batch_size=batch_size, shuffle=shuffle,
             pin_memory=True, num_workers=num_workers,
@@ -550,33 +559,38 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
 
 
 def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='logmelspec', utt_cmvn=False, speech_hdf5=False, 
-                     discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False, diffbound_gtword=False):
+                     discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False, diffbound_gtword=False, 
+                     dino_feature=None, img_dim=2048):
 
     assert discretized_phone & discretized_word == False
 
     train_loader = get_precomp_loader(
         data_path, 'train', vocab, basename, batch_size, True, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5, 
         discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=False, 
-        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword
+        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, 
+        dino_feature=dino_feature, img_dim=img_dim
     )
     val_loader = get_precomp_loader(
         data_path, 'val', vocab, basename, batch_size, False, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5, 
         discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=False, 
-        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword
+        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, 
+        dino_feature=dino_feature, img_dim=img_dim
     )
     return train_loader, val_loader
 
 
 def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
                     feature='logmelspec', speech_hdf5=False, load_img=False, img_dim=2048, utt_cmvn=False, 
-                    discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False, diffbound_gtword=False):
+                    discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False, diffbound_gtword=False,
+                    dino_feature=None):
 
     assert discretized_phone & discretized_word == False
     
     eval_loader = get_precomp_loader(
         data_path, split_name, vocab, basename, batch_size, False, num_workers=0, feature=feature, 
-        speech_hdf5=speech_hdf5, load_img=load_img, img_dim=img_dim, utt_cmvn=utt_cmvn, 
+        speech_hdf5=speech_hdf5, load_img=load_img, utt_cmvn=utt_cmvn, 
         discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=True, 
-        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword
+        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, 
+        dino_feature=dino_feature, img_dim=img_dim
     )
     return eval_loader

@@ -3,21 +3,39 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np 
 
-from module import AttentivePooling
 from utils import l2norm
+
+class MeanPooledPhoneSegment(nn.Module): 
+    """
+    Return the mean-pooled representation with propor masking. 
+    """
+    def __init__(self): 
+        super(MeanPooledPhoneSegment, self).__init__()
+
+    def forward(self, batch_rep, att_mask):
+        """
+        input:
+        batch_rep : size (B, T, H), B: batch size, T: sequence length, H: Hidden dimension
+        att_mask:  size (B, T),     Attention Mask logits
+        
+        attention_weight:
+        att_w : size (B, T, 1)
+        
+        return:
+        utter_rep: size (B, H)
+        """
+        att_w = torch.where(att_mask == -100000, 0, 1).unsqueeze(-1)
+        phn_segment_rep = torch.mean(batch_rep * att_w, dim=1)
+
+        return phn_segment_rep
+
 
 class SegmentSimilarityMeasure(nn.Module): 
     """
-    Compute how similar two segments are. Use MLP instead of dot-product. 
+    Compute how similar two segments are. Use cosine-similarity instead of MLP. 
     """
     def __init__(self, hidden_dim): 
         super(SegmentSimilarityMeasure, self).__init__()
-
-        self.sim_measure = nn.Sequential(
-            nn.Linear(hidden_dim * 2, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, 1, bias=False)
-        )
 
     def forward(self, batch_segment1, batch_segment2): 
         """
@@ -28,13 +46,9 @@ class SegmentSimilarityMeasure(nn.Module):
         output: 
         batch_sim: (B, N-1)
         """
-        concat_batch_segment = torch.cat(
-            (l2norm(batch_segment1), l2norm(batch_segment2)), 
-            dim=2
-        )
-        S = self.sim_measure(concat_batch_segment)
+        S = F.cosine_similarity(l2norm(batch_segment1), l2norm(batch_segment2), dim=2)
 
-        return S.squeeze(-1)
+        return S
 
 def relatvie_segment_dissimilarity(segment_similarity): 
     """
@@ -113,24 +127,47 @@ def top_k_peak_sampling(P, phn_mask, gt_word_lens, proxy_large_num=10):
         topk_Pi, topk_Pi_idx = torch.topk(P[i, :num_of_phns], num_of_words) # for the corner case of under-segmentation. trivial solve by randomly uniform segment the rest (return from topk sampling)
         P[i, topk_Pi_idx] = proxy_large_num
     
-    P = torch.where(P != proxy_large_num, torch.tensor(0.0, device=P.device), P) # rest of P set to 0. This will avoid over-segmentation.
+    P = torch.where(P != proxy_large_num, torch.tensor(0.0, device=P.device), torch.tensor(1.0, device=P.device)) # rest of P set to 0. This will avoid over-segmentation.
 
     # good way to debug
     #print(P)
     #print(gt_word_lens)
     return P
-    
+ 
+def weighted_random_peak_sampling(P, phn_mask, gt_word_lens, proxy_large_num=10):
+    """
+    weighted_random sample top_k selection on peak to match # of words specified in phn_mask
+
+    input: 
+    P: size (B, N), B: batch size, N: number of phns
+    phn_mask : size (B, N)
+    gt_word_lens: size (B,)
+
+    output: 
+    P: size (B, N)
+    """
+    # iterate through P as each Pi has different # of gt words 
+    # ensure top-k word segments are selected from *the valid phn ranges*
+    for i in range(len(P)): 
+        num_of_words = gt_word_lens[i]
+        num_of_phns = torch.sum(torch.where(phn_mask[i] != -100000, 1, 0)).item()
+        # select indices via weighted sampling based on P[i, :num_of_phns]
+        weights = P[i, :num_of_phns]
+        topk_indices = torch.multinomial(weights, num_of_words, replacement=False)
+        P[i, topk_indices] = proxy_large_num
+   
+    P = torch.where(P != proxy_large_num, torch.tensor(0.0, device=P.device), torch.tensor(1.0, device=P.device)) # rest of P set to 0. This will avoid over-segmentation.
+    # good way to debug
+    #print(P)
+    #print(gt_word_lens)
+    return P
+   
 class DifferentialWordSegmentation(nn.Module): 
     def __init__(self, hidden_dim, peak_detection_threshold):
         super(DifferentialWordSegmentation, self).__init__()
         
         self.adjacent_segment_sim_measure = SegmentSimilarityMeasure(hidden_dim)
         self.peak_detection_threshold = peak_detection_threshold
-        self.word_enc = nn.Sequential(
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim)
-        )
 
     def forward(self, segment_rep, phn_mask, gt_word_lens):
         '''
@@ -165,11 +202,12 @@ class DifferentialWordSegmentation(nn.Module):
         #print(gt_word_lens)
 
         # 2.2 top-k sampling for enforcing # of word segment
-        P = top_k_peak_sampling(P, phn_mask, gt_word_lens)
+        P = weighted_random_peak_sampling(P, phn_mask, gt_word_lens)
         #print(P)
-
+        print(P)
+        exit()
         # 3. make P binary and differentiable via straight-through
-        b_soft = torch.tanh(10 * P)
+        b_soft = torch.tanh(P)
         b_hard = torch.tanh(100000 * P)
         b = b_soft + (b_hard - b_soft).detach()
         #print(b.shape) # B, N 
@@ -207,26 +245,10 @@ class DifferentialWordSegmentation(nn.Module):
         #print(word_segment_rep[-1])
         word_masks = torch.where(word_segment_rep==0, 0, 1)
         #print(word_masks[-1])
-        word_segment_rep = self.word_enc(word_segment_rep)
-        word_segment_rep = torch.mul(word_segment_rep, word_masks)
         #print(word_segment_rep.shape) # B, M, H
         #print(word_segment_rep[-1, 5:])
         return word_segment_rep
 
-'''
-some to-dos:
-
-1. use scipy.peak-detector during test-time 
-2. enforce # of words via selecting top-k peaks (instead of thresholding) --> done 
-3. Remove <sos> <eos> for word segmentation? Altentatively, # detect and fix "first and second" segments instead, to make <sos> itself a segment. Perhaps also need to do it for <eos> too. Make <eos> itself a segment
-    i.e. the real segments are n-2 --> remove <sos> <eos> during pre-processing instead. 
-
-some potential improvements: 
-1. run an RNN on phn-segments (like SCPC). This way we can have both the loss, and word similarity comes from 
-    cos_dist(context_vector, segment_vector). 
-
-2. pre-train diff boundary detector with SCPC. 
-'''
 if __name__ == '__main__': 
     batch_size = 10
     num_word = 20
@@ -241,12 +263,13 @@ if __name__ == '__main__':
     audio_mask[:-1, -10:, :] = -100000 # half of the phns are masked out 
     audio_mask_reshaped = audio_mask.reshape(-1, frame_per_segment)
 
-    sem_embedding = AttentivePooling(feat_dim, hidden_dim)
+    #sem_embedding = AttentivePooling(feat_dim, hidden_dim)
+    sem_embedding = MeanPooledPhoneSegment()
     sem_embeddings = sem_embedding(x, audio_mask_reshaped)
-    print(sem_embeddings.shape) # torch.Size([480, 512])
-    sem_embeddings = sem_embeddings.reshape(batch_size, num_word, hidden_dim)
-    print(sem_embeddings.shape) # torch.Size([10, 48, 512])
-     
+    print(sem_embeddings.shape) # torch.Size([200, 768])
+    sem_embeddings = sem_embeddings.reshape(batch_size, num_word, feat_dim)
+    print(sem_embeddings.shape) # torch.Size([10, 20, 768])
+    
     differential_boundary_module = DifferentialWordSegmentation(hidden_dim, word_segment_threshold)
     differential_boundary_module(sem_embeddings, audio_mask[:, :, 0], gt_word_lens)
 

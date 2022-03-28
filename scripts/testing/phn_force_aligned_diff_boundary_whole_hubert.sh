@@ -25,10 +25,10 @@ else
     expdir=exp/spokencoco/phn_force_aligned_diffbound-gtword_whole_${feature}_embed${embed_size}_lr${lr}_margin${margin}_lambdahi${head_init_bias}_${basename}
 fi 
 i=0
-while [ $i -ne 10 ]; do  
+while [ $i -ne 30 ]; do  
     if [ -f ${expdir}/${i}.pth.tar ]; then
         #echo evaluating ${i}.pth.tar
-        python src/test.py --data_path ${datadir}/Freda-formatting/ --candidate ${expdir}/${i}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab-threshold1.pk --basename ${basename}
+        python src/test.py --data_path ${datadir}/Freda-formatting/ --candidate ${expdir}/${i}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab-threshold1.pkl --basename ${basename}
     fi 
     i=$(($i+1))
 done
