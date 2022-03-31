@@ -1,9 +1,8 @@
-# post-process Jason's word discovery features
-
 import os.path as osp
 import json 
 import pickle
 from tqdm import tqdm
+import argparse
 
 import numpy as np 
 import textgrid
@@ -37,9 +36,11 @@ def _convert_default_wav_to_wavspeaker(main_dir, wav_pth):
     spk = wav_pth.split('/')[-1].split('-')[0]
     return osp.join(main_dir, 'wavs-speaker', spk, wav_name)
 
-def create_iteration_list(data_summary_json, wav2wordseg, gt_word_lists, hubert_frame_stride=0.02): 
-    idx = 0 
-    over_cnt = 1
+def run(data_summary_json, wav2wordseg, target_word_list_pth, target_alignment_pth):
+
+    pred_word_list_dict = {}
+    alignment_dict = {}
+    idx = 0
     for image_key, captions_list in tqdm(data_summary_json.items()):
         captions_list = _deduplicate(captions_list, image_key)
         for caption in captions_list: 
@@ -48,25 +49,27 @@ def create_iteration_list(data_summary_json, wav2wordseg, gt_word_lists, hubert_
             alignment_file = caption[3]
 
             pred_word_segment = wav2wordseg[wav_pth]
-
-            #gt_word_list = gt_word_lists[idx]
-            #gt_word_list_seconds = [(x[0], x[1]*hubert_frame_stride, x[2]*hubert_frame_stride) for x in gt_word_list]
-
+            pred_word_list = _generate_pretty_word_list(pred_word_segment)
             gt_word_list = read_textgrid(alignment_file, transcript_file, pred_word_segment[-1][-1].item())
-            print(pred_word_segment) # store this in the same format as gt_word_list
+            print(pred_word_list) # store this in the same format as gt_word_list
             print(gt_word_list)
+
+            pred_word_list_dict[idx] = pred_word_list
             alignment = l1_alignment(gt_word_list, pred_word_segment)
             print(alignment) # store this in the same order as others
-
-            #word_list, word_string = read_textgrid(alignment_file, transcript_file, nframes, frame_stride=self.logmelspec_frame_stride)
-
-            #if word_segment[-1][-1].item() > gt_word_list_seconds[-1][-1]:
-            #    print(over_cnt)
-            #    print(word_segment)
-            #    print(gt_word_list_seconds)
-            #    over_cnt += 1
+            alignment_dict[idx] = alignment
 
             idx += 1
+
+    np.save(target_word_list_pth, [pred_word_list_dict])
+    np.save(target_alignment_pth, [alignment_dict])
+
+def _generate_pretty_word_list(pred_word_segment): 
+    # return [(0-th word, start frame, end frame), ..., (n-th word, start frame, end frame)]
+    # since Jason's word segments do not correspond to any particular words, we use a dummay 
+    # word token as replacement, and in this case "shit"
+    return [('shit', x[0], x[1]) for x in np.array(pred_word_segment)]
+    
 
 def read_textgrid(textgrid_pth, text_pth, pred_last_timestamp, epsilon=0.001):
     # return [(0-th word, start frame, end frame), ..., (n-th word, start frame, end frame)]
@@ -99,45 +102,28 @@ def read_jason_file(main_dir, ffile):
         features = pickle.load(f)
 
     features = {_convert_default_wav_to_wavspeaker(main_dir, k):v['boundaries'] for k,v in features.items()}
-    print(len(features.keys())) # 25020 for val, 567171 for train
-    # to-do: merge train and val 
-    #print(features)
+    print(len(features.keys())) # 25020 for val, 567171 for train, 25031 for test
     return features
 
-
-
-def combine_h5_files(self, all_lab_embed_file, all_lab_len_file, seg_embed_h5_obj, word_list_pth, feature='logmelspec'):
-    print('writing to h5 object')
-
-    total_word_list_dict = {}
-    idx = 0
-    for lab_id in range(self.num_labs): # load lab files in-order
-        lab_f = all_lab_embed_file[lab_id]
-        word_list_dict = np.load(all_lab_len_file[lab_id], allow_pickle=True)[0]
-        for tmp_idx, tmp_word_list in tqdm(word_list_dict.items()): 
-            print(f'Processing lab {lab_id} and index {idx}')
-            total_word_list_dict[idx] = tmp_word_list
-
-            tmp_feat = lab_f[str(tmp_idx)][:]
-            seg_embed_h5_obj.create_dataset(str(idx), data=tmp_feat)
-
-            idx += 1
-
-    np.save(word_list_pth, [total_word_list_dict])
-
 if __name__ == '__main__': 
-    main_dir = 'data/SpokenCOCO'
-    new_feature = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn'
-    spoken_coco_json = 'data/SpokenCOCO/SpokenCOCO_summary-83k-5k-5k.json'
-    word_list_file = 'val_segment-hubert2_word_list-83k-5k-5k.npy'
-    split = 'val'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_summary_json', '-j', 
+                        type=str, default='data/SpokenCOCO/SpokenCOCO_summary-83k-5k-5k.json')
+    parser.add_argument('--data_dir', type=str, default='data/SpokenCOCO')
+    parser.add_argument('--data_split', type=str, choices=['test', 'val', 'train'])
+    parser.add_argument('--new_feature', type=str)
+    parser.add_argument('--output-dir', '-o', type=str)
+    args = parser.parse_args()
 
-    gt_word_list = np.load(osp.join('data/SpokenCOCO/Freda-formatting/', word_list_file), allow_pickle=True)[0]
-    
-    with open(spoken_coco_json) as f: 
-        coco_json = json.load(f) # for determining 'train', 'val', 'test'
-    val_wav2wordseg = read_jason_file(main_dir, osp.join(main_dir, 'Jason_word_discovery', new_feature, 'val_data_dict.pkl'))
-    #train_wav2wordseg = read_jason_file(main_dir, osp.join(main_dir, 'Jason_word_discovery', new_feature, 'train_data_dict.pkl'))
-    #create_iteration_list(coco_json[split], train_wav2wordseg, gt_word_list)
-    create_iteration_list(coco_json[split], val_wav2wordseg, gt_word_list)
+    basename = '-'.join(args.data_summary_json.split('-')[1:]).split('.')[0]
+    print('processing %s' % basename)
 
+    word_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_word_list-' + basename + '.npy')
+    alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-alignment_via_max_weight_matching-' + basename + '.npy')
+    print('storing pred_word_list at %s\nstoring alignment at %s' % (word_list_file, alignment_file))
+
+    with open(args.data_summary_json) as f: 
+        coco_json = json.load(f)
+
+    wav2wordseg = read_jason_file(args.data_dir, osp.join(args.data_dir, 'Jason_word_discovery', args.new_feature, args.data_split + '_data_dict.pkl'))
+    run(coco_json[args.data_split], wav2wordseg, word_list_file, alignment_file)

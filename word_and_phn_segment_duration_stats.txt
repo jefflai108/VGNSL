@@ -1,4 +1,4 @@
-
+------------------------------------------
 word boundaries (max & avg segment length): 
 
 train: 
@@ -27,3 +27,46 @@ val:
 test: 
     logmelspec 465 & 9.50 frames 
     hubert 233 & 4.74 frames 
+
+------------------------------------------
+unsupervised word boundaries (max & avg segment length): 
+
+feature = 'disc-81_spokencoco_preFeats_max_0.7_9_clsAttn'
+    train: 
+        hubert 250 & 13.90 frames 
+
+    val: 
+        hubert 200 & 13.84 frames 
+
+    test: 
+        hubert 150 & 13.89 frames 
+
+feature = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn'
+    train: 
+        hubert 150 & 10.96 frames 
+
+    val: 
+        hubert 100 & 10.89 frames 
+
+    test: 
+        hubert 100 & 11.45 frames 
+
+feature = 'model3_spokencoco_preFeats_weightedmean_0.8_7_clsAttn'
+    train: 
+        hubert 200 & 8.44 frames 
+
+    val: 
+        hubert 150 & 8.41 frames 
+
+    test: 
+        hubert 150 & 8.42 frames 
+
+feature = 'disc-26_spokencoco_preFeats_weightedmean_0.8_7_clsAttn'
+    train: 
+        hubert 200 & 9.51 frames 
+
+    val: 
+        hubert 200 & 9.46 frames 
+
+    test: 
+        hubert 150 & 9.51 frames 
