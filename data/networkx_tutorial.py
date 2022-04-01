@@ -43,12 +43,13 @@ def _permute(edge, sim_mat):
 
 def run(gt_word_list, jason_word_feature): 
     # return max weight matching nodes from a bipartite graph. 
-    # distance + min-match == 1/distance + max-match 
+    # distance + min-match == -distance + max-match 
     # 
     # reference https://github.com/cisnlp/simalign/blob/05332bf2f6ccde075c3aba94248d6105d9f95a00/simalign/simalign.py#L96-L103
 
     dist_mat = generate_sim_mat(gt_word_list, jason_word_feature)
-    sim_mat = np.reciprocal(dist_mat)
+    #sim_mat = np.reciprocal(dist_mat) # could have issue with 0 inverse
+    sim_mat = -1 * dist_mat
 
     G = from_biadjacency_matrix(csr_matrix(sim_mat))
     matching = nx.max_weight_matching(G, maxcardinality=True)

@@ -37,7 +37,9 @@ def _convert_default_wav_to_wavspeaker(main_dir, wav_pth):
     return osp.join(main_dir, 'wavs-speaker', spk, wav_name)
 
 def run(data_summary_json, wav2wordseg, target_word_list_pth, target_alignment_pth):
-
+    if wav2wordseg is None: 
+        pred_word_lists = np.load(target_word_list_pth, allow_pickle=True)[0]
+    
     pred_word_list_dict = {}
     alignment_dict = {}
     idx = 0
@@ -47,21 +49,27 @@ def run(data_summary_json, wav2wordseg, target_word_list_pth, target_alignment_p
             wav_pth = caption[0]
             transcript_file = caption[1]
             alignment_file = caption[3]
+        
+            if wav2wordseg:
+                pred_word_segment = wav2wordseg[wav_pth]
+                pred_word_list = _generate_pretty_word_list(pred_word_segment)
+                gt_word_list = read_textgrid(alignment_file, transcript_file, pred_word_segment[-1][-1].item())
+                pred_word_list_dict[idx] = pred_word_list
+            else: 
+                pred_word_list = pred_word_lists[idx]
+                gt_word_list = read_textgrid(alignment_file, transcript_file, pred_word_list[-1][-1].item())
+                pred_word_segment = np.array([[x[1], x[2]] for x in pred_word_list])
+            #print(pred_word_list) # store this in the same format as gt_word_list
+            #print(gt_word_list)
 
-            pred_word_segment = wav2wordseg[wav_pth]
-            pred_word_list = _generate_pretty_word_list(pred_word_segment)
-            gt_word_list = read_textgrid(alignment_file, transcript_file, pred_word_segment[-1][-1].item())
-            print(pred_word_list) # store this in the same format as gt_word_list
-            print(gt_word_list)
-
-            pred_word_list_dict[idx] = pred_word_list
             alignment = l1_alignment(gt_word_list, pred_word_segment)
-            print(alignment) # store this in the same order as others
+            #print(alignment) # store this in the same order as others
             alignment_dict[idx] = alignment
 
             idx += 1
 
-    np.save(target_word_list_pth, [pred_word_list_dict])
+    if wav2wordseg:
+        np.save(target_word_list_pth, [pred_word_list_dict])
     np.save(target_alignment_pth, [alignment_dict])
 
 def _generate_pretty_word_list(pred_word_segment): 
@@ -105,6 +113,36 @@ def read_jason_file(main_dir, ffile):
     print(len(features.keys())) # 25020 for val, 567171 for train, 25031 for test
     return features
 
+def convert_attention_boundary_to_word_boundary(attn_list_file, word_list_file):
+	# convert Jason's attention boundaries to word boundaries 
+	# input should be in the same units (in seconds)
+
+    all_attn_boundaries = np.load(attn_list_file, allow_pickle=True)[0]
+    all_word_boundaries = {}
+    for k, attn_boundaries in all_attn_boundaries.items():
+        attn_boundaries = [[x[1], x[2]] for x in attn_boundaries]
+
+        # determine last frame 
+        pred_last_frame = attn_boundaries[-1][-1]
+        final_last_frame = pred_last_frame
+
+        # locate word boundaries via attention endpoints avg
+        temp_word_boundaries = [(0 + attn_boundaries[0][0])/2]
+        for left, right in zip(attn_boundaries[:-1], attn_boundaries[1:]):
+            temp_word_boundaries.append((left[1] + right[0])/2)
+        temp_word_boundaries.append(final_last_frame)
+
+        # generate final word boundaries 
+        word_boundaries = []
+        for left, right in zip(temp_word_boundaries[:-1], temp_word_boundaries[1:]):
+            word_boundaries.append([left, right])
+        word_boundaries = [('shit', x[0], x[1]) for x in word_boundaries]
+
+        # store word boundaries 
+        all_word_boundaries[k] = word_boundaries
+    
+    np.save(word_list_file, [all_word_boundaries])
+
 if __name__ == '__main__': 
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_summary_json', '-j', 
@@ -118,12 +156,24 @@ if __name__ == '__main__':
     basename = '-'.join(args.data_summary_json.split('-')[1:]).split('.')[0]
     print('processing %s' % basename)
 
-    word_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_word_list-' + basename + '.npy')
-    alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-alignment_via_max_weight_matching-' + basename + '.npy')
-    print('storing pred_word_list at %s\nstoring alignment at %s' % (word_list_file, alignment_file))
-
     with open(args.data_summary_json) as f: 
         coco_json = json.load(f)
 
+    # Step 1: attention boundaries & alignment based on attention boundaries
+    attn_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_attn_list-' + basename + '.npy')
+    attn_alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-attn_alignment_via_max_weight_matching-' + basename + '.npy')
+    print('storing pred_attn_list at %s\nstoring alignment at %s\n' % (attn_list_file, attn_alignment_file))
     wav2wordseg = read_jason_file(args.data_dir, osp.join(args.data_dir, 'Jason_word_discovery', args.new_feature, args.data_split + '_data_dict.pkl'))
-    run(coco_json[args.data_split], wav2wordseg, word_list_file, alignment_file)
+    run(coco_json[args.data_split], wav2wordseg, attn_list_file, attn_alignment_file)
+
+    # Step 2: convert attention boundaries to word boundaries
+    attn_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_attn_list-' + basename + '.npy')
+    word_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_word_list-' + basename + '.npy')
+    print('converting pred_attn_list %s\nto pred_word_list %s\n' % (attn_list_file, word_list_file))
+    convert_attention_boundary_to_word_boundary(attn_list_file, word_list_file)
+   
+    # Step 3: generate alignment based on word boundaries 
+    word_alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-word_alignment_via_max_weight_matching-' + basename + '.npy')
+    print('storing pred_word_list at %s\nstoring alignment at %s\n' % (word_list_file, word_alignment_file))
+    run(coco_json[args.data_split], None, word_list_file, word_alignment_file)
+
