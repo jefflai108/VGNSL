@@ -19,6 +19,7 @@ from utils import generate_tree, clean_tree
 
 sys.path.insert(-1, os.path.join(sys.path[0], '../analysis'))
 from constituent_recall import constituent_recall
+from ex_sparseval import corpus_f1 as ex_sparseval_f1
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -72,7 +73,9 @@ class LogCollector(object):
         return s
 
 
-def encode_data(data_path, basename, model, data_loader, log_step=10, logging=print, vocab=None, stage='dev', speech_hdf5=False, phn_force_align=False, diffbound_gtword=False):
+def encode_data(data_path, basename, model, data_loader, log_step=10, logging=print, vocab=None, stage='dev', speech_hdf5=False, 
+                phn_force_align=False, diffbound_gtword=False,
+                unsup_word_discovery_feats=None, unsup_word_discovery_feat_type=None):
     """Encode all images and captions loadable by `data_loader`
     """
     if phn_force_align: 
@@ -84,6 +87,9 @@ def encode_data(data_path, basename, model, data_loader, log_step=10, logging=pr
     else: 
         ground_truth = [line.strip() for line in open(
             os.path.join(data_path, f'val_word-level-ground-truth-{basename}.txt'))]
+    if unsup_word_discovery_feats: # load alignments
+        unsup_discovered_word_alignments = np.load(os.path.join(data_path, f'val-{unsup_word_discovery_feats}-{unsup_word_discovery_feat_type}_alignment_via_max_weight_matching-{basename}.npy'), allow_pickle=True)[0]
+        unsup_discovered_word_alignments = list(unsup_discovered_word_alignments.values())
 
     batch_time = AverageMeter()
     val_logger = LogCollector()
@@ -155,7 +161,11 @@ def encode_data(data_path, basename, model, data_loader, log_step=10, logging=pr
                         e_log=str(model.logger)))
         del images, captions, img_emb, cap_emb, audios, audio_masks
 
-    f1, _, _ =  f1_score(trees, ground_truth)
+    if unsup_word_discovery_feats:
+        trees, ground_truth, unsup_discovered_word_alignments = _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments)
+        f1 = ex_sparseval_f1(ground_truth, trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
+    else: # normal corpus f1
+        f1, _, _ =  f1_score(trees, ground_truth)
     logging(f'validation tree f1 score is {f1}')
 
     return img_embs, cap_embs
@@ -380,7 +390,7 @@ def viz_tree(bare_tree):
 def _retrieve_text_from_tree(tree): 
     return ' '.join(tree.replace('(', '').replace(')', '').split())
 
-def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False, constituent_recall_analysis=False):
+def _cleanup_tree(orig_produced_trees, orig_gold_trees, unsup_discovered_word_alignments=None):
     # remove word-level mismatch (from pre-processing)
     # by keeping track of the indices 
     indices_to_remove = []
@@ -389,6 +399,13 @@ def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=Fa
             indices_to_remove.append(i)
     orig_gold_trees = [orig_gold_tree for i, orig_gold_tree in enumerate(orig_gold_trees) if i not in indices_to_remove]
     orig_produced_trees = [orig_produced_tree for i, orig_produced_tree in enumerate(orig_produced_trees) if i not in indices_to_remove]
+    if unsup_discovered_word_alignments: 
+        unsup_discovered_word_alignments = [alignment for i, alignment in enumerate(unsup_discovered_word_alignments) if i not in indices_to_remove]
+
+    return orig_produced_trees, orig_gold_trees, unsup_discovered_word_alignments
+
+def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False, constituent_recall_analysis=False):
+    orig_produced_trees, orig_gold_trees, _ = _cleanup_tree(orig_produced_trees, orig_gold_trees)
 
     # double-check underlying word/phn sequence match 
     orig_gold_trees_text = [_retrieve_text_from_tree(orig_gold_tree) for orig_gold_tree in orig_gold_trees]

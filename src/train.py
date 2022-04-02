@@ -76,7 +76,10 @@ def train(opt, train_loader, model, epoch, val_loader, vocab, best_rsum):
 def validate(opt, val_loader, model, vocab):
     # compute the encoding for all the validation images and captions
     img_embs, cap_embs = encode_data(
-        opt.data_path, opt.basename, model, val_loader, opt.log_step, logger.info, vocab, speech_hdf5=opt.speech_hdf5, phn_force_align=opt.phn_force_align, diffbound_gtword=opt.diffbound_gtword)
+        opt.data_path, opt.basename, model, val_loader, opt.log_step, logger.info, vocab, speech_hdf5=opt.speech_hdf5, 
+        phn_force_align=opt.phn_force_align, diffbound_gtword=opt.diffbound_gtword, 
+        unsup_word_discovery_feats=opt.unsup_word_discovery_feats, unsup_word_discovery_feat_type=opt.unsup_word_discovery_feat_type)
+
     # caption retrieval
     (r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, measure='cosine')
     logger.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
@@ -177,6 +180,18 @@ if __name__ == '__main__':
                         help='use davenet as the speech embedding')
     parser.add_argument('--davenet_embed_pretrained', action='store_true',
                         help='use pretrained davenet')
+    parser.add_argument('--use_seg_feats_for_unsup_word_discovery', action='store_true',
+                        help='train VG-NSL on pre-stored segment-level feature instead of whole hubert.')
+    parser.add_argument('--unsup_word_discovery_feat_type', default='word', type=str, 
+                        help='Use word or attention boundary from unsupervised word discovery', 
+                        choices = ['word', 'attn'])
+    parser.add_argument('--unsup_word_discovery_feats', default=None, type=str, 
+                        help='train VG-NSL on unsupervised word discovery features (boundaries)', 
+                        choices = ['disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn', 
+                                   'model3_spokencoco_preFeats_weightedmean_0.8_7_clsAttn', 
+                                   'disc-81_spokencoco_preFeats_max_0.7_9_clsAttn', 
+                                   'disc-26_spokencoco_preFeats_weightedmean_0.8_7_clsAttn',]
+                        )
     parser.add_argument('--davenet_embed_type', default='RDVQ_00000', type=str,
                         help='type of davenet', choices = ['RDVQ_00000', 
                         'RDVQ_00000_01100', 'RDVQ_00000_01000', 'RDVQ_00000_00100', 
@@ -262,12 +277,13 @@ if __name__ == '__main__':
         opt.vocab_init_embeddings = os.path.join(
             opt.data_path, f'vocab.pkl.{opt.init_embeddings_key}_embeddings.npy'
         )
-
+    
     # Load data loaders
     train_loader, val_loader = data.get_train_loaders(
         opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.feature, opt.feature_cmvn, opt.speech_hdf5, 
         opt.discretized_phone, opt.discretized_word, opt.km_clusters, opt.phn_force_align, opt.diffbound_gtword, 
-        opt.dino_feature, opt.img_dim
+        opt.dino_feature, opt.img_dim, opt.unsup_word_discovery_feats, opt.unsup_word_discovery_feat_type, 
+        opt.use_seg_feats_for_unsup_word_discovery
     )
 
     # construct the model
@@ -288,6 +304,9 @@ if __name__ == '__main__':
             model.load_state_dict(checkpoint['model']) 
             starting_epoch = checkpoint['epoch']
             best_rsum = checkpoint['best_rsum']
+
+    # start with validation
+    validate(opt, val_loader, model, vocab)
 
     for epoch in range(starting_epoch, opt.num_epochs):
         adjust_learning_rate(opt, model.optimizer, epoch)

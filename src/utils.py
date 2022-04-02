@@ -13,6 +13,39 @@ class EmbeddingCombiner(nn.Module):
     def forward(self, input):
         return torch.cat([e(input) for e in self.embeddings], dim=-1)
 
+def convert_attention_boundary_to_word_boundary(attn_boundaries, gt_boundaries):
+	# convert Jason's attention boundaries to word boundaries 
+	# input should be in the same units (either sec/frames)
+	#
+    # inputs:
+    # attn_boundaries = [('shit', 8.05636645962733, 12.084549689440996), ('shit', 25.176145186335408, 28.197282608695655), ('shit', 30.211374223602487, 44.31001552795031), ('shit', 47.33115295031056, 53.373427795031056), ('shit', 58.40865683229814, 67.4720690993789), ('shit', 70.49320652173914, 74.5213897515528), ('shit', 78.54957298136647, 87.61298524844722), ('shit', 91.64116847826088, 94.66230590062112), ('shit', 97.68344332298138, 108.76094720496896), ('shit', 124.87368012422361, 127.89481754658387), ('shit', 131.92300077639754, 144.00755046583853), ('shit', 145.01459627329194, 151.05687111801245), ('shit', 156.09210015527952, 161.11323757763978)]
+    # gt_boundaries = [('the', 22.5, 28.000000000000004), ('table', 28.000000000000004, 48.5), ('is', 48.5, 55.0), ('full', 55.0, 69.5), ('of', 69.5, 76.5), ('wooden', 76.5, 91.0), ('spoons', 91.0, 114.5), ('and', 114.5, 124.50000000000001), ('utensils', 124.50000000000001, 161.0)]
+    #
+    # outputs:
+	# word_boundaries = [('shit', 4.028183229813665, 18.6303474378882), ('shit', 18.6303474378882, 29.20432841614907), ('shit', 29.20432841614907, 45.82058423913044), ('shit', 45.82058423913044, 55.8910423136646), ('shit', 55.8910423136646, 68.98263781055903), ('shit', 68.98263781055903, 76.53548136645963), ('shit', 76.53548136645963, 89.62707686335405), ('shit', 89.62707686335405, 96.17287461180125), ('shit', 96.17287461180125, 116.81731366459628), ('shit', 116.81731366459628, 129.9089091614907), ('shit', 129.9089091614907, 144.51107336956522), ('shit', 144.51107336956522, 153.574485636646), ('shit', 153.574485636646, 161.11323757763978)]
+
+    attn_boundaries = [[x[1], x[2]] for x in attn_boundaries]
+
+    # determine last frame 
+    gt_last_frame = gt_boundaries[-1][-1]
+    pred_last_frame = attn_boundaries[-1][-1]
+    if gt_last_frame >= pred_last_frame: 
+        final_last_frame = (gt_last_frame + pred_last_frame) / 2
+    else: final_last_frame = pred_last_frame
+
+    # locate word boundaries via attention endpoints avg
+    temp_word_boundaries = [(0 + attn_boundaries[0][0])/2]
+    for left, right in zip(attn_boundaries[:-1], attn_boundaries[1:]):
+        temp_word_boundaries.append((left[1] + right[0])/2)
+    temp_word_boundaries.append(final_last_frame)
+
+    # generate final word boundaries 
+    word_boundaries = []
+    for left, right in zip(temp_word_boundaries[:-1], temp_word_boundaries[1:]):
+        word_boundaries.append([left, right])
+    word_boundaries = [('shit', x[0], x[1]) for x in word_boundaries]
+    
+    return word_boundaries
 
 def tree2list(tokens):
     tree = list()

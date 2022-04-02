@@ -9,6 +9,8 @@ import random
 import torch
 import torch.utils.data as data
 
+from utils import convert_attention_boundary_to_word_boundary
+
 class PrecompDataset(data.Dataset):
     """ default + segment speech (.npy) """
 
@@ -141,7 +143,9 @@ class H5PrecompDataset(PrecompDataset):
 
     def __init__(self, data_path, data_split, vocab, basename,
                  load_img=True, img_dim=2048, feature='logmelspec', utt_cmvn=False, 
-                 phn_force_align=False, diffbound_gtword=False, dino_feature=None):
+                 phn_force_align=False, diffbound_gtword=False, dino_feature=None, 
+                 unsup_word_discovery_feats=None, unsup_word_discovery_feat_type=None, 
+                 use_seg_feats_for_unsup_word_discovery=False):
 
         self.data_split = data_split 
         self.vocab = vocab
@@ -150,6 +154,9 @@ class H5PrecompDataset(PrecompDataset):
         self.phn_force_align = phn_force_align
         self.diffbound_gtword = diffbound_gtword
         self.dino_feature = dino_feature
+        self.unsup_word_discovery_feats = unsup_word_discovery_feats
+        self.unsup_word_discovery_feat_type = unsup_word_discovery_feat_type
+        self.use_seg_feats_for_unsup_word_discovery = use_seg_feats_for_unsup_word_discovery
 
         # load captions
         self._load_captions(data_path, data_split, basename, self.phn_force_align, self.diffbound_gtword)
@@ -182,9 +189,26 @@ class H5PrecompDataset(PrecompDataset):
             self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_phn_list-{basename}.npy'), allow_pickle=True)[0]
         else: # default alignment is word-level 
             self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
+        if self.unsup_word_discovery_feats: # overwrite, and use word-discovery word_list. 
+            gt_feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
+            self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_{self.unsup_word_discovery_feat_type}_list-{basename}.npy'), allow_pickle=True)[0]
+            self.vg_hubert_seg_feats = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_seg_feat-{basename}.npy'), allow_pickle=True)[0]
+
+            assert self.vg_hubert_seg_feats[22].shape[-1] == self.feature_embed_obj[str(22)][:].shape[-1]
+                      
+            # convert pred_word_list from secs --> frames 
+            if self.feature == 'logmelspec': 
+                frame_stride = 0.01
+            else: frame_stride = 0.02
+            for k, v in self.feature_wordlist.items():
+                self.feature_wordlist[k] = [(word, init_sec/frame_stride, end_sec/frame_stride) for (word, init_sec, end_sec) in v]
+
+            # then, convert attention boundaries to word boundaries --> deprecate now
+            #for k, v in self.feature_wordlist.items():
+            #    self.feature_wordlist[k] = convert_attention_boundary_to_word_boundary(v, gt_feature_wordlist[k])
+
         #print(self.feature_embed_obj[str(22)][:].shape)
         #print(self.feature_wordlist[22])
-        
         self.feature_dim = self.feature_embed_obj[str(0)][:].shape[-1]
         #print(self._slice_speech_feature(self.feature_embed_obj[str(22)][:], self.feature_wordlist[22])[0].shape)
 
@@ -200,16 +224,20 @@ class H5PrecompDataset(PrecompDataset):
             max_segment_len = 15
             if self.feature == 'logmelspec': 
                 max_segment_len = 30 
-        else: # # avg word_segment duration is ~15 frames for hubert and ~30 frames for logmelspec. 50 should be enough.
+        else: # avg word_segment duration is ~15 frames for hubert and ~30 frames for logmelspec. unsupervised word segments are even shorter. 50 should be enough.
             max_segment_len = 50 
         if self.data_split == 'test': # avoid over-cropping during test-time
             max_segmnet_len = 50
 
-        assert len(feat) >= round(word_list[-1][-1]), print(word_list, len(feat))
+        try: 
+            assert len(feat) >= round(word_list[-1][2])
+        except AssertionError: # sometimes pred_word_list will slightly exceed the last frame. Fix it.  
+            word_list[-1] = (word_list[-1][0], word_list[-1][1], len(feat))
+            #word2len[-1] = len(feat) - round(word_list[-1][1])
+
         word2len = [round(z)-round(y) for (_,y,z) in word_list]
         max_segment_len = min(max_segment_len, max(word2len)) # limit the segment-dimension length
         sliced_feat = np.zeros((len(word_list), max_segment_len, self.feature_dim)) 
-
         for i, (word, start_frame, end_frame) in enumerate(word_list):
             start_frame, end_frame = round(start_frame), round(end_frame)
             if end_frame - start_frame > max_segment_len: 
@@ -229,7 +257,7 @@ class H5PrecompDataset(PrecompDataset):
         sliced_feature_embed, len_word_list = self._slice_speech_feature(whole_feature_embed, self.feature_wordlist[index])
         # account for start and end tokens (dummy_pad)
         dummy_segment_embed = np.zeros((1, sliced_feature_embed.shape[1], self.feature_dim))
-        if self.diffbound_gtword: # do not prepend and append dummy audio segment for differential boundary setup
+        if self.diffbound_gtword or self.unsup_word_discovery_feats: # do not prepend and append dummy audio segment for differential boundary setup
             audio = sliced_feature_embed 
             true_audio_len = len_word_list 
             del dummy_segment_embed
@@ -240,13 +268,22 @@ class H5PrecompDataset(PrecompDataset):
         return torch.tensor(audio), true_audio_len, segment_len
 
     def _get_caption_item(self, index): 
-        if self.diffbound_gtword: # no <sos> <eos>
+        if self.diffbound_gtword or self.unsup_word_discovery_feats: # no <sos> <eos>
             caption = [self.vocab(token)
                    for token in self.captions[index]]
         else:
             caption = [self.vocab(token)
                    for token in ['<start>'] + self.captions[index] + ['<end>']]
         return torch.tensor(caption)
+
+    def _get_caption_item_for_unsup_discovery(self, true_audio_len): 
+        caption = [self.vocab('shit')] * true_audio_len # dummy placeholder for unsup word discovered featuers
+        return torch.tensor(caption)
+
+    def _get_seg_feat_item(self, index): 
+        # no slicing required. 
+        seg_feat = self.vg_hubert_seg_feats[index]
+        return seg_feat, len(seg_feat)
 
     def __getitem__(self, index):
         # get image 
@@ -256,20 +293,29 @@ class H5PrecompDataset(PrecompDataset):
         caption = self._get_caption_item(index)
         
         # get speech
-        audio, true_audio_len, segment_len = self._get_speech_item(index)
+        if self.use_seg_feats_for_unsup_word_discovery: 
+            audio, true_audio_len = self._get_seg_feat_item(index)
+            audio = audio.unsqueeze(dim=1)
+            segment_len = 1
+        else: # default 
+            audio, true_audio_len, segment_len = self._get_speech_item(index)
+
+        if self.unsup_word_discovery_feats: 
+            caption = self._get_caption_item_for_unsup_discovery(true_audio_len)
+
         if not self.diffbound_gtword: # mismatch only exists in diff-boundary setup, where input is phn-segments and output is word segments 
             assert true_audio_len == len(caption)
-
+        
         return image, caption, audio, true_audio_len, segment_len, index, img_id, self.diffbound_gtword
 
 def h5_collate_fn(data):
     """ build mini-batch tensors from a list of (image, caption) tuples """
-    # sort a data list by caption length
+    # sort a data list by caption length 
     data.sort(key=lambda x: len(x[1]), reverse=True)
     zipped_data = list(zip(*data))
     images, captions, audios, true_audio_lens, audio_segment_lens, ids, img_ids, diffbound_gtword = zipped_data
     images = torch.stack(images, 0)
-    max_sentence_len = len(captions[0])
+    max_sentence_len = max([len(caption) for caption in captions])
     targets = torch.zeros(len(captions), max_sentence_len).long()
     lengths = [len(cap) for cap in captions] # --> ensure this match with true_audio_lens
     for i, cap in enumerate(captions):
@@ -324,12 +370,11 @@ def h5_collate_fn_eval(data):
     sentence_level_speech_masks = torch.tensor(true_audio_lens)
     audio_masks = torch.where(target_audios==0, -100000, 0) # mask==-inf indicates padding 
     audio_masks = audio_masks[:, :, :, 0].squeeze(-1) # feature-dim is not indicative 
-    #print(target_audios.shape, audio_masks.shape) # torch.Size([256, 27, 71, 768]) torch.Size([256, 27, 71])
     if not diffbound_gtword: 
         assert sentence_level_speech_masks.tolist() == lengths # ensure we can match segment embed to words
-
+    
     return images, targets, target_audios, audio_masks, lengths, ids
-
+    
 class H5DiscretePrecompDataset(PrecompDataset):
     """ default + whole speech (.hdf5) with Discrete IDs as input
         re-use functions from PrecompDataset.
@@ -529,7 +574,10 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
                        feature='logmelspec', utt_cmvn=False, speech_hdf5=False, 
                        discretized_phone=False, discretized_word=False, km_clusters=0, no_collate_fn_sorting=False, 
                        phn_force_align=False, diffbound_gtword=False, 
-                       dino_feature=None):
+                       dino_feature=None, 
+                       unsup_word_discovery_feats=None, 
+                       unsup_word_discovery_feat_type='word', 
+                       use_seg_feats_for_unsup_word_discovery=False):
     if speech_hdf5: # whole utterance, support for logmelspec and hubert 
         if discretized_phone or discretized_word: 
             dset = H5DiscretePrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn, 
@@ -541,7 +589,9 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
             )
         else:
             dset = H5PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn, \
-                                    phn_force_align, diffbound_gtword, dino_feature)
+                                    phn_force_align, diffbound_gtword, dino_feature, \
+                                    unsup_word_discovery_feats, unsup_word_discovery_feat_type, 
+                                    use_seg_feats_for_unsup_word_discovery)
             data_loader = torch.utils.data.DataLoader(
                 dataset=dset, batch_size=batch_size, shuffle=shuffle,
                 pin_memory=True, num_workers=num_workers,
@@ -560,21 +610,26 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
 
 def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='logmelspec', utt_cmvn=False, speech_hdf5=False, 
                      discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False, diffbound_gtword=False, 
-                     dino_feature=None, img_dim=2048):
-
+                     dino_feature=None, img_dim=2048, unsup_word_discovery_feats=None, unsup_word_discovery_feat_type='word', 
+                     use_seg_feats_for_unsup_word_discovery=False):
+  
     assert discretized_phone & discretized_word == False
 
     train_loader = get_precomp_loader(
         data_path, 'train', vocab, basename, batch_size, True, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5, 
         discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=False, 
         phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, 
-        dino_feature=dino_feature, img_dim=img_dim
+        dino_feature=dino_feature, img_dim=img_dim, 
+        unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
+        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery
     )
     val_loader = get_precomp_loader(
         data_path, 'val', vocab, basename, batch_size, False, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5, 
         discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=False, 
         phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, 
-        dino_feature=dino_feature, img_dim=img_dim
+        dino_feature=dino_feature, img_dim=img_dim, 
+        unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
+        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery
     )
     return train_loader, val_loader
 
@@ -582,7 +637,8 @@ def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='
 def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
                     feature='logmelspec', speech_hdf5=False, load_img=False, img_dim=2048, utt_cmvn=False, 
                     discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False, diffbound_gtword=False,
-                    dino_feature=None):
+                    dino_feature=None, unsup_word_discovery_feats=None, unsup_word_discovery_feat_type='word', 
+                    use_seg_feats_for_unsup_word_discovery=False):
 
     assert discretized_phone & discretized_word == False
     
@@ -591,6 +647,8 @@ def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
         speech_hdf5=speech_hdf5, load_img=load_img, utt_cmvn=utt_cmvn, 
         discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=True, 
         phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, 
-        dino_feature=dino_feature, img_dim=img_dim
+        dino_feature=dino_feature, img_dim=img_dim, 
+        unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
+        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery
     )
     return eval_loader
