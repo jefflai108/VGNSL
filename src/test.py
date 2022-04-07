@@ -29,11 +29,9 @@ if __name__ == '__main__':
                         help='run constituency recall on predicted trees.')
     args = parser.parse_args()
 
-    trees, ground_truth, captions = test_trees(args.data_path, args.candidate, args.vocab_path, args.basename, args.data_split, 
-                                               args.visual_tree, args.visual_samples, args.export_tree, args.export_tree_path)
-    f1, _, _ = f1_score(trees, ground_truth, captions, args.visual_tree, args.constituent_recall)
-    #print('Model:', args.candidate)
-    #print('F1 score:', f1)
+    f1 = test_trees(args.data_path, args.candidate, args.vocab_path, args.basename, args.data_split, 
+                    args.visual_tree, args.visual_samples, args.export_tree, args.export_tree_path, 
+                    args.constituent_recall)
     if args.visual_tree:
         print('visual samples f1 score is %f' % f1)
     else: print(f1)

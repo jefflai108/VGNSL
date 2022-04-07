@@ -255,7 +255,8 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
 
 def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
                visual_tree=False, visual_samples=10, \
-               export_tree=False, export_tree_path=None):
+               export_tree=False, export_tree_path=None, 
+               constituent_recall=False):
     """ use the trained model to generate parse trees for text """
     # load model and options
     checkpoint = torch.load(model_path, map_location='cpu')
@@ -296,6 +297,16 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
     if hasattr(opt, 'dino_feature'): 
         dino_feature = opt.dino_feature
     else: dino_feature = None
+    if hasattr(opt, 'use_seg_feats_for_unsup_word_discovery'): 
+        use_seg_feats_for_unsup_word_discovery = opt.use_seg_feats_for_unsup_word_discovery
+    else: use_seg_feats_for_unsup_word_discovery = False 
+    if hasattr(opt, 'unsup_word_discovery_feat_type'): 
+        unsup_word_discovery_feat_type = opt.unsup_word_discovery_feat_type
+    else: unsup_word_discovery_feat_type = None 
+    if hasattr(opt, 'unsup_word_discovery_feats'): 
+        unsup_word_discovery_feats = opt.unsup_word_discovery_feats
+    else: unsup_word_discovery_feats = None
+
     if visual_tree: 
         eval_batch_size = 1 
     elif export_tree: # smaller batch size to avoid mem error
@@ -306,8 +317,11 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
         data_path, data_split, vocab, basename, eval_batch_size, 1,
         feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5, 
         discretized_phone=use_discretized_phone, discretized_word=use_discretized_word, km_clusters=km_clusters, 
-        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, dino_feature=dino_feature
+        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, dino_feature=dino_feature, 
+        unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
+        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery
     )
+
 
     if phn_force_align: # phn-level alignment 
         ground_truth = [line.strip().lower() for line in open(
@@ -320,12 +334,16 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
                 os.path.join(data_path, f'{data_split}_word-level-ground-truth-{basename}.txt'))]
             all_captions = [line.strip() for line in open(
                 os.path.join(data_path, f'{data_split}_caps-{basename}.txt'))]
-
     else: # word-level alignment 
         ground_truth = [line.strip() for line in open(
             os.path.join(data_path, f'{data_split}_word-level-ground-truth-{basename}.txt'))]
         all_captions = [line.strip() for line in open(
             os.path.join(data_path, f'{data_split}_caps-{basename}.txt'))]
+    if unsup_word_discovery_feats: # load alignments
+        unsup_discovered_word_alignments = np.load(os.path.join(data_path, f'{data_split}-{unsup_word_discovery_feats}-{unsup_word_discovery_feat_type}_alignment_via_max_weight_matching-{basename}.npy'), allow_pickle=True)[0]
+        unsup_discovered_word_alignments = list(unsup_discovered_word_alignments.values())
+
+
     if visual_tree: 
         ground_truth = ground_truth[:visual_samples]
         all_captions = all_captions[:visual_samples]
@@ -378,7 +396,14 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
     if export_tree: 
         export_tree_writer.close()
         exit()
-    return trees, ground_truth, all_captions
+
+    if unsup_word_discovery_feats:
+        trees, ground_truth, unsup_discovered_word_alignments = _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments)
+        f1 = ex_sparseval_f1(ground_truth, trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
+    else: # normal corpus f1
+        f1, _, _ = f1_score(trees, ground_truth, all_captions, visual_tree, constituent_recall)
+
+    return f1
 
 
 def viz_tree(bare_tree):

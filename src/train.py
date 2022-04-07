@@ -159,13 +159,16 @@ if __name__ == '__main__':
                         'content_vec_v07_1112', 'content_vec_v12_0512'])
     parser.add_argument('--dino_feature', type=str, default=None, 
                         choices = ['vits8', 'vits16', 'vitb8', 'vitb16', 
-                                   'deit_base_patch16_224', 'deit_base_distilled_patch16_384'])
+                                   'deit_base_patch16_224', 'deit_base_distilled_patch16_384', 
+                                   'random'])
     parser.add_argument('--feature_dim', default=40, type=int,
                         help='dimensionality of the feature')
     parser.add_argument('--word_dim', default=512, type=int,
                         help='dimensionality of the word embedding')
     parser.add_argument('--phn_force_align', action='store_true',
                         help='force alignment in the phone-level')
+    parser.add_argument('--uniform_word_force_align', action='store_true',
+                        help='uniform force alignment in the word-level')
     parser.add_argument('--diffbound_gtword', action='store_true',
                         help='differential boundary detector given gtword segments. Use with --phn_force_align')
     parser.add_argument('--discretized_word', action='store_true',
@@ -190,7 +193,9 @@ if __name__ == '__main__':
                         choices = ['disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn', 
                                    'model3_spokencoco_preFeats_weightedmean_0.8_7_clsAttn', 
                                    'disc-81_spokencoco_preFeats_max_0.7_9_clsAttn', 
-                                   'disc-26_spokencoco_preFeats_weightedmean_0.8_7_clsAttn',]
+                                   'disc-26_spokencoco_preFeats_weightedmean_0.8_7_clsAttn',
+                                   'disc-62_spokencoco_preFeats_mean_0.9_5_clsAttn', 
+                                   'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn']
                         )
     parser.add_argument('--davenet_embed_type', default='RDVQ_00000', type=str,
                         help='type of davenet', choices = ['RDVQ_00000', 
@@ -283,7 +288,7 @@ if __name__ == '__main__':
         opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.feature, opt.feature_cmvn, opt.speech_hdf5, 
         opt.discretized_phone, opt.discretized_word, opt.km_clusters, opt.phn_force_align, opt.diffbound_gtword, 
         opt.dino_feature, opt.img_dim, opt.unsup_word_discovery_feats, opt.unsup_word_discovery_feat_type, 
-        opt.use_seg_feats_for_unsup_word_discovery
+        opt.use_seg_feats_for_unsup_word_discovery, opt.uniform_word_force_align
     )
 
     # construct the model

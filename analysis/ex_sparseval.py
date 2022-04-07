@@ -38,6 +38,11 @@ def corpus_f1(pred_trees, gold_trees, aligns, is_baretree=False):
     pred_cnt = 0
 
     for pred_tree, gold_tree, align in zip(pred_trees, gold_trees, aligns):
+        #print(pred_tree)
+        #print(gold_tree)
+        #print(align)
+        if '(' not in pred_tree or '(' not in gold_tree: # for (rare) cases where there is just one word.
+            continue 
         pred_tree = ExNLTKTree.fromstring(pred_tree) if not is_baretree else BareTree.fromstring(pred_tree)
         gold_tree = ExNLTKTree.fromstring(gold_tree) if not is_baretree else BareTree.fromstring(gold_tree)
         pred2gold_align = {k: v for k, v in align}
@@ -100,8 +105,12 @@ if __name__ == '__main__':
 
     # more test    # our case 
     gold_trees = ['( ( a young boy ) barefoot ( holding ( ( an umbrella ) ( touching ( ( the horn ) ( of ( a cow ) ) ) ) ) ) )', '( ( ( a young boy ) ( with ( an umbrella ) ) ) ( who ( is ( touching ( ( the horn ) ( of ( a cow ) ) ) ) ) ) )', '( ( a young man ) ( holding ( an umbrella ) ( next ( to ( ( a herd ) ( of cattle ) ) ) ) ))', '( ( a child ) ( ( holding ( a flowered umbrella ) ) and ( petting ( a yak ) ) ) )', '( ( a boy ) ( holding ( an umbrella ) ( while ( standing ( next ( to livestock ) ) ) ) ) )']
-    pred_trees = ['( ( ( shit ( ( shit ( shit ( ( shit shit ) shit ) ) ) shit ) ) ( shit ( shit ( shit shit ) ) ) ) shit )', '( ( ( ( shit shit ) ( shit ( shit shit ) ) ) ( shit ( shit shit ) ) ) shit )', '( shit ( shit ( ( shit shit ) ( ( shit shit ) shit ) ) ) )', '( ( ( ( shit shit ) ( ( shit shit ) shit ) ) ( shit shit ) ) shit )', '( ( ( shit ( shit ( shit ( ( shit shit ) shit ) ) ) ) shit ) ( shit shit ) )']
+    pred_trees = ['( ( shit ( ( ( shit ( shit ( ( shit shit ) shit ) ) ) shit ) ) ( shit ( shit ( shit shit ) ) ) ) shit )', '( ( ( ( shit shit ) ( shit ( shit shit ) ) ) ( shit ( shit shit ) ) ) shit )', '( shit ( shit ( ( shit shit ) ( ( shit shit ) shit ) ) ) )', '( ( ( ( shit shit ) ( ( shit shit ) shit ) ) ( shit shit ) ) shit )', '( ( ( shit ( shit ( shit ( ( shit shit ) shit ) ) ) ) shit ) ( shit shit ) )']
     aligns = [[(2, 1), (0, 3), (7, 7), (9, 9), (10, 10), (3, 2), (1, 0), (12, 11), (6, 6), (4, 4), (8, 8), (5, 5)], [(6, 4), (1, 0), (5, 3), (3, 2), (10, 6), (8, 5), (13, 8), (11, 7), (2, 1)], [(9, 4), (1, 0), (5, 2), (10, 5), (7, 3), (2, 1), (11, 6)], [(6, 4), (1, 0), (8, 6), (4, 2), (5, 3), (7, 5), (9, 7), (2, 1)], [(0, 0), (1, 1), (6, 4), (7, 5), (8, 6), (5, 3), (9, 8), (3, 2), (4, 7)]]
+    aligns_reverse = []
+    for align in aligns: 
+        aligns_reverse.append([(t[1], t[0]) for t in align])
 
     print(corpus_f1(gold_trees, pred_trees, aligns, is_baretree=True)) # correct
     print(corpus_f1(pred_trees, gold_trees, aligns, is_baretree=True)) # wrong 
+    print(corpus_f1(pred_trees, gold_trees, aligns_reverse, is_baretree=True)) # correct

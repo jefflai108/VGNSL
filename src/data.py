@@ -143,7 +143,7 @@ class H5PrecompDataset(PrecompDataset):
 
     def __init__(self, data_path, data_split, vocab, basename,
                  load_img=True, img_dim=2048, feature='logmelspec', utt_cmvn=False, 
-                 phn_force_align=False, diffbound_gtword=False, dino_feature=None, 
+                 phn_force_align=False, uniform_word_force_align=False, diffbound_gtword=False, dino_feature=None, 
                  unsup_word_discovery_feats=None, unsup_word_discovery_feat_type=None, 
                  use_seg_feats_for_unsup_word_discovery=False):
 
@@ -152,6 +152,7 @@ class H5PrecompDataset(PrecompDataset):
         self.img_dim = img_dim
         self.feature = feature
         self.phn_force_align = phn_force_align
+        self.uniform_word_force_align = uniform_word_force_align
         self.diffbound_gtword = diffbound_gtword
         self.dino_feature = dino_feature
         self.unsup_word_discovery_feats = unsup_word_discovery_feats
@@ -187,6 +188,8 @@ class H5PrecompDataset(PrecompDataset):
         self.feature_embed_obj = h5py.File(os.path.join(data_path, f'{data_split}_segment-{feature}_embed-{basename}.hdf5'), 'r')
         if self.phn_force_align: # use phn-level alignment 
             self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_phn_list-{basename}.npy'), allow_pickle=True)[0]
+        elif self.uniform_word_force_align: 
+            self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_uniform_word_list-{basename}.npy'), allow_pickle=True)[0]
         else: # default alignment is word-level 
             self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
         if self.unsup_word_discovery_feats: # overwrite, and use word-discovery word_list. 
@@ -573,7 +576,7 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
                        batch_size=128, shuffle=True, num_workers=2, load_img=True, img_dim=2048, 
                        feature='logmelspec', utt_cmvn=False, speech_hdf5=False, 
                        discretized_phone=False, discretized_word=False, km_clusters=0, no_collate_fn_sorting=False, 
-                       phn_force_align=False, diffbound_gtword=False, 
+                       phn_force_align=False, uniform_word_force_align=False, diffbound_gtword=False, 
                        dino_feature=None, 
                        unsup_word_discovery_feats=None, 
                        unsup_word_discovery_feat_type='word', 
@@ -589,7 +592,7 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
             )
         else:
             dset = H5PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn, \
-                                    phn_force_align, diffbound_gtword, dino_feature, \
+                                    phn_force_align, uniform_word_force_align, diffbound_gtword, dino_feature, \
                                     unsup_word_discovery_feats, unsup_word_discovery_feat_type, 
                                     use_seg_feats_for_unsup_word_discovery)
             data_loader = torch.utils.data.DataLoader(
@@ -611,14 +614,14 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
 def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='logmelspec', utt_cmvn=False, speech_hdf5=False, 
                      discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False, diffbound_gtword=False, 
                      dino_feature=None, img_dim=2048, unsup_word_discovery_feats=None, unsup_word_discovery_feat_type='word', 
-                     use_seg_feats_for_unsup_word_discovery=False):
-  
+                     use_seg_feats_for_unsup_word_discovery=False, uniform_word_force_align=False):
+
     assert discretized_phone & discretized_word == False
 
     train_loader = get_precomp_loader(
         data_path, 'train', vocab, basename, batch_size, True, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5, 
         discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=False, 
-        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, 
+        phn_force_align=phn_force_align, uniform_word_force_align=uniform_word_force_align, diffbound_gtword=diffbound_gtword, 
         dino_feature=dino_feature, img_dim=img_dim, 
         unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
         use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery
@@ -626,7 +629,7 @@ def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='
     val_loader = get_precomp_loader(
         data_path, 'val', vocab, basename, batch_size, False, workers, feature=feature, utt_cmvn=utt_cmvn, speech_hdf5=speech_hdf5, 
         discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=False, 
-        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, 
+        phn_force_align=phn_force_align, uniform_word_force_align=uniform_word_force_align, diffbound_gtword=diffbound_gtword, 
         dino_feature=dino_feature, img_dim=img_dim, 
         unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
         use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery
@@ -638,7 +641,7 @@ def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
                     feature='logmelspec', speech_hdf5=False, load_img=False, img_dim=2048, utt_cmvn=False, 
                     discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False, diffbound_gtword=False,
                     dino_feature=None, unsup_word_discovery_feats=None, unsup_word_discovery_feat_type='word', 
-                    use_seg_feats_for_unsup_word_discovery=False):
+                    use_seg_feats_for_unsup_word_discovery=False, uniform_word_force_align=False):
 
     assert discretized_phone & discretized_word == False
     
@@ -646,7 +649,7 @@ def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
         data_path, split_name, vocab, basename, batch_size, False, num_workers=0, feature=feature, 
         speech_hdf5=speech_hdf5, load_img=load_img, utt_cmvn=utt_cmvn, 
         discretized_phone=discretized_phone, discretized_word=discretized_word, km_clusters=km_clusters, no_collate_fn_sorting=True, 
-        phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, 
+        phn_force_align=phn_force_align, uniform_word_force_align=uniform_word_force_align, diffbound_gtword=diffbound_gtword, 
         dino_feature=dino_feature, img_dim=img_dim, 
         unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
         use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery
