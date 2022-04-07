@@ -41,6 +41,8 @@ parser.add_argument('--data-workers', type=int, default=4, metavar='N', help='th
 parser.add_argument('--use-gpu', type='bool', default=True, metavar='B', help='use GPU or not')
 parser.add_argument('--force-gpu', action='store_true', help='force the script to use GPUs, useful when there exists on-the-ground devices')
 
+parser.add_argument('--random-embed', action='store_true', help='random embeddings instead of passing through visual models')
+
 args = parser.parse_args()
 args.output_images_json = osp.splitext(args.output)[0] + '.images.json'
 
@@ -94,10 +96,15 @@ class FeatureExtractor(nn.Module):
         self.resnet = torch.nn.Sequential(*(list(model.children())[:-1])) # take representation before last classification layer 
         self.resnet.eval()
 
-    def forward(self, feed_dict, image_filename):
+    def forward(self, feed_dict, image_filename, random_embed=False, batch_size=64):
         feed_dict = GView(feed_dict)
         with torch.no_grad(): 
-            f = self.resnet(feed_dict.image).squeeze(-1).squeeze(-1)
+            if random_embed: # random embed
+                print('random embed')
+                f = torch.randn(batch_size, 2048)
+            else: # default
+                f = self.resnet(feed_dict.image).squeeze(-1).squeeze(-1)
+
             print(f.shape) # N, 2048
 
         f = f.cpu().detach().numpy() # for storing purpose 
@@ -105,7 +112,7 @@ class FeatureExtractor(nn.Module):
         
         return output_dict
 
-def main(model, caption_file, output_dict = {}):
+def main(model, caption_file, output_dict = {}, random_embed=False, batch_size=64):
     logger.critical('Loading the dataset.')
     data = io.load(caption_file)
     # Step 1: filter out images.
@@ -128,7 +135,7 @@ def main(model, caption_file, output_dict = {}):
             #image_filename = ['/'.join([x.split('/')[0].replace('2014', '2017'), x.split('/')[1].split('_')[2]]) for x in image_filename] # use the 2017 mscoco instead of 2014
         
         with torch.no_grad():
-            output_dict.update(model(feed_dict, image_filename))
+            output_dict.update(model(feed_dict, image_filename, random_embed, batch_size))
    
     return output_dict, len(images)
     
@@ -146,8 +153,8 @@ if __name__ == '__main__':
     model.eval()
 
     output_dict = {}
-    output_dict, val_image_len = main(model, args.val_caption, output_dict)
-    output_dict, train_image_len = main(model, args.train_caption, output_dict)
+    output_dict, val_image_len = main(model, args.val_caption, output_dict, args.random_embed, args.batch_size)
+    output_dict, train_image_len = main(model, args.train_caption, output_dict, args.random_embed, args.batch_size)
 
     assert len(output_dict) == val_image_len + train_image_len
     for k, v in output_dict.items():

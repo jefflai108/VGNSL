@@ -72,6 +72,20 @@ def run(data_summary_json, wav2wordseg, target_word_list_pth, target_alignment_p
         np.save(target_word_list_pth, [pred_word_list_dict])
     np.save(target_alignment_pth, [alignment_dict])
 
+def run_seg_feat(data_summary_json, wav2wordseg, target_seg_feat_pth):
+    seg_feat_dict = {}
+    idx = 0
+    for image_key, captions_list in tqdm(data_summary_json.items()):
+        captions_list = _deduplicate(captions_list, image_key)
+        for caption in captions_list: 
+            wav_pth = caption[0]
+            pred_seg_feat = wav2wordseg[wav_pth]
+            seg_feat_dict[idx] = pred_seg_feat
+
+            idx += 1
+
+    np.save(target_seg_feat_pth, [seg_feat_dict])
+
 def _generate_pretty_word_list(pred_word_segment): 
     # return [(0-th word, start frame, end frame), ..., (n-th word, start frame, end frame)]
     # since Jason's word segments do not correspond to any particular words, we use a dummay 
@@ -79,7 +93,7 @@ def _generate_pretty_word_list(pred_word_segment):
     return [('shit', x[0], x[1]) for x in np.array(pred_word_segment)]
     
 
-def read_textgrid(textgrid_pth, text_pth, pred_last_timestamp, epsilon=0.001):
+def read_textgrid(textgrid_pth, text_pth, pred_last_timestamp, epsilon=0.05):
     # return [(0-th word, start frame, end frame), ..., (n-th word, start frame, end frame)]
     word_tgs = textgrid.TextGrid.fromFile(textgrid_pth)[0]
 
@@ -105,13 +119,23 @@ def _deduplicate(captions_list, image_key):
 
     return captions_list
 
-def read_jason_file(main_dir, ffile): 
+def read_jason_file(main_dir, ffile, boundaries_only=True): 
     with open(ffile, 'rb') as f: 
         features = pickle.load(f)
 
-    features = {_convert_default_wav_to_wavspeaker(main_dir, k):v['boundaries'] for k,v in features.items()}
+    boundaries = {_convert_default_wav_to_wavspeaker(main_dir, k):v['boundaries'] for k,v in features.items()}
     print(len(features.keys())) # 25020 for val, 567171 for train, 25031 for test
-    return features
+
+    if boundaries_only:
+        return boundaries
+    else: # return seg_feats instead of bounadries
+        seg_features = {_convert_default_wav_to_wavspeaker(main_dir, k):v['seg_feats'] for k,v in features.items()}
+        for wav in boundaries.keys(): 
+            boundary = boundaries[wav]
+            seg_feature = seg_features[wav]
+            assert len(boundary) == len(seg_feature) # ensure 1:1 mapping 
+
+        return seg_features
 
 def convert_attention_boundary_to_word_boundary(attn_list_file, word_list_file):
 	# convert Jason's attention boundaries to word boundaries 
@@ -177,3 +201,10 @@ if __name__ == '__main__':
     print('storing pred_word_list at %s\nstoring alignment at %s\n' % (word_list_file, word_alignment_file))
     run(coco_json[args.data_split], None, word_list_file, word_alignment_file)
 
+    # Step 4: pre-store Jason's default feature
+    seg_feat_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_seg_feat-' + basename + '.npy')
+    wav2wordseg = read_jason_file(args.data_dir, 
+                                  osp.join(args.data_dir, 'Jason_word_discovery', args.new_feature, args.data_split + '_data_dict.pkl'), 
+                                  boundaries_only=False)
+    print('storing pred_seg_feat at %s' % seg_feat_file)
+    run_seg_feat(coco_json[args.data_split], wav2wordseg, seg_feat_file)

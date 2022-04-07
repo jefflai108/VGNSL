@@ -40,3 +40,15 @@ python data/data_reformat_v4-dino.py \
     --data-split $data_split --feature hubert --layer_num $layer_num --dino_type $vits 
 done
 
+# for writing random img embeddings only 
+datadir=data/SpokenCOCO
+split=83k-5k-5k
+num_labs=1
+lab_id=0
+layer_num=12
+for data_split in train val test; do
+python data/data_reformat_v4-random_image_embed.py \
+    -j ${datadir}/SpokenCOCO_summary-${split}.json -i ${datadir}/SpokenCOCO_random_images.h5 \
+    -o ${datadir}/Freda-formatting/ --h5_format --parallelize -n $num_labs -l $lab_id \
+    --data-split $data_split --feature hubert --layer_num $layer_num
+done
