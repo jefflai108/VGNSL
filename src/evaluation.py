@@ -306,7 +306,10 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
     if hasattr(opt, 'unsup_word_discovery_feats'): 
         unsup_word_discovery_feats = opt.unsup_word_discovery_feats
     else: unsup_word_discovery_feats = None
-
+    if hasattr(opt, 'uniform_word_force_align'): 
+        uniform_word_force_align = opt.uniform_word_force_align
+    else: uniform_word_force_align = False 
+    
     if visual_tree: 
         eval_batch_size = 1 
     elif export_tree: # smaller batch size to avoid mem error
@@ -319,9 +322,8 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
         discretized_phone=use_discretized_phone, discretized_word=use_discretized_word, km_clusters=km_clusters, 
         phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, dino_feature=dino_feature, 
         unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
-        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery
+        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, uniform_word_force_align=uniform_word_force_align
     )
-
 
     if phn_force_align: # phn-level alignment 
         ground_truth = [line.strip().lower() for line in open(

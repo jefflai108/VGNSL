@@ -59,7 +59,7 @@ class PrecompDataset(data.Dataset):
                 self.images = np.load(os.path.join(data_path, f'{data_split}_ims-{basename}.npy'))
         else:
             self.images = np.zeros((self.length // 5, self.img_dim))
-
+        
         # each image can have 1 caption or 5 captions
         if self.images.shape[0] != self.length:
             self.im_div = 5

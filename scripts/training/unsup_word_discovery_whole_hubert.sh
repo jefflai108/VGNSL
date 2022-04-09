@@ -22,7 +22,7 @@ echo $expdir
 python src/train.py --logger_name $expdir \
     --data_path ${datadir}/Freda-formatting --vocab_path ${datadir}/SpokenCOCO_vocab-threshold1.pkl --basename ${basename} \
     --init_embeddings 0 --img_dim 2048 --scoring_hidden_dim 128 \
-    --num_epochs 20 --workers 3 --batch_size 128 --margin 0.2 \
+    --num_epochs 20 --workers 1 --batch_size 128 --margin 0.2 \
     --embed_size ${embed_size} --feature_dim ${feature_dim} --learning_rate ${lr} \
     --speech_hdf5 --feature ${feature} --load_pretrained \
     --unsup_word_discovery_feats $jason_feats --unsup_word_discovery_feat_type ${discovery_type}
