@@ -145,7 +145,7 @@ class H5PrecompDataset(PrecompDataset):
                  load_img=True, img_dim=2048, feature='logmelspec', utt_cmvn=False, 
                  phn_force_align=False, uniform_word_force_align=False, diffbound_gtword=False, dino_feature=None, 
                  unsup_word_discovery_feats=None, unsup_word_discovery_feat_type=None, 
-                 use_seg_feats_for_unsup_word_discovery=False):
+                 use_seg_feats_for_unsup_word_discovery=False, test_time_oracle_segmentation=False):
 
         self.data_split = data_split 
         self.vocab = vocab
@@ -158,6 +158,7 @@ class H5PrecompDataset(PrecompDataset):
         self.unsup_word_discovery_feats = unsup_word_discovery_feats
         self.unsup_word_discovery_feat_type = unsup_word_discovery_feat_type
         self.use_seg_feats_for_unsup_word_discovery = use_seg_feats_for_unsup_word_discovery
+        self.test_time_oracle_segmentation = test_time_oracle_segmentation
 
         # load captions
         self._load_captions(data_path, data_split, basename, self.phn_force_align, self.diffbound_gtword)
@@ -193,6 +194,8 @@ class H5PrecompDataset(PrecompDataset):
         else: # default alignment is word-level 
             self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
         if self.unsup_word_discovery_feats: # overwrite, and use word-discovery word_list. 
+            if self.test_time_oracle_segmentation: 
+                print('not implemented yet')
             gt_feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
             self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_{self.unsup_word_discovery_feat_type}_list-{basename}.npy'), allow_pickle=True)[0]
             self.vg_hubert_seg_feats = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_seg_feat-{basename}.npy'), allow_pickle=True)[0]
@@ -580,7 +583,8 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
                        dino_feature=None, 
                        unsup_word_discovery_feats=None, 
                        unsup_word_discovery_feat_type='word', 
-                       use_seg_feats_for_unsup_word_discovery=False):
+                       use_seg_feats_for_unsup_word_discovery=False, 
+                       test_time_oracle_segmentation=False):
     if speech_hdf5: # whole utterance, support for logmelspec and hubert 
         if discretized_phone or discretized_word: 
             dset = H5DiscretePrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn, 
@@ -591,10 +595,10 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
                 collate_fn=h5_discrete_collate_fn_eval if no_collate_fn_sorting else h5_discrete_collate_fn
             )
         else:
-            dset = H5PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn, \
-                                    phn_force_align, uniform_word_force_align, diffbound_gtword, dino_feature, \
+            dset = H5PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn,
+                                    phn_force_align, uniform_word_force_align, diffbound_gtword, dino_feature,
                                     unsup_word_discovery_feats, unsup_word_discovery_feat_type, 
-                                    use_seg_feats_for_unsup_word_discovery)
+                                    use_seg_feats_for_unsup_word_discovery, test_time_oracle_segmentation)
             data_loader = torch.utils.data.DataLoader(
                 dataset=dset, batch_size=batch_size, shuffle=shuffle,
                 pin_memory=True, num_workers=num_workers,
@@ -641,7 +645,8 @@ def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
                     feature='logmelspec', speech_hdf5=False, load_img=False, img_dim=2048, utt_cmvn=False, 
                     discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False, diffbound_gtword=False,
                     dino_feature=None, unsup_word_discovery_feats=None, unsup_word_discovery_feat_type='word', 
-                    use_seg_feats_for_unsup_word_discovery=False, uniform_word_force_align=False):
+                    use_seg_feats_for_unsup_word_discovery=False, uniform_word_force_align=False, 
+                    test_time_oracle_segmentation=False):
 
     assert discretized_phone & discretized_word == False
     
@@ -652,6 +657,7 @@ def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
         phn_force_align=phn_force_align, uniform_word_force_align=uniform_word_force_align, diffbound_gtword=diffbound_gtword, 
         dino_feature=dino_feature, img_dim=img_dim, 
         unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
-        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery
+        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, 
+        test_time_oracle_segmentation=test_time_oracle_segmentation
     )
     return eval_loader

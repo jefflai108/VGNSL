@@ -253,10 +253,11 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
         return (r1, r5, r10, medr, meanr)
 
 
-def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
-               visual_tree=False, visual_samples=10, \
+def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
+               visual_tree=False, visual_samples=10,
                export_tree=False, export_tree_path=None, 
-               constituent_recall=False):
+               constituent_recall=False, duration_based_alignment=False, 
+               test_time_oracle_segmentation=False):
     """ use the trained model to generate parse trees for text """
     # load model and options
     checkpoint = torch.load(model_path, map_location='cpu')
@@ -322,7 +323,8 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
         discretized_phone=use_discretized_phone, discretized_word=use_discretized_word, km_clusters=km_clusters, 
         phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, dino_feature=dino_feature, 
         unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
-        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, uniform_word_force_align=uniform_word_force_align
+        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, uniform_word_force_align=uniform_word_force_align, 
+        test_time_oracle_segmentation=test_time_oracle_segmentation
     )
 
     if phn_force_align: # phn-level alignment 
@@ -342,7 +344,12 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
         all_captions = [line.strip() for line in open(
             os.path.join(data_path, f'{data_split}_caps-{basename}.txt'))]
     if unsup_word_discovery_feats: # load alignments
-        unsup_discovered_word_alignments = np.load(os.path.join(data_path, f'{data_split}-{unsup_word_discovery_feats}-{unsup_word_discovery_feat_type}_alignment_via_max_weight_matching-{basename}.npy'), allow_pickle=True)[0]
+        if duration_based_alignment: # duration-based alignment 
+            #print('loading duration-based alignment!')
+            unsup_discovered_word_alignments = np.load(os.path.join(data_path, f'{data_split}-{unsup_word_discovery_feats}-{unsup_word_discovery_feat_type}_alignment_via_max_weight_duration_matching-{basename}.npy'), allow_pickle=True)[0]
+        else: # default is l1-distance based alignment
+            #print('loading l1-based alignment!')
+            unsup_discovered_word_alignments = np.load(os.path.join(data_path, f'{data_split}-{unsup_word_discovery_feats}-{unsup_word_discovery_feat_type}_alignment_via_max_weight_matching-{basename}.npy'), allow_pickle=True)[0]
         unsup_discovered_word_alignments = list(unsup_discovered_word_alignments.values())
 
 
@@ -399,7 +406,7 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test', \
         export_tree_writer.close()
         exit()
 
-    if unsup_word_discovery_feats:
+    if unsup_word_discovery_feats and not test_time_oracle_segmentation: # if test_time_oracle_segmentation, use normal F1 score. 
         trees, ground_truth, unsup_discovered_word_alignments = _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments)
         f1 = ex_sparseval_f1(ground_truth, trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
     else: # normal corpus f1
