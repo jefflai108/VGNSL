@@ -188,22 +188,22 @@ if __name__ == '__main__':
     with open(args.data_summary_json) as f: 
         coco_json = json.load(f)
 
-    ## Step 1: attention boundaries & alignment based on attention boundaries
-    #attn_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_attn_list-' + basename + '.npy')
-    #attn_alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-attn_alignment_via_max_weight_matching-' + basename + '.npy')
-    #print('storing pred_attn_list at %s\nstoring alignment at %s\n' % (attn_list_file, attn_alignment_file))
-    #wav2wordseg = read_jason_file(args.data_dir, 
-    #                              osp.join(args.data_dir, 'Jason_word_discovery', args.new_feature, args.data_split + '_data_dict.pkl'))
-    #run(coco_json[args.data_split], wav2wordseg, attn_list_file, attn_alignment_file)
+    # Step 1: attention boundaries & alignment based on attention boundaries
+    attn_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_attn_list-' + basename + '.npy')
+    attn_alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-attn_alignment_via_max_weight_matching-' + basename + '.npy')
+    print('storing pred_attn_list at %s\nstoring alignment at %s\n' % (attn_list_file, attn_alignment_file))
+    wav2wordseg = read_jason_file(args.data_dir, 
+                                  osp.join(args.data_dir, 'Jason_word_discovery', args.new_feature, args.data_split + '_data_dict.pkl'))
+    run(coco_json[args.data_split], wav2wordseg, attn_list_file, attn_alignment_file)
 
-    ## (Optional) Step 2.1: word boundaries & alignment based on word boundaries
-    #word_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_word_list-' + basename + '.npy')
-    #word_alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-word_alignment_via_max_weight_matching-' + basename + '.npy')
-    #print('storing pred_word_list at %s\nstoring alignment at %s\n' % (word_list_file, word_alignment_file))
-    #wav2wordseg = read_jason_file(args.data_dir, 
-    #                              osp.join(args.data_dir, 'Jason_word_discovery', args.new_feature, args.data_split + '_data_dict.pkl'), 
-    #                              attention_boundaries=False)
-    #run(coco_json[args.data_split], wav2wordseg, word_list_file, word_alignment_file)
+    # (Optional) Step 2.1: word boundaries & alignment based on word boundaries
+    word_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_word_list-' + basename + '.npy')
+    word_alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-word_alignment_via_max_weight_matching-' + basename + '.npy')
+    print('storing pred_word_list at %s\nstoring alignment at %s\n' % (word_list_file, word_alignment_file))
+    wav2wordseg = read_jason_file(args.data_dir, 
+                                  osp.join(args.data_dir, 'Jason_word_discovery', args.new_feature, args.data_split + '_data_dict.pkl'), 
+                                  attention_boundaries=False)
+    run(coco_json[args.data_split], wav2wordseg, word_list_file, word_alignment_file)
 
     ## (Optional) Step 2.2.1: convert attention boundaries to word boundaries
     #attn_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_attn_list-' + basename + '.npy')
@@ -216,7 +216,7 @@ if __name__ == '__main__':
     #print('storing pred_word_list at %s\nstoring alignment at %s\n' % (word_list_file, word_alignment_file))
     #run(coco_json[args.data_split], None, word_list_file, word_alignment_file)
 
-    # (Optional) Step 2.3: generete additional alignments based on existing attn_list/word_list
+    # (Optional) Step 2.3: generete additional (duration-based) alignments based on existing attn_list/word_list
     attn_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_attn_list-' + basename + '.npy')
     assert osp.exists(attn_list_file)
     attn_alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-attn_alignment_via_max_weight_duration_matching-' + basename + '.npy')
@@ -229,10 +229,10 @@ if __name__ == '__main__':
     print('storing pred_word_list at %s\nstoring alignment at %s\n' % (word_list_file, word_alignment_file))
     run(coco_json[args.data_split], None, word_list_file, word_alignment_file, weighting_via_l1=False)
 
-    ## Step 3: pre-store Jason's default feature
-    #seg_feat_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_seg_feat-' + basename + '.npy')
-    #wav2wordseg = read_jason_file(args.data_dir, 
-    #                              osp.join(args.data_dir, 'Jason_word_discovery', args.new_feature, args.data_split + '_data_dict.pkl'), 
-    #                              boundaries_only=False)
-    #print('storing pred_seg_feat at %s' % seg_feat_file)
-    #run_seg_feat(coco_json[args.data_split], wav2wordseg, seg_feat_file)
+    # Step 3: pre-store Jason's default feature
+    seg_feat_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_seg_feat-' + basename + '.npy')
+    wav2wordseg = read_jason_file(args.data_dir, 
+                                  osp.join(args.data_dir, 'Jason_word_discovery', args.new_feature, args.data_split + '_data_dict.pkl'), 
+                                  boundaries_only=False)
+    print('storing pred_seg_feat at %s' % seg_feat_file)
+    run_seg_feat(coco_json[args.data_split], wav2wordseg, seg_feat_file)
