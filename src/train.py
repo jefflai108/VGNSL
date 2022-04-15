@@ -204,7 +204,20 @@ if __name__ == '__main__':
                                    'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.1_snapshotbest',
                                    'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest',
                                    'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest',
-                                   'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest',]
+                                   'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest',
+                                   'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.5_snapshotbest',
+                                   'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.5_snapshotbest',
+                                   'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.5_snapshotbest',
+                                   'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.3_snapshotbest',
+                                   'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.3_snapshotbest',
+                                   'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.3_snapshotbest',
+                                   'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.4_snapshotbest',
+                                   'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.4_snapshotbest',
+                                   'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.4_snapshotbest',
+                                   'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadno_insertThreshold0.2_snapshotbest',
+                                   'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadno_insertThreshold0.2_snapshotbest',
+                                   'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadno_insertThreshold0.2_snapshotbest',
+                                    ]
                         )
     parser.add_argument('--davenet_embed_type', default='RDVQ_00000', type=str,
                         help='type of davenet', choices = ['RDVQ_00000', 
