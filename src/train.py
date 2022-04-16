@@ -228,6 +228,14 @@ if __name__ == '__main__':
                         help='apply utt-level cmvn on feature')
     parser.add_argument('--embed_size', default=512, type=int,
                         help='dimensionality of the joint embedding')
+    parser.add_argument('--mlp_combine', action='store_true',
+                        help='use MLP as the combination function for words/constituent embeddings')
+    parser.add_argument('--mlp_combine_v2', action='store_true',
+                        help='use MLP as the combination function for words/constituent embeddings')
+    parser.add_argument('--mlp_combine_v3', action='store_true',
+                        help='use MLP as the combination function for words/constituent embeddings')
+    parser.add_argument('--deeper_score', action='store_true',
+                        help='deeper scoring network')
     parser.add_argument('--grad_clip', default=2., type=float,
                         help='gradient clipping threshold')
     parser.add_argument('--learning_rate', default=.0005, type=float,

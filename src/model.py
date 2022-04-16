@@ -73,6 +73,37 @@ class EncoderText(nn.Module):
         self.vocab_size = vocab_size
         self.semantics_dim = semantics_dim
         self.embed_size = embed_size
+        
+        if hasattr(opt, 'mlp_combine') and opt.mlp_combine:
+            self.mlp_combine = True 
+            self.combination_function = torch.nn.Sequential( 
+                nn.Linear(embed_size * 2, embed_size), 
+                nn.ReLU(), 
+                nn.Linear(embed_size, embed_size, bias=False)
+            )
+        elif hasattr(opt, 'mlp_combine_v2') and opt.mlp_combine_v2:
+            self.mlp_combine = True 
+            self.combination_function = torch.nn.Sequential( 
+                nn.Linear(embed_size * 2, embed_size), 
+                nn.GELU(), 
+                nn.Linear(embed_size, embed_size), 
+                nn.GELU(), 
+                nn.Linear(embed_size, embed_size, bias=False)
+            )
+        elif hasattr(opt, 'mlp_combine_v3') and opt.mlp_combine_v3:
+            self.mlp_combine = True 
+            self.combination_function = torch.nn.Sequential( 
+                nn.Linear(embed_size * 2, 1000), 
+                nn.GELU(), 
+                nn.Linear(1000, embed_size), 
+                nn.GELU(), 
+                nn.Linear(embed_size, embed_size), 
+                nn.GELU(), 
+                nn.Linear(embed_size, embed_size), 
+                nn.GELU(), 
+                nn.Linear(embed_size, embed_size, bias=False)
+            )
+        else: self.mlp_combine = False
 
         # replace word embedding with linear layer 
         #self.sem_embedding = make_embeddings(opt, self.vocab_size, self.semantics_dim)
@@ -113,11 +144,22 @@ class EncoderText(nn.Module):
 
         opt.syntax_dim = embed_size  # syntax is tied with semantics
 
-        self.syn_score = nn.Sequential(
-            nn.Linear(opt.syntax_dim * 2, opt.syntax_score_hidden),
-            nn.ReLU(),
-            nn.Linear(opt.syntax_score_hidden, 1, bias=False)
-        )
+        if hasattr(opt, 'deeper_score') and opt.deeper_score:
+            self.syn_score = nn.Sequential(
+                nn.Linear(opt.syntax_dim * 2, opt.syntax_score_hidden),
+                nn.GELU(),
+                nn.Linear(opt.syntax_score_hidden, opt.syntax_score_hidden // 2),
+                nn.GELU(),
+                nn.Linear(opt.syntax_score_hidden // 2, opt.syntax_score_hidden // 4),
+                nn.GELU(),
+                nn.Linear(opt.syntax_score_hidden // 4, 1, bias=False)
+            )
+        else: # default scoring network is 2 layer MLP
+            self.syn_score = nn.Sequential(
+                nn.Linear(opt.syntax_dim * 2, opt.syntax_score_hidden),
+                nn.ReLU(),
+                nn.Linear(opt.syntax_score_hidden, 1, bias=False)
+            )
         # self.reset_weights()
 
     def reset_weights(self):
@@ -207,10 +249,19 @@ class EncoderText(nn.Module):
                 index_one_hot_ellipsis(left_bounds, 1, indices),
                 index_one_hot_ellipsis(right_bounds, 1, indices + 1)
             ], dim=1)
-            this_features = torch.add(
-                index_one_hot_ellipsis(sem_embeddings, 1, indices),
-                index_one_hot_ellipsis(sem_embeddings, 1, indices + 1)
-            )
+
+            if self.mlp_combine: # employ a more complicated combination function
+                this_features = torch.cat([
+                    index_one_hot_ellipsis(sem_embeddings, 1, indices),
+                    index_one_hot_ellipsis(sem_embeddings, 1, indices + 1)
+                    ], dim=-1
+                )   
+                this_features = self.combination_function(this_features)
+            else: # default: sum of the two component constituent
+                this_features = torch.add(
+                    index_one_hot_ellipsis(sem_embeddings, 1, indices),
+                    index_one_hot_ellipsis(sem_embeddings, 1, indices + 1)
+                )
             this_left_features = index_one_hot_ellipsis(sem_embeddings, 1, indices)
             this_right_features = index_one_hot_ellipsis(sem_embeddings, 1, indices + 1)
             this_features = l2norm(this_features)
@@ -228,11 +279,19 @@ class EncoderText(nn.Module):
             center_mask = index_mask(indices, max_length=seq_length).float()
             update_masks = (left_mask, right_mask, center_mask)
 
-            this_features_syn = torch.add(
-                index_one_hot_ellipsis(syn_embeddings, 1, indices),
-                index_one_hot_ellipsis(syn_embeddings, 1, indices + 1)
-            )
-            this_features_syn = l2norm(this_features_syn)
+            if self.mlp_combine: # employ a more complicated combination function 
+                this_features_syn = torch.cat([
+                    index_one_hot_ellipsis(syn_embeddings, 1, indices),
+                    index_one_hot_ellipsis(syn_embeddings, 1, indices + 1)
+                    ], dim=-1
+                )
+                this_features_syn = self.combination_function(this_features_syn)
+            else: # default: sum of the two component constituent
+                this_features_syn = torch.add(
+                    index_one_hot_ellipsis(syn_embeddings, 1, indices),
+                    index_one_hot_ellipsis(syn_embeddings, 1, indices + 1)
+                )
+            this_features_syn = l2norm(this_features_syn) # normalized 
             syn_embeddings = self.update_with_mask(syn_embeddings, syn_embeddings, this_features_syn, *update_masks)
 
             sem_embeddings = self.update_with_mask(sem_embeddings, sem_embeddings, this_features, *update_masks)
