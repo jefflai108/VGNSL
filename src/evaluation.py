@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 import pickle
 import regex
@@ -257,7 +258,8 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
                visual_tree=False, visual_samples=10,
                export_tree=False, export_tree_path=None, 
                constituent_recall=False, duration_based_alignment=False, 
-               test_time_oracle_segmentation=False):
+               test_time_oracle_segmentation=False, 
+               right_branching=False, left_branching=False, random_branching=False):
     """ use the trained model to generate parse trees for text """
     # load model and options
     checkpoint = torch.load(model_path, map_location='cpu')
@@ -409,11 +411,63 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
     if unsup_word_discovery_feats and not test_time_oracle_segmentation: # if test_time_oracle_segmentation, use normal F1 score. 
         trees, ground_truth, unsup_discovered_word_alignments = _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments)
         f1 = ex_sparseval_f1(ground_truth, trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
+        
+        #right_branching=True
+        #left_branching=True 
+        #random_branching=True 
+
+        if right_branching: 
+            print(f'Right branching')
+            right_trees = [right_branching_algorithm(x) for x in trees]
+            rf1 = ex_sparseval_f1(ground_truth, right_trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
+            print(f'\tCorpus sparseval F1: {rf1:.3f}')
+        if left_branching: 
+            print(f'Left branching')
+            left_trees = [left_branching_algorithm(x) for x in trees]
+            lf1 = ex_sparseval_f1(ground_truth, left_trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
+            print(f'\tCorpus sparseval F1: {lf1:.3f}')
+        if random_branching:
+            print(f'Random branching')
+            c_rf1 = 0
+            for seed in range(5):
+                random_trees = [random_branching_algorithm(x, seed) for x in trees]
+                rf1 = ex_sparseval_f1(ground_truth, random_trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
+                c_rf1 += rf1
+            c_rf1 /= 5
+            print(f'\tCorpus sparseval F1: {c_rf1:.3f}')
     else: # normal corpus f1
         f1, _, _ = f1_score(trees, ground_truth, all_captions, visual_tree, constituent_recall)
 
     return f1
 
+def left_branching_algorithm(st):
+    words = st.replace('(', '').replace(')', '').split()
+    if len(words) == 1:
+        return (f'( {words[0]} )')
+    else:
+        current_st = f'( {words[0]} {words[1]} )'
+        for item in words[2:]:
+            current_st = f'( {current_st} {item} )'
+        return current_st
+
+def right_branching_algorithm(st):
+    words = st.replace('(', '').replace(')', '').split()
+    if len(words) == 1:
+        return (f'( {words[0]} )')
+    else:
+        current_st = f'( {words[-2]} {words[-1]} )'
+        for item in words[2:]:
+            current_st = f'( {item} {current_st} )'
+        return current_st
+
+def random_branching_algorithm(st, seed=0):
+    random.seed(seed)
+    words = st.replace('(', '').replace(')', '').split()
+    while len(words) > 1:
+        position = random.randint(0, len(words) - 2)
+        item = f'( {words[position]} {words[position+1]} )'
+        words = words[:position] + [item] + words[position+2:]
+    return words[0]
 
 def viz_tree(bare_tree):
     nt_tree = bare_tree.replace('(', '(NT').replace(' ', '  ')

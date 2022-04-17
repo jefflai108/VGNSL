@@ -236,6 +236,8 @@ if __name__ == '__main__':
                         help='use MLP as the combination function for words/constituent embeddings')
     parser.add_argument('--deeper_score', action='store_true',
                         help='deeper scoring network')
+    parser.add_argument('--word_mask_ratio', default=0.0, type=float,
+                        help='input masking ratio. (word-level).')
     parser.add_argument('--grad_clip', default=2., type=float,
                         help='gradient clipping threshold')
     parser.add_argument('--learning_rate', default=.0005, type=float,
@@ -318,7 +320,8 @@ if __name__ == '__main__':
         opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.feature, opt.feature_cmvn, opt.speech_hdf5, 
         opt.discretized_phone, opt.discretized_word, opt.km_clusters, opt.phn_force_align, opt.diffbound_gtword, 
         opt.dino_feature, opt.img_dim, opt.unsup_word_discovery_feats, opt.unsup_word_discovery_feat_type, 
-        opt.use_seg_feats_for_unsup_word_discovery, opt.uniform_word_force_align
+        opt.use_seg_feats_for_unsup_word_discovery, opt.uniform_word_force_align,
+        opt.word_mask_ratio
     )
 
     # construct the model
