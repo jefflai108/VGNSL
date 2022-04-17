@@ -299,7 +299,15 @@ class H5PrecompDataset(PrecompDataset):
     def _get_seg_feat_item(self, index): 
         # no slicing required. 
         seg_feat = self.vg_hubert_seg_feats[index]
-        return seg_feat, len(seg_feat)
+        num_of_words = len(seg_feat)
+        
+        # select mask-out word segments
+        if self.data_split == 'train': 
+            masked_out_word_idx = random.sample(list(range(num_of_words)), int(num_of_words * self.word_mask_ratio))
+        else: masked_out_word_idx = []
+        seg_feat[masked_out_word_idx] = 0.0
+
+        return seg_feat, num_of_words
 
     def __getitem__(self, index):
         # get image 
