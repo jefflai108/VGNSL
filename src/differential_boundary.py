@@ -248,5 +248,6 @@ if __name__ == '__main__':
     print(sem_embeddings.shape) # torch.Size([10, 48, 512])
      
     differential_boundary_module = DifferentialWordSegmentation(hidden_dim, word_segment_threshold)
-    differential_boundary_module(sem_embeddings, audio_mask[:, :, 0], gt_word_lens)
+    sem_embeddings = differential_boundary_module(sem_embeddings, audio_mask[:, :, 0], gt_word_lens)
+    print(sem_embeddings.shape)
 

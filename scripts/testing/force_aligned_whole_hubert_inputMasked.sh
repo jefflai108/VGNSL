@@ -10,13 +10,10 @@ feature=hubert6; feature_dim=768
 feature=hubert8; feature_dim=768
 feature=hubert10; feature_dim=768
 feature=$4
+mask_ratio=$5
 
 datadir=data/SpokenCOCO
-expdir=exp/spokencoco/force_aligned_whole_${feature}_embed${embed_size}_MLPcombine_lr${lr}_${basename} # mlp_combine
-expdir=exp/spokencoco/force_aligned_whole_${feature}_embed${embed_size}_MLPcombineV2_lr${lr}_${basename} # mlp_combine_v2 + deeper_score
-expdir=exp/spokencoco/force_aligned_whole_${feature}_embed${embed_size}_MLPcombineV3_lr${lr}_${basename} # mlp_combine_v3 + deeper_score
-echo $expdir
-
+expdir=exp/spokencoco/force_aligned_masking${mask_ratio}_whole_${feature}_embed${embed_size}_lr${lr}_${basename}
 i=0
 while [ $i -ne 20 ]; do  
     if [ -f ${expdir}/${i}.pth.tar ]; then
@@ -25,4 +22,3 @@ while [ $i -ne 20 ]; do
     fi 
     i=$(($i+1))
 done
-exit 0

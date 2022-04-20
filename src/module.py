@@ -5,6 +5,33 @@ import numpy as np
 
 from torch.distributions import Categorical
 
+class MLPCombineBasicBlock(nn.Module):
+    def __init__(self, input_size, output_size):
+        super(MLPCombineBasicBlock, self).__init__()
+
+        self.downsampling = False
+        if input_size != output_size: 
+            self.downsampling = True 
+            self.downsampler = nn.Linear(input_size, output_size)
+
+        self.combination_function = torch.nn.Sequential( 
+                nn.Linear(output_size, output_size), 
+                nn.GELU(), 
+                nn.Linear(output_size, output_size), 
+                nn.GELU(), 
+                nn.Linear(output_size, output_size, bias=False)
+            )
+        self.gelu = nn.GELU()
+
+    def forward(self, x):
+        if self.downsampling: 
+            x = self.downsampler(x)
+        residual = x
+        out = self.combination_function(x)
+        out += residual
+        out = self.gelu(out)
+        return out
+
 class AttentivePooling(nn.Module):
     """
     Attentive Pooling module incoporate attention mask 

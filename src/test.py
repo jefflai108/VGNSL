@@ -21,6 +21,8 @@ if __name__ == '__main__':
                         help='targeted data_split', choices = ['train', 'val', 'test'])
     parser.add_argument('--vocab_path', default='../data/mscoco/vocab.pkl',
                         help='path to vocab.pkl')
+    parser.add_argument('--mbr_path', default=None, type=str,
+                        help='path to store predicted tree for MBR model selection')
     parser.add_argument('--visual_tree', '-v', action="store_true", 
                         help='visualize tress')
     parser.add_argument('--visual_samples', type=int, default=10, 
@@ -36,7 +38,8 @@ if __name__ == '__main__':
 
     f1 = test_trees(args.data_path, args.candidate, args.vocab_path, args.basename, args.data_split, 
                     args.visual_tree, args.visual_samples, args.export_tree, args.export_tree_path, 
-                    args.constituent_recall, args.duration_based_alignment, args.test_time_oracle_segmentation)
+                    args.constituent_recall, args.duration_based_alignment, args.test_time_oracle_segmentation, 
+                    args.mbr_path)
     if args.visual_tree:
         print('visual samples f1 score is %f' % f1)
     else: print(f1)

@@ -20,8 +20,11 @@ from utils import make_embeddings, l2norm, cosine_sim, sequence_mask, \
 import utils
 
 from module import AttentivePooling, AttentivePoolingInputNorm, \
-                   AttentivePoolingDiscreteInput, create_resdavenet_vq
-from differential_boundary import DifferentialWordSegmentation
+                   AttentivePoolingDiscreteInput, create_resdavenet_vq, \
+                   MLPCombineBasicBlock
+
+#from differential_boundary import DifferentialWordSegmentation # diffboundV0
+from differential_boundary_v1 import DifferentialWordSegmentation # diffboundV1
 
 class EncoderImagePrecomp(nn.Module):
     """ image encoder """
@@ -73,7 +76,7 @@ class EncoderText(nn.Module):
         self.vocab_size = vocab_size
         self.semantics_dim = semantics_dim
         self.embed_size = embed_size
-        
+       
         if hasattr(opt, 'mlp_combine') and opt.mlp_combine:
             self.mlp_combine = True 
             self.combination_function = torch.nn.Sequential( 
@@ -103,6 +106,13 @@ class EncoderText(nn.Module):
                 nn.GELU(), 
                 nn.Linear(embed_size, embed_size, bias=False)
             )
+        elif hasattr(opt, 'mlp_combine_v4') and opt.mlp_combine_v4:
+            self.mlp_combine = True 
+            layers = []
+            layers.append(MLPCombineBasicBlock(embed_size * 2, embed_size))
+            for _ in range(2):
+                layers.append(MLPCombineBasicBlock(embed_size, embed_size))
+            self.combination_function = nn.Sequential(*layers)
         else: self.mlp_combine = False
 
         # replace word embedding with linear layer 

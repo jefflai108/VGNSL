@@ -11,13 +11,11 @@ feature=hubert8; feature_dim=768
 feature=hubert10; feature_dim=768
 jason_feats=disc-81_spokencoco_preFeats_max_0.7_9_clsAttn
 jason_feats=$4
+mask_ratio=$5
 discovery_type=attn # seg_feats + attention boundaries
 
 datadir=data/SpokenCOCO
-expdir=exp/spokencoco/unsup_${discovery_type}_discovery_${jason_feats}_seg_feats_embed${embed_size}_MLPcombine_lr${lr}_${basename} # mlp_combine
-expdir=exp/spokencoco/unsup_${discovery_type}_discovery_${jason_feats}_seg_feats_embed${embed_size}_MLPcombineV2_lr${lr}_${basename} # mlp_combine_v2 + deeper_score
-expdir=exp/spokencoco/unsup_${discovery_type}_discovery_${jason_feats}_seg_feats_embed${embed_size}_MLPcombineV3_lr${lr}_${basename} # mlp_combine_v3 + deeper_score
-expdir=exp/spokencoco/unsup_${discovery_type}_discovery_${jason_feats}_seg_feats_embed${embed_size}_MLPcombineV4_lr${lr}_${basename} # mlp_combine_v4 + deeper_score
+expdir=exp/spokencoco/unsup_${discovery_type}_discovery_${jason_feats}_masking${mask_ratio}_seg_feats_embed${embed_size}_MLPcombineV2_lr${lr}_${basename} # mlp_combine_v2 + deeper_score + word_mask_ratio
 echo $expdir
 
 i=0

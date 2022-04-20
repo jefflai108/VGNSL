@@ -204,8 +204,7 @@ class DifferentialWordSegmentation(nn.Module):
         # 2.2 top-k sampling for enforcing # of word segment
         P = weighted_random_peak_sampling(P, phn_mask, gt_word_lens)
         #print(P)
-        print(P)
-        exit()
+        
         # 3. make P binary and differentiable via straight-through
         b_soft = torch.tanh(P)
         b_hard = torch.tanh(100000 * P)
@@ -271,5 +270,6 @@ if __name__ == '__main__':
     print(sem_embeddings.shape) # torch.Size([10, 20, 768])
     
     differential_boundary_module = DifferentialWordSegmentation(hidden_dim, word_segment_threshold)
-    differential_boundary_module(sem_embeddings, audio_mask[:, :, 0], gt_word_lens)
+    sem_embeddings = differential_boundary_module(sem_embeddings, audio_mask[:, :, 0], gt_word_lens)
+    print(sem_embeddings.shape)
 

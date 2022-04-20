@@ -21,10 +21,10 @@ rl_loss=$7
 datadir=data/SpokenCOCO
 if [[ $rl_loss ]]; then 
     vse_reward_alpha=$rl_loss 
-    expdir=exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_${feature}_embed${embed_size}_lr${lr}_margin${margin}_lambdahi${head_init_bias}_vseRL${vse_reward_alpha}_${basename}
+    expdir=exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_${feature}_embed${embed_size}_lr${lr}_margin${margin}_lambdahi${head_init_bias}_vseRL${vse_reward_alpha}_${basename}
 else
     vse_reward_alpha=1.0
-    expdir=exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_${feature}_embed${embed_size}_lr${lr}_margin${margin}_lambdahi${head_init_bias}_${basename}
+    expdir=exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_${feature}_embed${embed_size}_lr${lr}_margin${margin}_lambdahi${head_init_bias}_${basename}
 fi 
 # reduce num_epochs from 20 --> 10 to speed up model dev cycle 
 # reduce batch_size from 128 --> 64 to avoid mem error on SLS machines 

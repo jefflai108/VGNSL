@@ -142,6 +142,8 @@ if __name__ == '__main__':
                         help='pre-stored speech embeddings are in .h5 format')
     parser.add_argument('--load_pretrained', action='store_true', 
                         help='load pre-trained model ckpt and optimizer')
+    parser.add_argument('--init_with_uniform_word_force_align', type=str, 
+                        help='init with VG-NSL trained on naive uniform segmentaiton')
     parser.add_argument('--data_summary_json', help='karpathy split json file')
     parser.add_argument('--basename', help='MSCOCO split')
     parser.add_argument('--margin', default=0.2, type=float,
@@ -233,6 +235,8 @@ if __name__ == '__main__':
     parser.add_argument('--mlp_combine_v2', action='store_true',
                         help='use MLP as the combination function for words/constituent embeddings')
     parser.add_argument('--mlp_combine_v3', action='store_true',
+                        help='use MLP as the combination function for words/constituent embeddings')
+    parser.add_argument('--mlp_combine_v4', action='store_true',
                         help='use MLP as the combination function for words/constituent embeddings')
     parser.add_argument('--deeper_score', action='store_true',
                         help='deeper scoring network')
@@ -326,6 +330,13 @@ if __name__ == '__main__':
 
     # construct the model
     model = VGNSL(opt)
+    if opt.init_with_uniform_word_force_align: # init VGNSL w/ VGNSL trained on naive uniform segmentation
+        print(f'loading pretrained model from {opt.init_with_uniform_word_force_align}')
+        checkpoint = torch.load(opt.init_with_uniform_word_force_align, map_location='cpu')
+        model.load_state_dict(checkpoint['model']) 
+        starting_epoch = 0
+        best_rsum = 0
+       
     if opt.load_pretrained: 
         # find last ckpt 
         for last_ckpt in range(opt.num_epochs, -2, -1): 

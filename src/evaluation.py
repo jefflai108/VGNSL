@@ -258,7 +258,7 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
                visual_tree=False, visual_samples=10,
                export_tree=False, export_tree_path=None, 
                constituent_recall=False, duration_based_alignment=False, 
-               test_time_oracle_segmentation=False, 
+               test_time_oracle_segmentation=False, mbr_path=None, 
                right_branching=False, left_branching=False, random_branching=False):
     """ use the trained model to generate parse trees for text """
     # load model and options
@@ -354,7 +354,6 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
             unsup_discovered_word_alignments = np.load(os.path.join(data_path, f'{data_split}-{unsup_word_discovery_feats}-{unsup_word_discovery_feat_type}_alignment_via_max_weight_matching-{basename}.npy'), allow_pickle=True)[0]
         unsup_discovered_word_alignments = list(unsup_discovered_word_alignments.values())
 
-
     if visual_tree: 
         ground_truth = ground_truth[:visual_samples]
         all_captions = all_captions[:visual_samples]
@@ -408,14 +407,20 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
         export_tree_writer.close()
         exit()
 
+    if mbr_path: # pre-store predicted trees for all checkpoints. They will be used later for MBR model selection.
+        print(f'writing predicted trees to {mbr_path}')
+        with open(mbr_path, 'w') as f: 
+            for tree in trees: 
+                f.write('%s\n' % tree) 
+
     if unsup_word_discovery_feats and not test_time_oracle_segmentation: # if test_time_oracle_segmentation, use normal F1 score. 
         trees, ground_truth, unsup_discovered_word_alignments = _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments)
         f1 = ex_sparseval_f1(ground_truth, trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
-        
+       
+        ## tree baselines for unsup_word_discovery_feats
         #right_branching=True
         #left_branching=True 
         #random_branching=True 
-
         if right_branching: 
             print(f'Right branching')
             right_trees = [right_branching_algorithm(x) for x in trees]
