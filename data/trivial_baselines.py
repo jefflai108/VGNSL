@@ -60,7 +60,7 @@ def eval_baselines(fname):
     print(f'Random branching')
     print(f'\tCorpus F1: {c_f1*100:.3f}')
     print(f'\tSentence F1: {s_f1*100:.3f}')
-   
+
 if __name__ == '__main__':
     import argparse
 

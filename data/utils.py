@@ -1,13 +1,16 @@
-# Author: Wei-Ning Hsu
 import librosa
 import numpy as np
 import scipy.signal
 import torch
 import textgrid
+import pickle
+import os
 
 import torch 
 import torch.nn.functional as F
 import s3prl.hub as hub
+
+import w2v2_model_jeff
 
 WINDOWS = {'hamming': scipy.signal.hamming,
            'hann': scipy.signal.hann,
@@ -120,7 +123,7 @@ def slice_feature(logspec, word_list,
 def hubert_feature_extraction(input_utterance_pth, upstream_model, 
                               layer=12, hubert_dim=768, device='cpu'):
     # extract hubert feature on GPU with torch. 
-    # return specified layer's representation: 0, 1, 2, ...., 12
+    # return specified layer's representation: 0, 1, 2, ...., 12 (start with CNN encoder outputs)
 
     # load wavefile 
     y, native_sample_rate = librosa.load(input_utterance_pth)
@@ -141,6 +144,67 @@ def hubert_feature_extraction(input_utterance_pth, upstream_model,
 
     return numpy_reps, n_frames
 
+def vghubert_feature_extraction(input_utterance_pth, model,
+                                layer=11, device='cuda'):
+    # extract vg-hubert feature on GPU with torch. 
+    # return specified layer's representation: 0, 1, 2, ...., 11 (start with transformer_block1)
+
+    # load wavefile 
+    y, native_sample_rate = librosa.load(input_utterance_pth)
+    
+    # resample to the target sample rate -- important for pre-trained 16k models
+    y = librosa.resample(y, native_sample_rate, 16000)
+    y = torch.from_numpy(y).to(device)
+
+    with torch.no_grad():
+        # model forward pass
+        w2v2_out = model(y.unsqueeze(0), 
+                         padding_mask=None, 
+                         mask=False, 
+                         need_attention_weights=True, 
+                         segment_layer=-1, 
+                         feature_layer=[layer])
+
+        # extract the representations
+        reps = [item.squeeze(0)[1:] for item in w2v2_out['layer_features']] # [1, T+1, D] -> [T, D]
+        reps = reps[0]
+        numpy_reps = np.transpose(reps.detach().cpu().numpy())
+    n_frames = numpy_reps.shape[1]
+
+    return numpy_reps, n_frames
+
+def setup_vg_hubert(model_type, snapshot='best', device='cuda'):
+    # setup VG-Hubert based on Jason's code
+    
+    if model_type == 'disc-81':
+        exp_dir = '/data/sls/scratch/clai24/data/SpokenCOCO/vghubert_model_weights/disc-81'
+    elif model_type == 'disc-82':
+        expdir = '/data/sls/scratch/clai24/data/SpokenCOCO/vghubert_model_weights/disc-82'
+    else:
+        print('%s not supported' % model_type)
+        exit()
+
+    with open(os.path.join(exp_dir, "args.pkl"), "rb") as f:
+        model_args = pickle.load(f)
+    model = w2v2_model_jeff.Wav2Vec2Model_cls(model_args)
+    if "best" in snapshot:
+        bundle = torch.load(os.path.join(exp_dir, "best_bundle.pth"))
+    else:
+        snapshot = int(snapshot)
+        bundle = torch.load(os.path.join(exp_dir, f"snapshot_{snapshot}.pth"))
+
+    if "dual_encoder" in bundle:
+        model.carefully_load_state_dict(bundle['dual_encoder'], load_all=True)
+    elif "audio_encoder" in bundle:
+        model.carefully_load_state_dict(bundle['audio_encoder'], load_all=True)
+    else:
+        model.carefully_load_state_dict(bundle['model'], load_all=True)
+
+    model.eval()
+    model = model.to(device)
+
+    return model
+
 if __name__ == '__main__':
     wav_file = 'data/SpokenCOCO/wavs-speaker/m1vjq8cayvs6c9/m1vjq8cayvs6c9-32KTQ2V7RDFP25PU1AP8KXEZU8I9MO_92648_385961.wav'
     grid_file = 'data/SpokenCOCO/wavs-speaker-aligned/m1vjq8cayvs6c9/m1vjq8cayvs6c9-32KTQ2V7RDFP25PU1AP8KXEZU8I9MO_92648_385961.TextGrid'
@@ -154,8 +218,9 @@ if __name__ == '__main__':
                                                            target_sent_padded_length=50, sent_level_padding=True, \
                                                            target_segment_padded_length=None, return_whole=False) # (50, 40)
     print(logspec.shape, nframes, sentence_segment_spec.shape, num_of_words) # (40, 530) 530 (50, 40) 12
+    print('************************************')
 
-    ## example extracting whole-segmnet logmelspec 
+    # example extracting whole-segmnet logmelspec 
     frame_stride=0.01
     logspec, nframes = compute_spectrogram(wav_file) # (40, 530)
     word_list, word_string = read_textgrid(grid_file, text_file, nframes, frame_stride=frame_stride)
@@ -164,6 +229,7 @@ if __name__ == '__main__':
                                                                           target_segment_padded_length=int(7.90/frame_stride), return_whole=True) # (50, 790, 40)
     print(logspec.shape, nframes, sentence_segment_spec.shape, num_of_words) # (40, 530) 530 (50, 790, 40) 12
     print(word_list, word_string)
+    print('************************************')
 
     # example extracting whole-segment hubert 
     # setup upstream model first 
@@ -185,3 +251,15 @@ if __name__ == '__main__':
                                                                           target_segment_padded_length=int(7.90/frame_stride), return_whole=True) # (50, 395, 768)
     print(hubert_repre.shape, nframes, sentence_segment_spec.shape, num_of_words, segment_len_list) # (768, 264) 264 (50, 395, 768) 12 [8, 19, 22, 8, 12, 8, 30, 19, 10, 24, 11, 46]
     print(word_list, word_string) # [('a', 35.0, 43.0), ('town', 43.0, 61.5), ('square', 61.5, 84.5), ('is', 84.5, 92.0), ('full', 92.0, 104.49999999999999), ('of', 104.49999999999999, 112.00000000000001), ('people', 112.00000000000001, 142.5), ('riding', 149.0, 167.5), ('their', 167.5, 178.0), ('bikes', 178.0, 201.5), ('and', 201.5, 213.49999999999997), ('skateboarding', 213.49999999999997, 259.0)] a town square is full of people riding their bikes and skateboarding
+    print('************************************')
+
+    # example extracting whole-segment VG-hubert 
+    upstream_model = setup_vg_hubert(model_type='disc-81', snapshot='best', device=device)
+    vghubert_repre, vghubert_nframes = vghubert_feature_extraction(wav_file, upstream_model,
+                                                          layer=11, device=device)
+    print(vghubert_repre.shape, nframes) # (768, 264) 264
+    print('************************************')
+
+    # example concatenating the extracted hubert and vghubert representations
+    concat_hubert_and_vghubert_repre = np.concatenate((hubert_repre, vghubert_repre), axis=0)
+    print(concat_hubert_and_vghubert_repre.shape) # (1536, 264)
