@@ -490,9 +490,11 @@ def viz_tree_alignments_timestamps(orig_produced_trees, orig_gold_trees, alignme
         print('\nDiscovered word boundaries timestamps:')
         print(word_timestamps[i])
         print('\ngold tree:\n')
-        viz_tree(orig_gold_trees[i])
+        print(orig_gold_trees[i])
+        #viz_tree(orig_gold_trees[i])
         print('\ninduced tree:\n')
-        viz_tree(item)
+        print(item)
+        #viz_tree(item)
 
 def left_branching_algorithm(st):
     words = st.replace('(', '').replace(')', '').split()

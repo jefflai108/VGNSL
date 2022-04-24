@@ -26,75 +26,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                                         NT                                                                                                                                            
-                          _______________|________________________                                                                                                                      
-                         |                                        NT                                                                                                                   
-                         |                                    ____|___                                                                                                                  
-                         |                                   |        NT                                                                                                               
-                         |                                   |     ___|__________________                                                                                               
-                         |                                   |    |                      NT                                                                                            
-                         |                                   |    |        ______________|_________                                                                                     
-                         |                                   |    |       |                        NT                                                                                  
-                         |                                   |    |       |               _________|__________                                                                          
-                         |                                   |    |       |              |                    NT                                                                       
-                         |                                   |    |       |              |          __________|_____________                                                            
-                         NT                                  |    |       |              |         |                        NT                                                         
-      ___________________|_____                              |    |       |              |         |           _____________|_________                                                  
-     |                         NT                            |    |       |              |         |          |                       NT                                               
-     |          _______________|_____                        |    |       |              |         |          |         ______________|__________________                               
-     |         |                     NT                      |    |       |              |         |          |        |          |                      NT                            
-     |         |          ___________|_______                |    |       |              |         |          |        |          |        ______________|________                      
-     |         |         |                   NT              |    |       |              |         |          |        |          |       |                       NT                   
-     |         |         |            _______|____           |    |       |              |         |          |        |          |       |               ________|________             
-     NT        |         NT          |            NT         |    |       NT             |         NT         |        NT         |       NT             |                 NT          
-  ___|____     |     ____|_____      |    ________|____      |    |    ___|______        |    _____|_____     |     ___|____      |    ___|______        |         ________|______      
- PT  PT   PT   PT   PT   PT    PT    PT  PT       PT   PT    PT   PT  PT         PT      PT  PT    PT    PT   PT   PT       PT    PT  PT         PT      PT       PT              PT   
- |   |    |    |    |    |     |     |   |        |    |     |    |   |          |       |   |     |     |    |    |        |     |   |          |       |        |               |     
- a  dirt path with  a  young person  on  a      motor bike rests  to the     foreground  of  a  verdant area with  a      bridge and  a      background  of cloudwreathed     mountains
-
+( ( ( a dirt path ) ( with ( ( a young person ) ( on ( a motor bike ) ) ) ) ) ( rests ( to ( ( the foreground ) ( of ( ( a verdant area ) ( with ( ( a bridge ) and ( ( a background ) ( of ( cloudwreathed mountains ) ) ) ) ) ) ) ) ) ) )
 
 induced tree:
 
-                                                                                    NT                                                                                             
-                                     _______________________________________________|__________________________________________________________________________________             
-                                    NT                                                                                                                                 |           
-       _____________________________|_____________________________________                                                                                             |            
-      |                                                                   NT                                                                                           |           
-      |                                                               ____|____                                                                                        |            
-      |                                                              |         NT                                                                                      |           
-      |                                                              |     ____|____                                                                                   |            
-      |                                                              |    |         NT                                                                                 |           
-      |                                                              |    |     ____|____                                                                              |            
-      |                                                              |    |    |         NT                                                                            |           
-      |                                                              |    |    |     ____|____                                                                         |            
-      |                                                              |    |    |    |         NT                                                                       |           
-      |                                                              |    |    |    |     ____|____                                                                    |            
-      NT                                                             |    |    |    |    |         NT                                                                  |           
-  ____|____                                                          |    |    |    |    |     ____|____                                                               |            
- |         NT                                                        |    |    |    |    |    |         NT                                                             |           
- |     ____|____                                                     |    |    |    |    |    |     ____|____                                                          |            
- |    |         NT                                                   |    |    |    |    |    |    |         NT                                                        |           
- |    |     ____|____                                                |    |    |    |    |    |    |     ____|____                                                     |            
- |    |    |         NT                                              |    |    |    |    |    |    |    |         NT                                                   |           
- |    |    |     ____|____                                           |    |    |    |    |    |    |    |     ____|____                                                |            
- |    |    |    |         NT                                         |    |    |    |    |    |    |    |    |         NT                                              |           
- |    |    |    |     ____|____                                      |    |    |    |    |    |    |    |    |     ____|____                                           |            
- |    |    |    |    |         NT                                    |    |    |    |    |    |    |    |    |    |         NT                                         |           
- |    |    |    |    |     ____|_________                            |    |    |    |    |    |    |    |    |    |     ____|_________                                 |            
- |    |    |    |    |    |              NT                          |    |    |    |    |    |    |    |    |    |    |              NT                               |           
- |    |    |    |    |    |     _________|____                       |    |    |    |    |    |    |    |    |    |    |     _________|____                            |            
- |    |    |    |    |    |    |              NT                     |    |    |    |    |    |    |    |    |    |    |    |              NT                          |           
- |    |    |    |    |    |    |     _________|____                  |    |    |    |    |    |    |    |    |    |    |    |     _________|____                       |            
- |    |    |    |    |    |    |    |              NT                |    |    |    |    |    |    |    |    |    |    |    |    |              NT                     |           
- |    |    |    |    |    |    |    |     _________|___              |    |    |    |    |    |    |    |    |    |    |    |    |     _________|___                   |            
- |    |    |    |    |    |    |    |    |             NT            |    |    |    |    |    |    |    |    |    |    |    |    |    |             NT                 NT          
- |    |    |    |    |    |    |    |    |     ________|____         |    |    |    |    |    |    |    |    |    |    |    |    |    |     ________|____          ____|____        
- |    |    |    |    |    |    |    |    |    |             NT       |    |    |    |    |    |    |    |    |    |    |    |    |    |    |             NT       |         NT     
- |    |    |    |    |    |    |    |    |    |         ____|___     |    |    |    |    |    |    |    |    |    |    |    |    |    |    |         ____|___     |     ____|___    
- PT   PT   PT   PT   PT   PT   PT   PT   PT   PT       PT       PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT       PT       PT   PT   PT       PT 
- |    |    |    |    |    |    |    |    |    |        |        |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |        |        |    |    |        |   
-shit shit shit shit shit shit shit shit shit shit     shit     shit shit shit shit shit shit shit shit shit shit shit shit shit shit shit shit     shit     shit shit shit     shit
-
+( ( ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ) ) ) ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( shit ( shit shit ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2fy31gkekkszg/m2fy31gkekkszg-31QNSG6A5RT63XZXSCH51JMYFD787P_391895_770337.wav
@@ -110,43 +46,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                                     NT                                      
-      _______________________________|______________                          
-     |                |                             NT                       
-     |                |               ______________|____                     
-     |                |              |                   NT                  
-     |                |              |         __________|_______             
-     |                NT             |        |                  NT          
-     |        ________|___           |        |           _______|___         
-     NT      |            NT         |        NT         |           NT      
-  ___|___    |     _______|____      |    ____|_____     |    _______|____    
- PT      PT  PT   PT      PT   PT    PT  PT   PT    PT   PT  PT      PT   PT 
- |       |   |    |       |    |     |   |    |     |    |   |       |    |   
- a      man with  a      red helmet  on  a  small moped  on  a      dirt road
-
+( ( a man ) ( with ( a red helmet ) ) ( on ( ( a small moped ) ( on ( a dirt road ) ) ) ) )
 
 induced tree:
 
-                          NT                                               
-       ___________________|________________________________                 
-      NT                                                   |               
-  ____|____                                                |                
- |         NT                                              |               
- |     ____|_________                                      |                
- |    |              NT                                    |               
- |    |     _________|____                                 |                
- |    |    |              NT                               |               
- |    |    |     _________|____                            |                
- |    |    |    |              NT                          NT              
- |    |    |    |     _________|___               _________|___             
- |    |    |    |    |             NT            |             NT          
- |    |    |    |    |     ________|____         |     ________|____        
- |    |    |    |    |    |             NT       |    |             NT     
- |    |    |    |    |    |         ____|___     |    |         ____|___    
- PT   PT   PT   PT   PT   PT       PT       PT   PT   PT       PT       PT 
- |    |    |    |    |    |        |        |    |    |        |        |   
-shit shit shit shit shit shit     shit     shit shit shit     shit     shit
-
+( ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ( shit ( shit ( shit shit ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2jur5tcvsvbp6/m2jur5tcvsvbp6-3O6CYIULED1JR97B3NQMPR3453NUWO_391895_771687.wav
@@ -162,43 +66,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-      NT                                                           
-  ____|__________                                                   
- |               NT                                                
- |     __________|_____________                                     
- |    |          |             NT                                  
- |    |          |          ___|________                            
- |    |          |         |            NT                         
- |    |          |         |        ____|________                   
- |    |          |         |       |             NT                
- |    |          |         |       |          ___|___               
- |    |          NT        |       NT        |       NT            
- |    |      ____|____     |    ___|____     |    ___|_______       
- PT   PT    PT   PT   PT   PT  PT  PT   PT   PT  PT          PT    
- |    |     |    |    |    |   |   |    |    |   |           |      
-man riding  a  motor bike  on  a  dirt road  on the     countryside
-
+( man ( riding ( a motor bike ) ( on ( ( a dirt road ) ( on ( the countryside ) ) ) ) ) )
 
 induced tree:
 
-                                       NT                                            
-       ________________________________|_________                                     
-      NT                                         NT                                  
-  ____|_________                             ____|_________                           
- |              NT                          |              NT                        
- |     _________|____                       |     _________|____                      
- |    |              NT                     |    |              NT                   
- |    |     _________|____                  |    |     _________|____                 
- |    |    |              NT                |    |    |              NT              
- |    |    |     _________|___              |    |    |     _________|___             
- |    |    |    |             NT            |    |    |    |             NT          
- |    |    |    |     ________|____         |    |    |    |     ________|____        
- |    |    |    |    |             NT       |    |    |    |    |             NT     
- |    |    |    |    |         ____|___     |    |    |    |    |         ____|___    
- PT   PT   PT   PT   PT       PT       PT   PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |    |        |        |    |    |    |    |    |        |        |   
-shit shit shit shit shit     shit     shit shit shit shit shit shit     shit     shit
-
+( ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m3n07jtdpbjqtz/m3n07jtdpbjqtz-3LUY3GC63Z0R9PYEETJGN5HO8ST7P8_391895_781998.wav
@@ -214,61 +86,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                                       NT                                                     
-                      _________________|__________________________                             
-                     NT                                           |                           
-      _______________|____                                        |                            
-     |                    NT                                      NT                          
-     |        ____________|____                 __________________|_______________             
-     |       |                 NT              |       NT                         NT          
-     |       |        _________|_______        |    ___|___                _______|___         
-     NT      |       NT        |       NT      |   |       NT             |           NT      
-  ___|___    |    ___|____     |    ___|___    |   |    ___|______        |    _______|____    
- PT      PT  PT  PT  PT   PT   PT  PT  PT  PT  PT  PT  PT         PT      PT  PT      PT   PT 
- |       |   |   |   |    |    |   |   |   |   |   |   |          |       |   |       |    |   
- a      man  in  a  red shirt and  a  red hat  is  on  a      motorcycle  on  a      hill side
-
+( ( ( a man ) ( in ( ( a red shirt ) and ( a red hat ) ) ) ) ( is ( on ( a motorcycle ) ) ( on ( a hill side ) ) ) )
 
 induced tree:
 
-                                                   NT                                                                   
-       ____________________________________________|____________________________________________________                 
-      NT                                                                                                |               
-  ____|____                                                                                             |                
- |         NT                                                                                           |               
- |     ____|____                                                                                        |                
- |    |         NT                                                                                      |               
- |    |     ____|____                                                                                   |                
- |    |    |         NT                                                                                 |               
- |    |    |     ____|____                                                                              |                
- |    |    |    |         NT                                                                            |               
- |    |    |    |     ____|____                                                                         |                
- |    |    |    |    |         NT                                                                       |               
- |    |    |    |    |     ____|____                                                                    |                
- |    |    |    |    |    |         NT                                                                  |               
- |    |    |    |    |    |     ____|____                                                               |                
- |    |    |    |    |    |    |         NT                                                             |               
- |    |    |    |    |    |    |     ____|____                                                          |                
- |    |    |    |    |    |    |    |         NT                                                        |               
- |    |    |    |    |    |    |    |     ____|____                                                     |                
- |    |    |    |    |    |    |    |    |         NT                                                   |               
- |    |    |    |    |    |    |    |    |     ____|____                                                |                
- |    |    |    |    |    |    |    |    |    |         NT                                              |               
- |    |    |    |    |    |    |    |    |    |     ____|_________                                      |                
- |    |    |    |    |    |    |    |    |    |    |              NT                                    |               
- |    |    |    |    |    |    |    |    |    |    |     _________|____                                 |                
- |    |    |    |    |    |    |    |    |    |    |    |              NT                               |               
- |    |    |    |    |    |    |    |    |    |    |    |     _________|____                            |                
- |    |    |    |    |    |    |    |    |    |    |    |    |              NT                          NT              
- |    |    |    |    |    |    |    |    |    |    |    |    |     _________|___               _________|___             
- |    |    |    |    |    |    |    |    |    |    |    |    |    |             NT            |             NT          
- |    |    |    |    |    |    |    |    |    |    |    |    |    |     ________|____         |     ________|____        
- |    |    |    |    |    |    |    |    |    |    |    |    |    |    |             NT       |    |             NT     
- |    |    |    |    |    |    |    |    |    |    |    |    |    |    |         ____|___     |    |         ____|___    
- PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT       PT       PT   PT   PT       PT       PT 
- |    |    |    |    |    |    |    |    |    |    |    |    |    |    |        |        |    |    |        |        |   
-shit shit shit shit shit shit shit shit shit shit shit shit shit shit shit     shit     shit shit shit     shit     shit
-
+( ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ( shit ( shit ( shit shit ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/mb4m0ylawd52v/mb4m0ylawd52v-37ZHEEHM6WMK20TRGVM9A2EN04M37Q_391895_772707.wav
@@ -284,45 +106,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-         NT                                               
-      ___|__________                                       
-     |              NT                                    
-     |         _____|___________                           
-     |        |                 NT                        
-     |        |      ___________|____                      
-     |        |     |                NT                   
-     |        |     |        ________|___                  
-     |        |     |       |            NT               
-     |        |     |       |         ___|___              
-     NT       |     |       NT       |       NT           
-  ___|___     |     |    ___|___     |    ___|______       
- PT      PT   PT    PT  PT      PT   PT  PT         PT    
- |       |    |     |   |       |    |   |          |      
- a      man riding  on the     back  of  a      motorcycle
-
+( ( a man ) ( riding ( on ( ( the back ) ( of ( a motorcycle ) ) ) ) ) )
 
 induced tree:
 
-                     NT                             
-       ______________|___________________________    
-      NT                                         |  
-  ____|____                                      |   
- |         NT                                    |  
- |     ____|_________                            |   
- |    |              NT                          |  
- |    |     _________|____                       |   
- |    |    |              NT                     |  
- |    |    |     _________|____                  |   
- |    |    |    |              NT                |  
- |    |    |    |     _________|___              |   
- |    |    |    |    |             NT            |  
- |    |    |    |    |     ________|____         |   
- |    |    |    |    |    |             NT       |  
- |    |    |    |    |    |         ____|___     |   
- PT   PT   PT   PT   PT   PT       PT       PT   PT 
- |    |    |    |    |    |        |        |    |   
-shit shit shit shit shit shit     shit     shit shit
-
+( ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) shit )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m1exzmxuk43d2n/m1exzmxuk43d2n-39ASUFLU6X7HRDFFNS73NSV8SKCEX3_60623_161592.wav
@@ -338,35 +126,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                  NT                                
-  ________________|________                          
- |                         NT                       
- |       __________________|_________                
- |      |     |       |              NT             
- |      |     |       |           ___|___            
- |      |     |       NT         |       NT         
- |      |     |    ___|____      |    ___|_____      
- PT     PT    PT  PT       PT    PT  PT        PT   
- |      |     |   |        |     |   |         |     
-girl blowing out the     candle  on  an     icecream
-
+( girl ( blowing out ( the candle ) ( on ( an icecream ) ) ) )
 
 induced tree:
 
-                             NT                    
-                     ________|__________________    
-                    NT                          |  
-                ____|__________________         |   
-               NT                      |        |  
-       ________|____                   |        |   
-      |             NT                 |        |  
-      |         ____|____              |        |   
-      NT       |         NT            NT       |  
-  ____|___     |     ____|___      ____|___     |   
- PT       PT   PT   PT       PT   PT       PT   PT 
- |        |    |    |        |    |        |    |   
-shit     shit shit shit     shit shit     shit shit
-
+( ( ( ( shit shit ) ( shit ( shit shit ) ) ) ( shit shit ) ) shit )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2rwcn22hxwplu/m2rwcn22hxwplu-3BC8WZX3V3WM3LY80ZLBXH837ARRR8_60623_152106.wav
@@ -382,59 +146,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-           NT                                                            
-       ____|____________                                                  
-      |                 NT                                               
-      |            _____|____                                             
-      |           |          NT                                          
-      |           |      ____|________                                    
-      |           |     |             NT                                 
-      |           |     |         ____|___________                        
-      |           |     |        |                NT                     
-      |           |     |        |           _____|_____                  
-      |           |     |        |          |           NT               
-      |           |     |        |          |      _____|_______          
-      NT          |     |        NT         |     |     |       NT       
-  ____|____       |     |     ___|____      |     |     |    ___|____     
- PT   PT   PT     PT    PT   PT       PT    PT    PT    PT  PT       PT  
- |    |    |      |     |    |        |     |     |     |   |        |    
- a  young girl inhales with the     intent  of blowing out  a      candle
-
+( ( a young girl ) ( inhales ( with ( ( the intent ) ( of ( blowing out ( a candle ) ) ) ) ) ) )
 
 induced tree:
 
-      NT                                                                                   
-  ____|____                                                                                 
- |         NT                                                                              
- |     ____|____                                                                            
- |    |         NT                                                                         
- |    |     ____|____                                                                       
- |    |    |         NT                                                                    
- |    |    |     ____|____                                                                  
- |    |    |    |         NT                                                               
- |    |    |    |     ____|____                                                             
- |    |    |    |    |         NT                                                          
- |    |    |    |    |     ____|____                                                        
- |    |    |    |    |    |         NT                                                     
- |    |    |    |    |    |     ____|____                                                   
- |    |    |    |    |    |    |         NT                                                
- |    |    |    |    |    |    |     ____|____                                              
- |    |    |    |    |    |    |    |         NT                                           
- |    |    |    |    |    |    |    |     ____|____                                         
- |    |    |    |    |    |    |    |    |         NT                                      
- |    |    |    |    |    |    |    |    |     ____|_________                               
- |    |    |    |    |    |    |    |    |    |              NT                            
- |    |    |    |    |    |    |    |    |    |     _________|________                      
- |    |    |    |    |    |    |    |    |    |    |                  NT                   
- |    |    |    |    |    |    |    |    |    |    |     _____________|____                 
- |    |    |    |    |    |    |    |    |    |    |    |                  NT              
- |    |    |    |    |    |    |    |    |    |    |    |          ________|________        
- |    |    |    |    |    |    |    |    |    |    |    |         NT                NT     
- |    |    |    |    |    |    |    |    |    |    |    |     ____|___          ____|___    
- PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT       PT       PT       PT 
- |    |    |    |    |    |    |    |    |    |    |    |    |        |        |        |   
-shit shit shit shit shit shit shit shit shit shit shit shit shit     shit     shit     shit
-
+( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( ( shit shit ) ( shit shit ) ) ) ) ) ) ) ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2xvfotbdlxse7/m2xvfotbdlxse7-3KMS4QQVK2Q3DRG4JKCKFG86C98KFW_60623_158205.wav
@@ -450,37 +166,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-           NT                                           
-       ____|___________                                  
-      |                NT                               
-      |          ______|______                           
-      |         |             NT                        
-      |         |       ______|___                       
-      |         |      |          NT                    
-      |         |      |       ___|____                  
-      |         |      |      |        NT               
-      |         |      |      |    ____|_______          
-      NT        |      |      |   |    |       NT       
-  ____|____     |      |      |   |    |    ___|____     
- PT   PT   PT   PT     PT     PT  PT   PT  PT       PT  
- |    |    |    |      |      |   |    |   |        |    
- a  young girl  is preparing  to blow out her     candle
-
+( ( a young girl ) ( is ( preparing ( to ( blow out ( her candle ) ) ) ) ) )
 
 induced tree:
 
-                    NT                        
-                ____|__________________        
-               NT                      |      
-           ____|_________              |       
-          NT             |             |      
-       ___|____          |             |       
-      NT       |         NT            NT     
-  ____|___     |     ____|___      ____|___    
- PT       PT   PT   PT       PT   PT       PT 
- |        |    |    |        |    |        |   
-shit     shit shit shit     shit shit     shit
-
+( ( ( ( shit shit ) shit ) ( shit shit ) ) ( shit shit ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m3zbehjp85if0v/m3zbehjp85if0v-35BLDD71I6XNYJ1GJ0KYKHZ51W7ZVK_60623_160512.wav
@@ -496,61 +186,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-             NT                                                                          
-      _______|____________                                                                
-     |                    NT                                                             
-     |        ____________|_______________                                                
-     |       |                            NT                                             
-     |       |    ________________________|_____                                          
-     |       |   |                              NT                                       
-     |       |   |    __________________________|___________                              
-     |       |   |   |    |        |                        NT                           
-     |       |   |   |    |        |             ___________|____                         
-     |       |   |   |    |        |            |                NT                      
-     |       |   |   |    |        |            |        ________|_____                   
-     |       |   |   |    |        |            |       |              NT                
-     |       |   |   |    |        |            |       |         _____|______            
-     NT      |   |   |    |        NT           |       NT       |            NT         
-  ___|___    |   |   |    |    ____|______      |    ___|___     |      ______|_____      
- PT      PT  PT  PT  PT   PT  PT   PT     PT    PT  PT      PT   PT    PT           PT   
- |       |   |   |   |    |   |    |      |     |   |       |    |     |            |     
- a      kid  is  to blow out the single candle  in  a      bowl  of birthday     goodness
-
+( ( a kid ) ( is ( to ( blow out ( the single candle ) ( in ( ( a bowl ) ( of ( birthday goodness ) ) ) ) ) ) ) )
 
 induced tree:
 
-                         NT                                                                                        
-            _____________|__________________                                                                        
-           |                                NT                                                                     
-           |                            ____|____                                                                   
-           |                           |         NT                                                                
-           |                           |     ____|____                                                              
-           |                           |    |         NT                                                           
-           |                           |    |     ____|____                                                         
-           |                           |    |    |         NT                                                      
-           |                           |    |    |     ____|____                                                    
-           |                           |    |    |    |         NT                                                 
-           |                           |    |    |    |     ____|____                                               
-           |                           |    |    |    |    |         NT                                            
-           |                           |    |    |    |    |     ____|____                                          
-           |                           |    |    |    |    |    |         NT                                       
-           |                           |    |    |    |    |    |     ____|____                                     
-           |                           |    |    |    |    |    |    |         NT                                  
-           |                           |    |    |    |    |    |    |     ____|_________                           
-           NT                          |    |    |    |    |    |    |    |              NT                        
-  _________|____                       |    |    |    |    |    |    |    |     _________|____                      
- |              NT                     |    |    |    |    |    |    |    |    |              NT                   
- |     _________|____                  |    |    |    |    |    |    |    |    |     _________|____                 
- |    |              NT                |    |    |    |    |    |    |    |    |    |              NT              
- |    |     _________|___              |    |    |    |    |    |    |    |    |    |     _________|___             
- |    |    |             NT            |    |    |    |    |    |    |    |    |    |    |             NT          
- |    |    |     ________|____         |    |    |    |    |    |    |    |    |    |    |     ________|____        
- |    |    |    |             NT       |    |    |    |    |    |    |    |    |    |    |    |             NT     
- |    |    |    |         ____|___     |    |    |    |    |    |    |    |    |    |    |    |         ____|___    
- PT   PT   PT   PT       PT       PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |        |        |    |    |    |    |    |    |    |    |    |    |    |    |        |        |   
-shit shit shit shit     shit     shit shit shit shit shit shit shit shit shit shit shit shit shit     shit     shit
-
+( ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m5ocnshr5z2wx/m5ocnshr5z2wx-3TESA3PJ31A49P8OQJTDPJKJUF4MMV_60623_162963.wav
@@ -566,47 +206,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-            NT                                                                         
-       _____|__________                                                                 
-      |                NT                                                              
-      |           _____|______                                                          
-      |          |            NT                                                       
-      |          |      ______|____                                                     
-      |          |     |           NT                                                  
-      |          |     |       ____|________                                            
-      |          |     |      |             NT                                         
-      |          |     |      |     ________|____________                               
-      |          |     |      |    |                     NT                            
-      |          |     |      |    |    _________________|_____________                 
-      |          |     |      |    |   |    |       |                  NT              
-      |          |     |      |    |   |    |       |           _______|____            
-      NT         |     |      |    |   |    |       NT         |            NT         
-  ____|_____     |     |      |    |   |    |    ___|____      |    ________|______     
- PT   PT    PT   PT    PT     PT   PT  PT   PT  PT       PT    PT  PT       PT     PT  
- |    |     |    |     |      |    |   |    |   |        |     |   |        |      |    
- a  little girl  is getting ready  to blow out  a      candle  on  a      small dessert
-
+( ( a little girl ) ( is ( getting ( ready ( to ( blow out ( a candle ) ( on ( a small dessert ) ) ) ) ) ) ) )
 
 induced tree:
 
-                                            NT                                                
-                                   _________|_____________________________________             
-                                  NT                                              |           
-            ______________________|______________                                 |            
-           NT                                    NT                               |           
-  _________|____                        _________|____                            |            
- |              NT                     |              NT                          |           
- |     _________|____                  |     _________|____                       |            
- |    |              NT                |    |              NT                     |           
- |    |     _________|___              |    |     _________|___                   |            
- |    |    |             NT            |    |    |             NT                 NT          
- |    |    |     ________|____         |    |    |     ________|____          ____|____        
- |    |    |    |             NT       |    |    |    |             NT       |         NT     
- |    |    |    |         ____|___     |    |    |    |         ____|___     |     ____|___    
- PT   PT   PT   PT       PT       PT   PT   PT   PT   PT       PT       PT   PT   PT       PT 
- |    |    |    |        |        |    |    |    |    |        |        |    |    |        |   
-shit shit shit shit     shit     shit shit shit shit shit     shit     shit shit shit     shit
-
+( ( ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ( shit ( shit shit ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m32vqt06f23tpr/m32vqt06f23tpr-3ZDAD0O1T1DJGWXCDNWYMEV9VICXT1_483108_581820.wav
@@ -622,47 +226,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                                               NT                                               
-                 ______________________________|_________                                        
-                NT                             |         NT                                     
-      __________|__________                    |     ____|____________                           
-     |                     NT                  |    |                 NT                        
-     |           __________|___                |    |     ____________|________                  
-     |          |              NT              |    |    |       |             NT               
-     |          |     _________|___            |    |    |       |          ___|___              
-     NT         |    |             NT          |    |    |       NT        |       NT           
-  ___|____      |    |          ___|_____      |    |    |    ___|____     |    ___|______       
- PT       PT    PT   PT        PT        PT    PT   PT   PT  PT       PT   PT  PT         PT    
- |        |     |    |         |         |     |    |    |   |        |    |   |          |      
- a      person  is riding      a      bicycle but there  is  a      train  in the     background
-
+( ( ( a person ) ( is ( riding ( a bicycle ) ) ) ) but ( there ( is ( a train ) ( in ( the background ) ) ) ) )
 
 induced tree:
 
-                               NT                                           
-       ________________________|________________________________             
-      NT                                                        |           
-  ____|____                                                     |            
- |         NT                                                   |           
- |     ____|____                                                |            
- |    |         NT                                              |           
- |    |     ____|____                                           |            
- |    |    |         NT                                         |           
- |    |    |     ____|_________                                 |            
- |    |    |    |              NT                               |           
- |    |    |    |     _________|____                            |            
- |    |    |    |    |              NT                          |           
- |    |    |    |    |     _________|____                       |            
- |    |    |    |    |    |              NT                     |           
- |    |    |    |    |    |     _________|___                   |            
- |    |    |    |    |    |    |             NT                 NT          
- |    |    |    |    |    |    |     ________|____          ____|____        
- |    |    |    |    |    |    |    |             NT       |         NT     
- |    |    |    |    |    |    |    |         ____|___     |     ____|___    
- PT   PT   PT   PT   PT   PT   PT   PT       PT       PT   PT   PT       PT 
- |    |    |    |    |    |    |    |        |        |    |    |        |   
-shit shit shit shit shit shit shit shit     shit     shit shit shit     shit
-
+( ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ) ( shit ( shit shit ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m34v77cqevjfee/m34v77cqevjfee-3VELCLL3GKJ17QUIBA62A1C735B1FH_483108_583905.wav
@@ -678,41 +246,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                         NT                                   
-          _______________|________________                     
-         |               |                NT                  
-         |               |        ________|_____               
-         NT              |       |              NT            
-  _______|__________     |       |         _____|___           
- |       NT         |    |       NT       |         NT        
- |    ___|____      |    |    ___|___     |      ___|_____     
- PT  PT  PT   PT    PT   PT  PT      PT   PT    PT        PT  
- |   |   |    |     |    |   |       |    |     |         |    
- a  red and white train and  a      man riding  a      bicycle
-
+( ( a ( red and white ) train ) and ( ( a man ) ( riding ( a bicycle ) ) ) )
 
 induced tree:
 
-                    NT                                                 
-            ________|_________                                          
-           |                  NT                                       
-           |              ____|____                                     
-           |             |         NT                                  
-           |             |     ____|_________                           
-           |             |    |              NT                        
-           |             |    |     _________|____                      
-           |             |    |    |              NT                   
-           |             |    |    |     _________|____                 
-           NT            |    |    |    |              NT              
-       ____|________     |    |    |    |     _________|___             
-      NT            |    |    |    |    |    |             NT          
-  ____|____         |    |    |    |    |    |     ________|____        
- |         NT       |    |    |    |    |    |    |             NT     
- |     ____|___     |    |    |    |    |    |    |         ____|___    
- PT   PT       PT   PT   PT   PT   PT   PT   PT   PT       PT       PT 
- |    |        |    |    |    |    |    |    |    |        |        |   
-shit shit     shit shit shit shit shit shit shit shit     shit     shit
-
+( ( ( shit ( shit shit ) ) shit ) ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m3vb1bv38cr27/m3vb1bv38cr27-33C7UALJVLYSSBKV3W0W09VLC8518H_483108_584211.wav
@@ -728,45 +266,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-             NT                                                    
-      _______|_________                                             
-     |                 NT                                          
-     |        _________|_____________                               
-     |       |                       NT                            
-     |       |     __________________|____                          
-     |       |    |                       NT                       
-     |       |    |     __________________|________                 
-     |       |    |    |         |                 NT              
-     |       |    |    |         |         ________|___             
-     |       |    |    |         |        |            NT          
-     |       |    |    |         |        |     _______|___         
-     NT      |    |    |         NT       |    |           NT      
-  ___|___    |    |    |      ___|___     |    |        ___|____    
- PT      PT  PT   PT   PT    PT      PT   PT   PT      PT       PT 
- |       |   |    |    |     |       |    |    |       |        |   
- a      guy that  is riding his     bike next  to      a      train
-
+( ( a guy ) ( that ( is ( riding ( his bike ) ( next ( to ( a train ) ) ) ) ) ) )
 
 induced tree:
 
-                                  NT                                           
-                              ____|_____________________________________        
-                             NT                                         |      
-            _________________|_________                                 |       
-           |                           NT                               |      
-           |                  _________|____                            |       
-           |                 |              NT                          |      
-           |                 |     _________|____                       |       
-           NT                |    |              NT                     |      
-  _________|___              |    |     _________|___                   |       
- |             NT            |    |    |             NT                 |      
- |     ________|____         |    |    |     ________|____              |       
- |    |             NT       |    |    |    |             NT            NT     
- |    |         ____|___     |    |    |    |         ____|___      ____|___    
- PT   PT       PT       PT   PT   PT   PT   PT       PT       PT   PT       PT 
- |    |        |        |    |    |    |    |        |        |    |        |   
-shit shit     shit     shit shit shit shit shit     shit     shit shit     shit
-
+( ( ( shit ( shit ( shit shit ) ) ) ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ( shit shit ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m3a1xconzsjx7b/m3a1xconzsjx7b-3TVSS0C0E104RWSM3I0CKVH2QG5TW7_483108_590199.wav
@@ -782,43 +286,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                                 NT                                          
-      ___________________________|____                                        
-     |                                NT                                     
-     |         _______________________|________                               
-     |        |         |                      NT                            
-     |        |         |         _____________|_______                       
-     |        |         |        |                     NT                    
-     |        |         |        |         ____________|_______               
-     |        |         |        |        |                    NT            
-     |        |         |        |        |             _______|____          
-     NT       |         NT       |        NT           |            NT       
-  ___|___     |      ___|___     |     ___|____        |        ____|____     
- PT      PT   PT    PT      PT   PT   PT       PT      PT      PT        PT  
- |       |    |     |       |    |    |        |       |       |         |    
- a      man riding  a      bike past  a      train traveling along     tracks
-
+( ( a man ) ( riding ( a bike ) ( past ( ( a train ) ( traveling ( along tracks ) ) ) ) ) )
 
 induced tree:
 
-                                  NT                                  
-                          ________|________________________________    
-                         NT                                        |  
-            _____________|_______________________                  |   
-           NT                                    |                 |  
-  _________|____                                 |                 |   
- |              NT                               |                 |  
- |     _________|____                            |                 |   
- |    |              NT                          NT                |  
- |    |     _________|___               _________|___              |   
- |    |    |             NT            |             NT            |  
- |    |    |     ________|____         |     ________|____         |   
- |    |    |    |             NT       |    |             NT       |  
- |    |    |    |         ____|___     |    |         ____|___     |   
- PT   PT   PT   PT       PT       PT   PT   PT       PT       PT   PT 
- |    |    |    |        |        |    |    |        |        |    |   
-shit shit shit shit     shit     shit shit shit     shit     shit shit
-
+( ( ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ( shit ( shit ( shit shit ) ) ) ) shit )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/mr2dhrdsb7sjj/mr2dhrdsb7sjj-3QXNC7EIPIVSZRINC52AM07MSYM905_483108_580656.wav
@@ -834,41 +306,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                           NT                                    
-              _____________|_________________                     
-             |                               NT                  
-             |                     __________|___                 
-             NT                   |              NT              
-      _______|___                 |      ________|___             
-     |           NT               |     |            NT          
-     |        ___|___             |     |     _______|___         
-     NT      |       NT           |     |    |           NT      
-  ___|___    |    ___|_____       |     |    |        ___|____    
- PT      PT  PT  PT        PT     PT    PT   PT      PT       PT 
- |       |   |   |         |      |     |    |       |        |   
- a      man  on  a      bicycle riding next  to      a      train
-
+( ( ( a man ) ( on ( a bicycle ) ) ) ( riding ( next ( to ( a train ) ) ) ) )
 
 induced tree:
 
-      NT                                       
-  ____|____                                     
- |         NT                                  
- |     ____|_________                           
- |    |              NT                        
- |    |     _________|____                      
- |    |    |              NT                   
- |    |    |     _________|____                 
- |    |    |    |              NT              
- |    |    |    |     _________|___             
- |    |    |    |    |             NT          
- |    |    |    |    |     ________|____        
- |    |    |    |    |    |             NT     
- |    |    |    |    |    |         ____|___    
- PT   PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |    |    |        |        |   
-shit shit shit shit shit shit     shit     shit
-
+( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m1yyugdozopwof/m1yyugdozopwof-3A4NIXBJ76ZK37Q3Q7SYP65UY6DLMN_384213_380344.wav
@@ -884,39 +326,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-           NT                                                  
-      _____|_________                                           
-     |               NT                                        
-     |            ___|_______________                           
-     |           |                   NT                        
-     |           |              _____|______________            
-     |           |             NT         |         |          
-     |           |        _____|_____     |         |           
-     NT          |       NT          |    |         NT         
-  ___|_____      |    ___|_____      |    |     ____|_____      
- PT        PT    PT  PT        PT    PT   PT   PT         PT   
- |         |     |   |         |     |    |    |          |     
- a      kitchen has the     windows open and plaid     curtains
-
+( ( a kitchen ) ( has ( ( ( the windows ) open ) and ( plaid curtains ) ) ) )
 
 induced tree:
 
-                                               NT           
-                                  _____________|_________    
-                                 NT                      |  
-                             ____|__________________     |   
-                            NT                      |    |  
-                    ________|__________________     |    |   
-                   NT                          |    |    |  
-                ___|__________________         |    |    |   
-               NT                     |        |    |    |  
-       ________|________              |        |    |    |   
-      NT                NT            NT       |    |    |  
-  ____|___          ____|___      ____|___     |    |    |   
- PT       PT       PT       PT   PT       PT   PT   PT   PT 
- |        |        |        |    |        |    |    |    |   
-shit     shit     shit     shit shit     shit shit shit shit
-
+( ( ( ( ( ( shit shit ) ( shit shit ) ) ( shit shit ) ) shit ) shit ) shit )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m1bqqrrs1kx103/m1bqqrrs1kx103-3YGXWBAF70HBWD7R7QZ30TY7E3WC4B_384213_383869.wav
@@ -932,43 +346,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                          NT                            
-          ________________|_____                         
-         |                      NT                      
-         |            __________|____                    
-         |           |               NT                 
-         |           |     __________|___                
-         |           |    |              NT             
-         |           |    |      ________|_____          
-         NT          |    |     |              NT       
-    _____|_____      |    |     |     _________|_____    
-   PT    PT    PT    PT   PT    PT   PT        PT    PT 
-   |     |     |     |    |     |    |         |     |   
-glasses and bottles are placed near  a      kitchen sink
-
+( ( glasses and bottles ) ( are ( placed ( near ( a kitchen sink ) ) ) ) )
 
 induced tree:
 
-                     NT                             
-       ______________|___________________________    
-      NT                                         |  
-  ____|____                                      |   
- |         NT                                    |  
- |     ____|_________                            |   
- |    |              NT                          |  
- |    |     _________|____                       |   
- |    |    |              NT                     |  
- |    |    |     _________|____                  |   
- |    |    |    |              NT                |  
- |    |    |    |     _________|___              |   
- |    |    |    |    |             NT            |  
- |    |    |    |    |     ________|____         |   
- |    |    |    |    |    |             NT       |  
- |    |    |    |    |    |         ____|___     |   
- PT   PT   PT   PT   PT   PT       PT       PT   PT 
- |    |    |    |    |    |        |        |    |   
-shit shit shit shit shit shit     shit     shit shit
-
+( ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) shit )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m228enkx9s6gwe/m228enkx9s6gwe-3TXWC2NHNZQS002ZL7LUW6D5QJ8S93_384213_381145.wav
@@ -984,39 +366,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-           NT                                           
-      _____|__________                                   
-     |                NT                                
-     |            ____|_______________                   
-     |           |                    NT                
-     |           |         ___________|________          
-     NT          |        NT          |        NT       
-  ___|_____      |     ___|_____      |    ____|_____    
- PT        PT    PT   PT        PT    PT  PT   PT    PT 
- |         |     |    |         |     |   |    |     |   
- a      kitchen with two     windows and two metal sinks
-
+( ( a kitchen ) ( with ( ( two windows ) and ( two metal sinks ) ) ) )
 
 induced tree:
 
-                                                NT                    
-                                       _________|__________________    
-                                      NT                           |  
-                              ________|_______________________     |   
-                             NT                               |    |  
-                _____________|__________________              |    |   
-               NT                               |             |    |  
-       ________|_________                       |             |    |   
-      |                  NT                     |             |    |  
-      |         _________|___                   |             |    |   
-      |        |             NT                 NT            |    |  
-      |        |     ________|____          ____|____         |    |   
-      NT       |    |             NT       |         NT       |    |  
-  ____|___     |    |         ____|___     |     ____|___     |    |   
- PT       PT   PT   PT       PT       PT   PT   PT       PT   PT   PT 
- |        |    |    |        |        |    |    |        |    |    |   
-shit     shit shit shit     shit     shit shit shit     shit shit shit
-
+( ( ( ( ( shit shit ) ( shit ( shit ( shit shit ) ) ) ) ( shit ( shit shit ) ) ) shit ) shit )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2i6vu998r20b4/m2i6vu998r20b4-3OB0CAO74HPIBSWRIP1BR9ZUMVBYH0_384213_382492.wav
@@ -1032,39 +386,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-             NT                                                 
-       ______|_____________                                      
-      |                    NT                                   
-      |             _______|______________                       
-      |            |                      NT                    
-      |            |                 _____|______________        
-      NT           |                NT         |         NT     
-  ____|______      |        ________|_____     |     ____|___    
- PT   PT     PT    PT      PT       PT    PT   PT   PT       PT 
- |    |      |     |       |        |     |    |    |        |   
- an older kitchen with cluttered counter tops but empty     sink
-
+( ( an older kitchen ) ( with ( ( cluttered counter tops ) but ( empty sink ) ) ) )
 
 induced tree:
 
-                                           NT                                       
-                                   ________|_____________________________________    
-                                  NT                                             |  
-                              ____|____________________________                  |   
-                             NT                                |                 |  
-                         ____|__________________               |                 |   
-                        NT                      |              |                 |  
-            ____________|_________              |              |                 |   
-           NT                     |             |              NT                |  
-  _________|___                   |             |     _________|___              |   
- |             NT                 NT            |    |             NT            |  
- |     ________|____          ____|____         |    |     ________|____         |   
- |    |             NT       |         NT       |    |    |             NT       |  
- |    |         ____|___     |     ____|___     |    |    |         ____|___     |   
- PT   PT       PT       PT   PT   PT       PT   PT   PT   PT       PT       PT   PT 
- |    |        |        |    |    |        |    |    |    |        |        |    |   
-shit shit     shit     shit shit shit     shit shit shit shit     shit     shit shit
-
+( ( ( ( ( shit ( shit ( shit shit ) ) ) ( shit ( shit shit ) ) ) shit ) ( shit ( shit ( shit shit ) ) ) ) shit )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m3z7gko9hnu6gd/m3z7gko9hnu6gd-37QW5D2ZRGMSMVJPGFFGWAIU5BV8SU_384213_376534.wav
@@ -1080,51 +406,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-           NT                                                                    
-      _____|__________                                                            
-     |                NT                                                         
-     |            ____|_________                                                  
-     |           |              NT                                               
-     |           |     _________|_______________                                  
-     |           |    |                         NT                               
-     |           |    |     ____________________|________                         
-     |           |    |    |                             NT                      
-     |           |    |    |         ____________________|________                
-     |           |    |    |        |               |             NT             
-     |           |    |    |        |               |          ___|___            
-     NT          |    |    |        NT              NT        |       NT         
-  ___|_____      |    |    |     ___|_____       ___|____     |    ___|_____      
- PT        PT    PT   PT   PT   PT        PT    PT       PT   PT  PT        PT   
- |         |     |    |    |    |         |     |        |    |   |         |     
- a      kitchen  is shown with  a      variety  of     items  on the     counters
-
+( ( a kitchen ) ( is ( shown ( with ( ( a variety ) ( of items ) ( on ( the counters ) ) ) ) ) ) )
 
 induced tree:
 
-      NT                                                      
-  ____|____                                                    
- |         NT                                                 
- |     ____|____                                               
- |    |         NT                                            
- |    |     ____|____                                          
- |    |    |         NT                                       
- |    |    |     ____|____                                     
- |    |    |    |         NT                                  
- |    |    |    |     ____|_________                           
- |    |    |    |    |              NT                        
- |    |    |    |    |     _________|____                      
- |    |    |    |    |    |              NT                   
- |    |    |    |    |    |     _________|____                 
- |    |    |    |    |    |    |              NT              
- |    |    |    |    |    |    |     _________|___             
- |    |    |    |    |    |    |    |             NT          
- |    |    |    |    |    |    |    |     ________|____        
- |    |    |    |    |    |    |    |    |             NT     
- |    |    |    |    |    |    |    |    |         ____|___    
- PT   PT   PT   PT   PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |    |    |    |    |    |        |        |   
-shit shit shit shit shit shit shit shit shit     shit     shit
-
+( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m1yqqk4y9sb8nj/m1yqqk4y9sb8nj-3FIJLY1B6U44OIDKWCHSBXU5360FPL_386164_480668.wav
@@ -1140,35 +426,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-           NT                                                          
-      _____|____________                                                
-     |                  NT                                             
-     |             _____|__________________                             
-     |            |                        NT                          
-     |            |          ______________|________                    
-     |            |         |                       NT                 
-     |            |         |               ________|_____              
-     NT           |         NT             |              NT           
-  ___|_____       |      ___|______        |    __________|_______      
- PT  PT    PT     PT    PT         PT      PT  PT         PT      PT   
- |   |     |      |     |          |       |   |          |       |     
- a  wood table holding  an     assortment  of wood     cooking utensils
-
+( ( a wood table ) ( holding ( ( an assortment ) ( of ( wood cooking utensils ) ) ) ) )
 
 induced tree:
 
-                             NT                             
-                _____________|______________                 
-               NT                           NT              
-       ________|_________          _________|___             
-      NT                 |        |             NT          
-  ____|____              |        |     ________|____        
- |         NT            NT       |    |             NT     
- |     ____|___      ____|___     |    |         ____|___    
- PT   PT       PT   PT       PT   PT   PT       PT       PT 
- |    |        |    |        |    |    |        |        |   
-shit shit     shit shit     shit shit shit     shit     shit
-
+( ( ( shit ( shit shit ) ) ( shit shit ) ) ( shit ( shit ( shit shit ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2fu9oshs147yl/m2fu9oshs147yl-3A4NIXBJ76ZK37Q3Q7SYP65UYCULMG_386164_483305.wav
@@ -1184,49 +446,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-            NT                                                
-      ______|___________                                       
-     |                  NT                                    
-     |              ____|______________                        
-     |             |                   NT                     
-     |             |             ______|________               
-     |             |            |               NT            
-     |             |            |            ___|___           
-     NT            |            NT          |       NT        
-  ___|______       |     _______|______     |    ___|_____     
- PT         PT     PT   PT      PT     PT   PT  PT        PT  
- |          |      |    |       |      |    |   |         |    
- a      selection  of wooden kitchen tools  on  a      counter
-
+( ( a selection ) ( of ( ( wooden kitchen tools ) ( on ( a counter ) ) ) ) )
 
 induced tree:
 
-      NT                                                           
-  ____|____                                                         
- |         NT                                                      
- |     ____|____                                                    
- |    |         NT                                                 
- |    |     ____|____                                               
- |    |    |         NT                                            
- |    |    |     ____|____                                          
- |    |    |    |         NT                                       
- |    |    |    |     ____|____                                     
- |    |    |    |    |         NT                                  
- |    |    |    |    |     ____|_________                           
- |    |    |    |    |    |              NT                        
- |    |    |    |    |    |     _________|____                      
- |    |    |    |    |    |    |              NT                   
- |    |    |    |    |    |    |     _________|____                 
- |    |    |    |    |    |    |    |              NT              
- |    |    |    |    |    |    |    |     _________|___             
- |    |    |    |    |    |    |    |    |             NT          
- |    |    |    |    |    |    |    |    |     ________|____        
- |    |    |    |    |    |    |    |    |    |             NT     
- |    |    |    |    |    |    |    |    |    |         ____|___    
- PT   PT   PT   PT   PT   PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |    |    |    |    |    |    |        |        |   
-shit shit shit shit shit shit shit shit shit shit     shit     shit
-
+( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/mtbta5q8p0viq/mtbta5q8p0viq-326O153BMIY3T7AYWS6RTLSGGV7DEX_386164_480356.wav
@@ -1242,41 +466,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-          NT                                             
-      ____|________                                       
-     |             NT                                    
-     |          ___|____                                  
-     |         |        NT                               
-     |         |    ____|____                             
-     |         |   |         NT                          
-     |         |   |     ____|__________                  
-     |         |   |    |               NT               
-     |         |   |    |           ____|___________      
-     NT        |   |    |          NT         |     |    
-  ___|____     |   |    |     _____|____      |     |     
- PT       PT   PT  PT   PT   PT         PT    PT    PT   
- |        |    |   |    |    |          |     |     |     
-the     table  is full  of wooden     spoons and utensils
-
+( ( the table ) ( is ( full ( of ( ( wooden spoons ) and utensils ) ) ) ) )
 
 induced tree:
 
-                                      NT                                  
-                              ________|____________________________        
-                             NT                                    |      
-                _____________|__________________                   |       
-               NT                               |                  |      
-       ________|_________                       |                  |       
-      |                  NT                     |                  |      
-      |         _________|___                   |                  |       
-      |        |             NT                 NT                 |      
-      |        |     ________|____          ____|____              |       
-      NT       |    |             NT       |         NT            NT     
-  ____|___     |    |         ____|___     |     ____|___      ____|___    
- PT       PT   PT   PT       PT       PT   PT   PT       PT   PT       PT 
- |        |    |    |        |        |    |    |        |    |        |   
-shit     shit shit shit     shit     shit shit shit     shit shit     shit
-
+( ( ( ( shit shit ) ( shit ( shit ( shit shit ) ) ) ) ( shit ( shit shit ) ) ) ( shit shit ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/mgmm1994xjdal/mgmm1994xjdal-3LKC68YZ3A3OE4NE71EDQLBFNH2OW8_386164_485087.wav
@@ -1292,45 +486,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                        NT                       
-         _______________|____                     
-        |                    NT                  
-        |           _________|___                 
-        |          |             NT              
-        |          |     ________|___             
-        |          |    |    |       NT          
-        |          |    |    |    ___|___         
-        NT         |    |    |   |       NT      
-   _____|____      |    |    |   |    ___|____    
-  PT         PT    PT   PT   PT  PT  PT       PT 
-  |          |     |    |    |   |   |        |   
-wooden     spoons are lined  up  on  a      table
-
+( ( wooden spoons ) ( are ( lined up ( on ( a table ) ) ) ) )
 
 induced tree:
 
-                          NT                                      
-       ___________________|________________________________        
-      NT                                                   |      
-  ____|____                                                |       
- |         NT                                              |      
- |     ____|____                                           |       
- |    |         NT                                         |      
- |    |     ____|_________                                 |       
- |    |    |              NT                               |      
- |    |    |     _________|____                            |       
- |    |    |    |              NT                          |      
- |    |    |    |     _________|____                       |       
- |    |    |    |    |              NT                     |      
- |    |    |    |    |     _________|___                   |       
- |    |    |    |    |    |             NT                 |      
- |    |    |    |    |    |     ________|____              |       
- |    |    |    |    |    |    |             NT            NT     
- |    |    |    |    |    |    |         ____|___      ____|___    
- PT   PT   PT   PT   PT   PT   PT       PT       PT   PT       PT 
- |    |    |    |    |    |    |        |        |    |        |   
-shit shit shit shit shit shit shit     shit     shit shit     shit
-
+( ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ( shit shit ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/mi0225azgmba5/mi0225azgmba5-33TIN5LC04APWME8KDDJES164AB9YE_386164_478769.wav
@@ -1346,35 +506,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                     NT                         
-       ______________|___                        
-      |                  NT                     
-      |           _______|___                    
-      |          |           NT                 
-      |          |    _______|___                
-      |          |   |           NT             
-      |          |   |    _______|____           
-      NT         |   |   |            NT        
-  ____|_____     |   |   |    ________|______    
- PT   PT    PT   PT  PT  PT  PT       PT     PT 
- |    |     |    |   |   |   |        |      |   
- a  wooden ball  on top  of  a      wooden stick
-
+( ( a wooden ball ) ( on ( top ( of ( a wooden stick ) ) ) ) )
 
 induced tree:
 
-                    NT                        
-                ____|__________________        
-               NT                      |      
-       ________|_________              |       
-      NT                 |             |      
-  ____|____              |             |       
- |         NT            NT            NT     
- |     ____|___      ____|___      ____|___    
- PT   PT       PT   PT       PT   PT       PT 
- |    |        |    |        |    |        |   
-shit shit     shit shit     shit shit     shit
-
+( ( ( shit ( shit shit ) ) ( shit shit ) ) ( shit shit ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m1yqqk4y9sb8nj/m1yqqk4y9sb8nj-3Z9WI9EOZZONRN7AEA0KI1KJP9THK2_223648_292491.wav
@@ -1390,39 +526,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                         NT                       
-          _______________|_______                  
-         |                       NT               
-         |                _______|____             
-         |               |   |        NT          
-         |               |   |    ____|___         
-         NT              |   |   |        NT      
-   ______|__________     |   |   |     ___|____    
-  PT     PT    PT   PT   PT  PT  PT   PT       PT 
-  |      |     |    |    |   |   |    |        |   
-wooden spoons and forks are all over  a      table
-
+( ( wooden spoons and forks ) ( are all ( over ( a table ) ) ) )
 
 induced tree:
 
-      NT                                       
-  ____|____                                     
- |         NT                                  
- |     ____|_________                           
- |    |              NT                        
- |    |     _________|____                      
- |    |    |              NT                   
- |    |    |     _________|____                 
- |    |    |    |              NT              
- |    |    |    |     _________|___             
- |    |    |    |    |             NT          
- |    |    |    |    |     ________|____        
- |    |    |    |    |    |             NT     
- |    |    |    |    |    |         ____|___    
- PT   PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |    |    |        |        |   
-shit shit shit shit shit shit     shit     shit
-
+( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2hpglqq00zbjf/m2hpglqq00zbjf-3AMW0RGHOD2GCAQ1U005J23E4FTNP6_223648_299328.wav
@@ -1438,35 +546,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                      NT                                  
-       _______________|_____________                       
-      |                             NT                    
-      |                _____________|______                
-      |               |                    NT             
-      |               |              ______|________       
-      NT              |             NT              NT    
-  ____|_________      |      _______|______      ___|___   
- PT   PT   PT   PT    PT    PT      PT     PT   PT      PT
- |    |    |    |     |     |       |      |    |       |  
- a  table and chairs with wooden kitchen tools  on     top
-
+( ( a table and chairs ) ( with ( ( wooden kitchen tools ) ( on top ) ) ) )
 
 induced tree:
 
-                                           NT                                           
-                         __________________|_______________________                      
-                        NT                                         NT                   
-            ____________|______________                   _________|____                 
-           NT                          NT                |              NT              
-  _________|___               _________|___              |     _________|___             
- |             NT            |             NT            |    |             NT          
- |     ________|____         |     ________|____         |    |     ________|____        
- |    |             NT       |    |             NT       |    |    |             NT     
- |    |         ____|___     |    |         ____|___     |    |    |         ____|___    
- PT   PT       PT       PT   PT   PT       PT       PT   PT   PT   PT       PT       PT 
- |    |        |        |    |    |        |        |    |    |    |        |        |   
-shit shit     shit     shit shit shit     shit     shit shit shit shit     shit     shit
-
+( ( ( shit ( shit ( shit shit ) ) ) ( shit ( shit ( shit shit ) ) ) ) ( shit ( shit ( shit ( shit shit ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2jur5tcvsvbp6/m2jur5tcvsvbp6-3WEV0KO0OMS43QFGXNQWI2WVDQOSDP_223648_290595.wav
@@ -1482,47 +566,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                                   NT                                           
-      _____________________________|_____                                        
-     |                                   NT                                     
-     |                     ______________|_______________                        
-     |                    |              |               NT                     
-     |                    |              |     __________|_____                  
-     |                    NT             |    |                NT               
-     |             _______|___           |    |      __________|_____            
-     NT           |           NT         |    |     |                NT         
-  ___|____        |        ___|____      |    |     |           _____|_____      
- PT       PT      PT      PT       PT    PT   PT    PT         PT          PT   
- |        |       |       |        |     |    |     |          |           |     
- a      table surrounded  by     chairs and filled with     cooking     utensils
-
+( ( a table ) ( ( surrounded ( by chairs ) ) and ( filled ( with ( cooking utensils ) ) ) ) )
 
 induced tree:
 
-                                                     NT                                                     
-                                                 ____|_______________________________________________        
-                                                NT                                                   |      
-                                            ____|__________________________________________          |       
-                                           NT                                              |         |      
-                ___________________________|____                                           |         |       
-               |                                NT                                         |         |      
-               |                            ____|____                                      |         |       
-               |                           |         NT                                    |         |      
-               |                           |     ____|_________                            |         |       
-               |                           |    |              NT                          |         |      
-               |                           |    |     _________|____                       |         |       
-               NT                          |    |    |              NT                     |         |      
-       ________|_________                  |    |    |     _________|____                  |         |       
-      |                  NT                |    |    |    |              NT                |         |      
-      |         _________|___              |    |    |    |     _________|___              |         |       
-      |        |             NT            |    |    |    |    |             NT            |         |      
-      |        |     ________|____         |    |    |    |    |     ________|____         |         |       
-      NT       |    |             NT       |    |    |    |    |    |             NT       |         NT     
-  ____|___     |    |         ____|___     |    |    |    |    |    |         ____|___     |     ____|___    
- PT       PT   PT   PT       PT       PT   PT   PT   PT   PT   PT   PT       PT       PT   PT   PT       PT 
- |        |    |    |        |        |    |    |    |    |    |    |        |        |    |    |        |   
-shit     shit shit shit     shit     shit shit shit shit shit shit shit     shit     shit shit shit     shit
-
+( ( ( ( ( shit shit ) ( shit ( shit ( shit shit ) ) ) ) ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) shit ) ( shit shit ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m3eqatcag2d8ji/m3eqatcag2d8ji-3E4GGUZ1T8RJCX4SVPXDVXEHZ6J2K8_223648_288357.wav
@@ -1538,47 +586,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                             NT                       
-            _________________|____                     
-           |                      NT                  
-           |             _________|___                 
-           |            |             NT              
-           |            |     ________|___             
-           |            |    |            NT          
-           |            |    |     _______|____        
-           NT           |    |    |            NT     
-    _______|______      |    |    |    ________|____   
-   PT      PT     PT    PT   PT   PT  PT       PT   PT
-   |       |      |     |    |    |   |        |    |  
-multiple wooden spoons are shown  on  a      table top
-
+( ( multiple wooden spoons ) ( are ( shown ( on ( a table top ) ) ) ) )
 
 induced tree:
 
-                                            NT                                                
-                         ___________________|__________________________________________        
-                        NT                                                             |      
-            ____________|_________                                                     |       
-           |                      NT                                                   |      
-           |                  ____|____                                                |       
-           |                 |         NT                                              |      
-           |                 |     ____|____                                           |       
-           |                 |    |         NT                                         |      
-           |                 |    |     ____|_________                                 |       
-           |                 |    |    |              NT                               |      
-           |                 |    |    |     _________|____                            |       
-           |                 |    |    |    |              NT                          |      
-           |                 |    |    |    |     _________|____                       |       
-           NT                |    |    |    |    |              NT                     |      
-  _________|___              |    |    |    |    |     _________|___                   |       
- |             NT            |    |    |    |    |    |             NT                 |      
- |     ________|____         |    |    |    |    |    |     ________|____              |       
- |    |             NT       |    |    |    |    |    |    |             NT            NT     
- |    |         ____|___     |    |    |    |    |    |    |         ____|___      ____|___    
- PT   PT       PT       PT   PT   PT   PT   PT   PT   PT   PT       PT       PT   PT       PT 
- |    |        |        |    |    |    |    |    |    |    |        |        |    |        |   
-shit shit     shit     shit shit shit shit shit shit shit shit     shit     shit shit     shit
-
+( ( ( shit ( shit ( shit shit ) ) ) ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ) ( shit shit ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/mr2dhrdsb7sjj/mr2dhrdsb7sjj-31JLPPHS2UURN6LQXH3BLO0ITK9O3Z_223648_292233.wav
@@ -1594,43 +606,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                        NT                             
-         _______________|____                           
-        |                    NT                        
-        |           _________|_________                 
-        |          |    |              NT              
-        |          |    |     _________|_____           
-        NT         |    |    |               NT        
-   _____|____      |    |    |      _________|______    
-  PT         PT    PT   PT   PT    PT        PT     PT 
-  |          |     |    |    |     |         |      |   
-wooden     spoons laid out across  a      kitchen table
-
+( ( wooden spoons ) ( laid out ( across ( a kitchen table ) ) ) )
 
 induced tree:
 
-                          NT                                      
-       ___________________|________________________________        
-      NT                                                   |      
-  ____|____                                                |       
- |         NT                                              |      
- |     ____|____                                           |       
- |    |         NT                                         |      
- |    |     ____|_________                                 |       
- |    |    |              NT                               |      
- |    |    |     _________|____                            |       
- |    |    |    |              NT                          |      
- |    |    |    |     _________|____                       |       
- |    |    |    |    |              NT                     |      
- |    |    |    |    |     _________|___                   |       
- |    |    |    |    |    |             NT                 |      
- |    |    |    |    |    |     ________|____              |       
- |    |    |    |    |    |    |             NT            NT     
- |    |    |    |    |    |    |         ____|___      ____|___    
- PT   PT   PT   PT   PT   PT   PT       PT       PT   PT       PT 
- |    |    |    |    |    |    |        |        |    |        |   
-shit shit shit shit shit shit shit     shit     shit shit     shit
-
+( ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ( shit shit ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m15gxvhpg896x2/m15gxvhpg896x2-3GS6S824SQX6WJN26ME0BWBA1WSNW5_403385_501985.wav
@@ -1646,39 +626,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-           NT                                               
-      _____|___________                                      
-     |                 NT                                   
-     |             ____|___                                  
-     |            |        NT                               
-     |            |     ___|__________                       
-     |            |    |              NT                    
-     |            |    |         _____|________              
-     |            |    |        |              NT           
-     |            |    |        |           ___|___          
-     NT           |    |        NT         |       NT       
-  ___|_____       |    |    ____|_____     |    ___|____     
- PT        PT     PT   PT  PT   PT    PT   PT  PT       PT  
- |         |      |    |   |    |     |    |   |        |    
- a      bathroom that has  a  broken wall  in the     shower
-
+( ( a bathroom ) ( that ( has ( ( a broken wall ) ( in ( the shower ) ) ) ) ) )
 
 induced tree:
 
-                             NT           
-                     ________|_________    
-                    NT                 |  
-                ____|_____________     |   
-               NT                 |    |  
-       ________|____              |    |   
-      |             NT            |    |  
-      |         ____|____         |    |   
-      NT       |         NT       |    |  
-  ____|___     |     ____|___     |    |   
- PT       PT   PT   PT       PT   PT   PT 
- |        |    |    |        |    |    |   
-shit     shit shit shit     shit shit shit
-
+( ( ( ( shit shit ) ( shit ( shit shit ) ) ) shit ) shit )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m1nm1thr140ao7/m1nm1thr140ao7-31HQ4X3T3SAN1238A4OK1F40QNDLS1_403385_510664.wav
@@ -1694,43 +646,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                                NT                                    
-               _________________|_________                             
-              |                           NT                          
-              |                       ____|____                        
-              NT                     |         NT                     
-  ____________|_________________     |     ____|__________________     
- |        NT           NT       |    |    |          NT           |   
- |    ____|___     ____|___     |    |    |     _____|_____       |    
- PT  PT       PT  PT       PT   PT   PT   PT   PT          PT     PT  
- |   |        |   |        |    |    |    |    |           |      |    
- a  very     big whit     rest room with  a  shabby     looking shower
-
+( ( a ( very big ) ( whit rest ) room ) ( with ( a ( shabby looking ) shower ) ) )
 
 induced tree:
 
-                                       NT                                            
-                              _________|__________________________________________    
-                             NT                                                   |  
-            _________________|_________                                           |   
-           |                           NT                                         |  
-           |                       ____|____                                      |   
-           |                      |         NT                                    |  
-           |                      |     ____|_________                            |   
-           |                      |    |              NT                          |  
-           |                      |    |     _________|____                       |   
-           NT                     |    |    |              NT                     |  
-  _________|____                  |    |    |     _________|____                  |   
- |              NT                |    |    |    |              NT                |  
- |     _________|___              |    |    |    |     _________|___              |   
- |    |             NT            |    |    |    |    |             NT            |  
- |    |     ________|____         |    |    |    |    |     ________|____         |   
- |    |    |             NT       |    |    |    |    |    |             NT       |  
- |    |    |         ____|___     |    |    |    |    |    |         ____|___     |   
- PT   PT   PT       PT       PT   PT   PT   PT   PT   PT   PT       PT       PT   PT 
- |    |    |        |        |    |    |    |    |    |    |        |        |    |   
-shit shit shit     shit     shit shit shit shit shit shit shit     shit     shit shit
-
+( ( ( shit ( shit ( shit ( shit shit ) ) ) ) ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) shit )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2hpglqq00zbjf/m2hpglqq00zbjf-3S0TNUHWKTIMK607JPKR1BWU10XD8Y_403385_508369.wav
@@ -1746,41 +666,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-              NT                                                      
-      ________|_____________                                           
-     |                      NT                                        
-     |         _____________|____________                              
-     |        |                          NT                           
-     |        |        __________________|____                         
-     |        |       |                       NT                      
-     |        |       |             __________|___                     
-     |        |       |            |              NT                  
-     |        |       |            |      ________|___                 
-     |        |       |            |     |            NT              
-     |        |       |            |     |     _______|____            
-     |        |       |            |     |    |            NT         
-     |        |       |            |     |    |    ________|____       
-     NT       |       NT           |     |    |   |             NT    
-  ___|___     |    ___|_____       |     |    |   |         ____|___   
- PT      PT   PT  PT        PT     PT    PT   PT  PT       PT       PT
- |       |    |   |         |      |     |    |   |        |        |  
- a      view  of  a      bathroom that needs  to  be     fixed      up
-
+( ( a view ) ( of ( ( a bathroom ) ( that ( needs ( to ( be ( fixed up ) ) ) ) ) ) ) )
 
 induced tree:
 
-                        NT                             
-            ____________|______________                 
-           NT                          NT              
-  _________|___               _________|___             
- |             NT            |             NT          
- |     ________|____         |     ________|____        
- |    |             NT       |    |             NT     
- |    |         ____|___     |    |         ____|___    
- PT   PT       PT       PT   PT   PT       PT       PT 
- |    |        |        |    |    |        |        |   
-shit shit     shit     shit shit shit     shit     shit
-
+( ( shit ( shit ( shit shit ) ) ) ( shit ( shit ( shit shit ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m309nxocvtcgxa/m309nxocvtcgxa-3AMW0RGHOD2GCAQ1U005J23E5UYNP6_403385_507367.wav
@@ -1796,41 +686,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                   NT                                                         
-      _____________|______________                                             
-     |                            NT                                          
-     |                   _________|_________                                   
-     |                  |         |         NT                                
-     |                  |         |    _____|__________                        
-     |                  |         |   |                NT                     
-     |                  |         |   |      __________|_______                
-     |                  |         |   |     |     |            NT             
-     |                  |         |   |     |     |     _______|____           
-     NT                 NT        |   |     |     |    |            NT        
-  ___|_____         ____|____     |   |     |     |    |    ________|______    
- PT        PT      PT        PT   PT  PT    PT    PT   PT  PT       PT     PT 
- |         |       |         |    |   |     |     |    |   |        |      |   
- a      bathroom looks     clean but  is missing tile  at the     shower stall
-
+( ( a bathroom ) ( ( looks clean ) but ( is ( missing tile ( at ( the shower stall ) ) ) ) ) )
 
 induced tree:
 
-                                               NT                                           
-                                       ________|_____________________________________        
-                                      NT                                             |      
-                             _________|___________________________                   |       
-                            NT                                    |                  |      
-                ____________|______________                       |                  |       
-               |                           NT                     |                  |      
-               |                  _________|___                   |                  |       
-               NT                |             NT                 NT                 |      
-       ________|________         |     ________|____          ____|____              |       
-      NT                NT       |    |             NT       |         NT            NT     
-  ____|___          ____|___     |    |         ____|___     |     ____|___      ____|___    
- PT       PT       PT       PT   PT   PT       PT       PT   PT   PT       PT   PT       PT 
- |        |        |        |    |    |        |        |    |    |        |    |        |   
-shit     shit     shit     shit shit shit     shit     shit shit shit     shit shit     shit
-
+( ( ( ( ( shit shit ) ( shit shit ) ) ( shit ( shit ( shit shit ) ) ) ) ( shit ( shit shit ) ) ) ( shit shit ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/mtbta5q8p0viq/mtbta5q8p0viq-3IO1LGZLK9XNZXLS92CDV5M2OAG681_403385_510313.wav
@@ -1846,37 +706,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                           NT                               
-       ____________________|____________                     
-      NT                                |                   
-  ____|__________                       |                    
- |               NT                     NT                  
- |           ____|_________      _______|_____               
- |          NT         |   |    |             NT            
- |     _____|____      |   |    |    _________|________      
- PT   PT         PT    PT  PT   PT  PT        PT       PT   
- |    |          |     |   |    |   |         |        |     
- a  shower     toilet and sink  in  a      basement bathroom
-
+( ( a ( ( shower toilet ) and sink ) ) ( in ( a basement bathroom ) ) )
 
 induced tree:
 
-                         NT                             
-       __________________|____                           
-      |                       NT                        
-      |              _________|____                      
-      |             |              NT                   
-      |             |     _________|____                 
-      |             |    |              NT              
-      |             |    |     _________|___             
-      NT            |    |    |             NT          
-  ____|____         |    |    |     ________|____        
- |         NT       |    |    |    |             NT     
- |     ____|___     |    |    |    |         ____|___    
- PT   PT       PT   PT   PT   PT   PT       PT       PT 
- |    |        |    |    |    |    |        |        |   
-shit shit     shit shit shit shit shit     shit     shit
-
+( ( shit ( shit shit ) ) ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2o0czquaewmh5/m2o0czquaewmh5-3ZY8KE4ISJ3EKR0PW41LTON1Y3IVQ4_294832_41096.wav
@@ -1892,35 +726,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                             NT                        
-       ______________________|____                      
-      |                           NT                   
-      |                       ____|____                 
-      NT                     |         NT              
-  ____|_______________       |     ____|____________    
- PT   PT     PT       PT     PT   PT   PT    PT     PT 
- |    |      |        |      |    |    |     |      |   
- a  clean spacious bathroom with  a  large shower stall
-
+( ( a clean spacious bathroom ) ( with ( a large shower stall ) ) )
 
 induced tree:
 
-                                  NT                                      
-                              ____|________________________________        
-                             NT                                    |      
-            _________________|______________                       |       
-           NT                               |                      |      
-  _________|____                            |                      |       
- |              NT                          NT                     |      
- |     _________|___               _________|___                   |       
- |    |             NT            |             NT                 |      
- |    |     ________|____         |     ________|____              |       
- |    |    |             NT       |    |             NT            NT     
- |    |    |         ____|___     |    |         ____|___      ____|___    
- PT   PT   PT       PT       PT   PT   PT       PT       PT   PT       PT 
- |    |    |        |        |    |    |        |        |    |        |   
-shit shit shit     shit     shit shit shit     shit     shit shit     shit
-
+( ( ( shit ( shit ( shit ( shit shit ) ) ) ) ( shit ( shit ( shit shit ) ) ) ) ( shit shit ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2ppbejt2j96dr/m2ppbejt2j96dr-3QAPZX2QN4DHZ7XORWNVCDZ8LA102S_294832_51617.wav
@@ -1936,35 +746,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-               NT                                   
-    ___________|__________                           
-   |                      NT                        
-   |       _______________|____                      
-   |      |                    NT                   
-   |      |                ____|______________       
-   |      |               NT                  |     
-   |      |          _____|_________          |      
-   |      |         NT         |    |         NT    
-   |      |     ____|_____     |    |      ___|___   
-   PT     PT   PT   PT    PT   PT   PT    PT      PT
-   |      |    |    |     |    |    |     |       |  
-bathroom with  a  shower sink and toilet  in      it
-
+( bathroom ( with ( ( ( a shower sink ) and toilet ) ( in it ) ) ) )
 
 induced tree:
 
-                    NT                    
-                ____|__________________    
-               NT                      |  
-       ________|_________              |   
-      NT                 NT            |  
-  ____|____          ____|____         |   
- |         NT       |         NT       |  
- |     ____|___     |     ____|___     |   
- PT   PT       PT   PT   PT       PT   PT 
- |    |        |    |    |        |    |   
-shit shit     shit shit shit     shit shit
-
+( ( ( shit ( shit shit ) ) ( shit ( shit shit ) ) ) shit )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m3722zayhgw89f/m3722zayhgw89f-358010RM5ETYTO11IIWDNWJUSDDVXK_294832_43916.wav
@@ -1980,47 +766,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                     NT                                              
-      _______________|__________                                      
-     |                          NT                                   
-     |                __________|_________                            
-     |               |                    NT                         
-     |               |       _____________|_________________          
-     NT              |      |        NT          |          NT       
-  ___|_____          |      |    ____|____       |      ____|____     
- PT        PT        PT     PT  PT   PT   PT     PT    PT   PT   PT  
- |         |         |      |   |    |    |      |     |    |    |    
- a      bathroom featuring  a  walk  in shower mirror sink and toilet
-
+( ( a bathroom ) ( featuring ( a ( walk in shower ) mirror ( sink and toilet ) ) ) )
 
 induced tree:
 
-                               NT                                                
-       ________________________|_____________________________________             
-      NT                                                             |           
-  ____|____                                                          |            
- |         NT                                                        |           
- |     ____|____                                                     |            
- |    |         NT                                                   |           
- |    |     ____|____                                                |            
- |    |    |         NT                                              |           
- |    |    |     ____|____                                           |            
- |    |    |    |         NT                                         |           
- |    |    |    |     ____|_________                                 |            
- |    |    |    |    |              NT                               |           
- |    |    |    |    |     _________|____                            |            
- |    |    |    |    |    |              NT                          |           
- |    |    |    |    |    |     _________|____                       |            
- |    |    |    |    |    |    |              NT                     |           
- |    |    |    |    |    |    |     _________|___                   |            
- |    |    |    |    |    |    |    |             NT                 NT          
- |    |    |    |    |    |    |    |     ________|____          ____|____        
- |    |    |    |    |    |    |    |    |             NT       |         NT     
- |    |    |    |    |    |    |    |    |         ____|___     |     ____|___    
- PT   PT   PT   PT   PT   PT   PT   PT   PT       PT       PT   PT   PT       PT 
- |    |    |    |    |    |    |    |    |        |        |    |    |        |   
-shit shit shit shit shit shit shit shit shit     shit     shit shit shit     shit
-
+( ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ) ) ( shit ( shit shit ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m3yw7r6wf80mlf/m3yw7r6wf80mlf-3MH9DQ757WCNUNHBOIM43OHGFBYGU8_294832_36563.wav
@@ -2036,53 +786,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-           NT                                                                     
-      _____|___________                                                            
-     |                 NT                                                         
-     |             ____|_____________                                              
-     |            |                  NT                                           
-     |            |           _______|__________                                   
-     |            |          |                  NT                                
-     |            |          |              ____|___________                       
-     |            |          |             |                NT                    
-     |            |          |             |     ___________|____                  
-     |            |          |             |    |                NT               
-     |            |          |             |    |        ________|_______          
-     NT           |          NT            |    |       NT       |       NT       
-  ___|_____       |     _____|_______      |    |    ___|___     |    ___|____     
- PT        PT     PT   PT    PT      PT    PT   PT  PT      PT   PT  PT       PT  
- |         |      |    |     |       |     |    |   |       |    |   |        |    
- a      bathroom with  an enclosed shower next  to  a      sink and  a      toilet
-
+( ( a bathroom ) ( with ( ( an enclosed shower ) ( next ( to ( ( a sink ) and ( a toilet ) ) ) ) ) ) )
 
 induced tree:
 
-      NT                                                           
-  ____|____                                                         
- |         NT                                                      
- |     ____|____                                                    
- |    |         NT                                                 
- |    |     ____|____                                               
- |    |    |         NT                                            
- |    |    |     ____|____                                          
- |    |    |    |         NT                                       
- |    |    |    |     ____|____                                     
- |    |    |    |    |         NT                                  
- |    |    |    |    |     ____|_________                           
- |    |    |    |    |    |              NT                        
- |    |    |    |    |    |     _________|____                      
- |    |    |    |    |    |    |              NT                   
- |    |    |    |    |    |    |     _________|____                 
- |    |    |    |    |    |    |    |              NT              
- |    |    |    |    |    |    |    |     _________|___             
- |    |    |    |    |    |    |    |    |             NT          
- |    |    |    |    |    |    |    |    |     ________|____        
- |    |    |    |    |    |    |    |    |    |             NT     
- |    |    |    |    |    |    |    |    |    |         ____|___    
- PT   PT   PT   PT   PT   PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |    |    |    |    |    |    |        |        |   
-shit shit shit shit shit shit shit shit shit shit     shit     shit
-
+( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m8jv9757c9amz/m8jv9757c9amz-3VD82FOHKQOF06H9QAECER4CYRHOCF_294832_41999.wav
@@ -2098,47 +806,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-           NT                                                                            
-   ________|__________________                                                            
-  |                           NT                                                         
-  |     ______________________|________________                                           
-  |    |                                       NT                                        
-  |    |                               ________|________________________                  
-  |    |                              NT                                |                
-  |    |                   ___________|_____________                    |                 
-  |    |                  NT               |        |                   NT               
-  |    |        __________|_______         |        |            _______|____             
-  |    |       NT                 NT       |        NT          |            NT          
-  |    |    ___|____           ___|___     |    ____|______     |    ________|______      
-  PT   PT  PT       PT        PT      PT   PT  PT   PT     PT   PT  PT       PT     PT   
-  |    |   |        |         |       |    |   |    |      |    |   |        |      |     
-there are  a      toilet      a      sink and  a  shower stall  in  a      large bathroom
-
+( there ( are ( ( ( ( a toilet ) ( a sink ) ) and ( a shower stall ) ) ( in ( a large bathroom ) ) ) ) )
 
 induced tree:
 
-                        NT                                                      
-            ____________|_________                                               
-           |                      NT                                            
-           |                  ____|____                                          
-           |                 |         NT                                       
-           |                 |     ____|____                                     
-           |                 |    |         NT                                  
-           |                 |    |     ____|_________                           
-           |                 |    |    |              NT                        
-           |                 |    |    |     _________|____                      
-           |                 |    |    |    |              NT                   
-           |                 |    |    |    |     _________|____                 
-           NT                |    |    |    |    |              NT              
-  _________|___              |    |    |    |    |     _________|___             
- |             NT            |    |    |    |    |    |             NT          
- |     ________|____         |    |    |    |    |    |     ________|____        
- |    |             NT       |    |    |    |    |    |    |             NT     
- |    |         ____|___     |    |    |    |    |    |    |         ____|___    
- PT   PT       PT       PT   PT   PT   PT   PT   PT   PT   PT       PT       PT 
- |    |        |        |    |    |    |    |    |    |    |        |        |   
-shit shit     shit     shit shit shit shit shit shit shit shit     shit     shit
-
+( ( shit ( shit ( shit shit ) ) ) ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m1or6g3sr7plqv/m1or6g3sr7plqv-3X73LLYYQ1EOZTSDBNS0AT1NLC4HNV_462565_120854.wav
@@ -2154,41 +826,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                                      NT                             
-                ______________________|__________                     
-               |                                 NT                  
-               |                       __________|___                 
-               |                      |              NT              
-               |                      |     _________|___             
-               NT                     |    |             NT          
-      _________|_______               |    |      _______|___         
-     NT                NT             |    |     |           NT      
-  ___|____          ___|______        |    |     |    _______|____    
- PT       PT       PT         PT      PT   PT    PT  PT      PT   PT 
- |        |        |          |       |    |     |   |       |    |   
- a      group      of     bicyclists are riding  in the     bike lane
-
+( ( ( a group ) ( of bicyclists ) ) ( are ( riding ( in ( the bike lane ) ) ) ) )
 
 induced tree:
 
-      NT                                       
-  ____|____                                     
- |         NT                                  
- |     ____|_________                           
- |    |              NT                        
- |    |     _________|____                      
- |    |    |              NT                   
- |    |    |     _________|____                 
- |    |    |    |              NT              
- |    |    |    |     _________|___             
- |    |    |    |    |             NT          
- |    |    |    |    |     ________|____        
- |    |    |    |    |    |             NT     
- |    |    |    |    |    |         ____|___    
- PT   PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |    |    |        |        |   
-shit shit shit shit shit shit     shit     shit
-
+( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m1kpw5nl664aj7/m1kpw5nl664aj7-3P59JYT76LKIFGUFPYB5WO1DM742TO_462565_116480.wav
@@ -2204,37 +846,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                          NT                               
-       ___________________|_________                        
-      |                             NT                     
-      |             ________________|________               
-      |            |            |            NT            
-      |            |            |         ___|____          
-      NT           |            NT       |        NT       
-  ____|____        |       _____|___     |    ____|____     
- PT        PT      PT     PT        PT   PT  PT        PT  
- |         |       |      |         |    |   |         |    
-bike     riders passing burger     king  in city     street
-
+( ( bike riders ) ( passing ( burger king ) ( in ( city street ) ) ) )
 
 induced tree:
 
-      NT                                  
-  ____|_________                           
- |              NT                        
- |     _________|____                      
- |    |              NT                   
- |    |     _________|____                 
- |    |    |              NT              
- |    |    |     _________|___             
- |    |    |    |             NT          
- |    |    |    |     ________|____        
- |    |    |    |    |             NT     
- |    |    |    |    |         ____|___    
- PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |    |        |        |   
-shit shit shit shit shit     shit     shit
-
+( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m304gvmq051v89/m304gvmq051v89-3HPZF4IVNMTRUKLBWXNAGI2EDMXCY2_462565_125381.wav
@@ -2250,39 +866,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                                    NT                             
-                 ___________________|_________                      
-                NT                            NT                   
-     ___________|___                 _________|________             
-    |               NT              |    |             NT          
-    |        _______|___            |    |     ________|___         
-    |       |           NT          |    |    |            NT      
-    |       |    _______|_____      |    |    |     _______|____    
-    PT      PT  PT      PT    PT    PT   PT   PT   PT      PT   PT 
-    |       |   |       |     |     |    |    |    |       |    |   
-bicyclists  on  a      city street most not using the     bike lane
-
+( ( bicyclists ( on ( a city street ) ) ) ( most not ( using ( the bike lane ) ) ) )
 
 induced tree:
 
-                        NT                                            
-            ____________|_________                                     
-           |                      NT                                  
-           |                  ____|_________                           
-           |                 |              NT                        
-           |                 |     _________|____                      
-           |                 |    |              NT                   
-           |                 |    |     _________|____                 
-           NT                |    |    |              NT              
-  _________|___              |    |    |     _________|___             
- |             NT            |    |    |    |             NT          
- |     ________|____         |    |    |    |     ________|____        
- |    |             NT       |    |    |    |    |             NT     
- |    |         ____|___     |    |    |    |    |         ____|___    
- PT   PT       PT       PT   PT   PT   PT   PT   PT       PT       PT 
- |    |        |        |    |    |    |    |    |        |        |   
-shit shit     shit     shit shit shit shit shit shit     shit     shit
-
+( ( shit ( shit ( shit shit ) ) ) ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m315slybd49iuk/m315slybd49iuk-31Z0PCVWUKFP1HRLVAS0SFILUIBT73_462565_115811.wav
@@ -2298,45 +886,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                                              NT                                           
-                ______________________________|_________                                    
-               |                                        NT                                 
-               |                   _____________________|________                           
-               |                  |                              NT                        
-               |                  |     _________________________|_____________             
-               NT                 |    |      |         NT                     NT          
-      _________|_______           |    |      |     ____|___            _______|___         
-     NT                NT         |    |      |    |        NT         |           NT      
-  ___|____          ___|____      |    |      |    |     ___|____      |    _______|____    
- PT       PT       PT       PT    PT   PT     PT   PT   PT       PT    PT  PT      PT   PT 
- |        |        |        |     |    |      |    |    |        |     |   |       |    |   
- a      group      of     people are riding bikes down the     street  in  a      bike lane
-
+( ( ( a group ) ( of people ) ) ( are ( riding bikes ( down ( the street ) ) ( in ( a bike lane ) ) ) ) )
 
 induced tree:
 
-                          NT                                           
-       ___________________|________________________________             
-      NT                                                   |           
-  ____|____                                                |            
- |         NT                                              |           
- |     ____|____                                           |            
- |    |         NT                                         |           
- |    |     ____|_________                                 |            
- |    |    |              NT                               |           
- |    |    |     _________|____                            |            
- |    |    |    |              NT                          |           
- |    |    |    |     _________|____                       |            
- |    |    |    |    |              NT                     |           
- |    |    |    |    |     _________|___                   |            
- |    |    |    |    |    |             NT                 NT          
- |    |    |    |    |    |     ________|____          ____|____        
- |    |    |    |    |    |    |             NT       |         NT     
- |    |    |    |    |    |    |         ____|___     |     ____|___    
- PT   PT   PT   PT   PT   PT   PT       PT       PT   PT   PT       PT 
- |    |    |    |    |    |    |        |        |    |    |        |   
-shit shit shit shit shit shit shit     shit     shit shit shit     shit
-
+( ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ( shit ( shit shit ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m3xm5b3z3wu8g7/m3xm5b3z3wu8g7-3DI28L7YXAE91CUMGZMWSJR7N2CE1K_462565_112826.wav
@@ -2352,37 +906,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                         NT                          
-         ________________|_________                   
-        |                          NT                
-        |                 _________|___               
-        NT               |             NT            
-   _____|___             |     ________|___           
-  |         NT           |    |            NT        
-  |      ___|_____       |    |     _______|_____     
-  PT    PT        PT     PT   PT   PT      PT    PT  
-  |     |         |      |    |    |       |     |    
-people  on     bicycles ride down  a      busy street
-
+( ( people ( on bicycles ) ) ( ride ( down ( a busy street ) ) ) )
 
 induced tree:
 
-      NT                                  
-  ____|_________                           
- |              NT                        
- |     _________|____                      
- |    |              NT                   
- |    |     _________|____                 
- |    |    |              NT              
- |    |    |     _________|___             
- |    |    |    |             NT          
- |    |    |    |     ________|____        
- |    |    |    |    |             NT     
- |    |    |    |    |         ____|___    
- PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |    |        |        |   
-shit shit shit shit shit     shit     shit
-
+( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2r8zl9k35hxtr/m2r8zl9k35hxtr-3Z4GS9HPNVA23JUEI7PZNJQ37TB77E_436141_312896.wav
@@ -2398,39 +926,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-           NT                                            
-      _____|___________                                   
-     |                 NT                                
-     |             ____|_________                         
-     |            |              NT                      
-     |            |     _________|________                
-     |            |    |    |             NT             
-     |            |    |    |     ________|___            
-     |            |    |    |    |            NT         
-     |            |    |    |    |     _______|___        
-     NT           |    |    |    |    |           NT     
-  ___|_____       |    |    |    |    |        ___|___    
- PT        PT     PT   PT   PT   PT   PT      PT      PT 
- |         |      |    |    |    |    |       |       |   
-the     bathroom  is clean and ready  to      be     used
-
+( ( the bathroom ) ( is ( clean and ( ready ( to ( be used ) ) ) ) ) )
 
 induced tree:
 
-                                 NT                    
-                             ____|__________________    
-                            NT                      |  
-                    ________|__________________     |   
-                   NT                          |    |  
-                ___|__________________         |    |   
-               NT                     |        |    |  
-       ________|________              |        |    |   
-      NT                NT            NT       |    |  
-  ____|___          ____|___      ____|___     |    |   
- PT       PT       PT       PT   PT       PT   PT   PT 
- |        |        |        |    |        |    |    |   
-shit     shit     shit     shit shit     shit shit shit
-
+( ( ( ( ( shit shit ) ( shit shit ) ) ( shit shit ) ) shit ) shit )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2ruyqzv9gyz7y/m2ruyqzv9gyz7y-3OWEPKL089CR64M1YE6OJGCT8C5N73_436141_314663.wav
@@ -2446,47 +946,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-             NT                                        
-          ___|___________                               
-         |               NT                            
-         |         ______|______                        
-         |        |             NT                     
-         |        |       ______|____                   
-         |        |      |           NT                
-         |        |      |       ____|___               
-         NT       |      |      |        NT            
-    _____|___     |      |      |     ___|_________     
-   PT        PT   PT     PT     PT   PT  PT   PT   PT  
-   |         |    |      |      |    |   |    |    |    
-doorway     view into bathroom with  a  sink and toilet
-
+( ( doorway view ) ( into ( bathroom ( with ( a sink and toilet ) ) ) ) )
 
 induced tree:
 
-      NT                                                      
-  ____|____                                                    
- |         NT                                                 
- |     ____|____                                               
- |    |         NT                                            
- |    |     ____|____                                          
- |    |    |         NT                                       
- |    |    |     ____|____                                     
- |    |    |    |         NT                                  
- |    |    |    |     ____|_________                           
- |    |    |    |    |              NT                        
- |    |    |    |    |     _________|____                      
- |    |    |    |    |    |              NT                   
- |    |    |    |    |    |     _________|____                 
- |    |    |    |    |    |    |              NT              
- |    |    |    |    |    |    |     _________|___             
- |    |    |    |    |    |    |    |             NT          
- |    |    |    |    |    |    |    |     ________|____        
- |    |    |    |    |    |    |    |    |             NT     
- |    |    |    |    |    |    |    |    |         ____|___    
- PT   PT   PT   PT   PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |    |    |    |    |    |        |        |   
-shit shit shit shit shit shit shit shit shit     shit     shit
-
+( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m2e5m5g1zle561/m2e5m5g1zle561-3E7TUJ2EGCMMYBJHOHQ517R5MNI9DL_436141_313097.wav
@@ -2502,41 +966,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                         NT                            
-       __________________|_______                       
-      |                          NT                    
-      |              ____________|____                  
-      |             |                 NT               
-      |             |         ________|_______          
-      NT            |        NT       |       NT       
-  ____|______       |     ___|___     |    ___|____     
- PT   PT     PT     PT   PT      PT   PT  PT       PT  
- |    |      |      |    |       |    |   |        |    
- a  small bathroom with  a      sink and  a      toilet
-
+( ( a small bathroom ) ( with ( ( a sink ) and ( a toilet ) ) ) )
 
 induced tree:
 
-      NT                                            
-  ____|____                                          
- |         NT                                       
- |     ____|____                                     
- |    |         NT                                  
- |    |     ____|_________                           
- |    |    |              NT                        
- |    |    |     _________|____                      
- |    |    |    |              NT                   
- |    |    |    |     _________|____                 
- |    |    |    |    |              NT              
- |    |    |    |    |     _________|___             
- |    |    |    |    |    |             NT          
- |    |    |    |    |    |     ________|____        
- |    |    |    |    |    |    |             NT     
- |    |    |    |    |    |    |         ____|___    
- PT   PT   PT   PT   PT   PT   PT       PT       PT 
- |    |    |    |    |    |    |        |        |   
-shit shit shit shit shit shit shit     shit     shit
-
+( shit ( shit ( shit ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ) ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m37p5doly4wv17/m37p5doly4wv17-36DSNE9QZ5Y28KNF02VY1VH7P0UJO7_436141_314087.wav
@@ -2552,37 +986,11 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                     NT                            
-       ______________|______________                
-      NT                            |              
-  ____|_________                    |               
- |              NT                  NT             
- |           ___|_________       ___|___            
- |          NT       |    |     |       NT         
- |     _____|___     |    |     |    ___|_____      
- PT   PT        PT   PT   PT    PT  PT        PT   
- |    |         |    |    |     |   |         |     
- a  toilet     sink and mirror  in the     bathroom
-
+( ( a ( ( toilet sink ) and mirror ) ) ( in ( the bathroom ) ) )
 
 induced tree:
 
-                NT                                 
-            ____|___________________________        
-           NT                               |      
-  _________|____                            |       
- |              NT                          |      
- |     _________|____                       |       
- |    |              NT                     |      
- |    |     _________|___                   |       
- |    |    |             NT                 |      
- |    |    |     ________|____              |       
- |    |    |    |             NT            NT     
- |    |    |    |         ____|___      ____|___    
- PT   PT   PT   PT       PT       PT   PT       PT 
- |    |    |    |        |        |    |        |   
-shit shit shit shit     shit     shit shit     shit
-
+( ( shit ( shit ( shit ( shit ( shit shit ) ) ) ) ) ( shit shit ) )
 
 wav filename:
 data/SpokenCOCO/wavs-speaker/m3zbehjp85if0v/m3zbehjp85if0v-34HJIJKLP5W7VMDRY7U8QLMW375V4K_436141_314885.wav
@@ -2598,32 +1006,8 @@ Discovered word boundaries timestamps:
 
 gold tree:
 
-                    NT                            
-       _____________|__________                    
-      |                        NT                 
-      |              __________|___                
-      |             |              NT             
-      |             |      ________|___            
-      |             |     |            NT         
-      |             |     |     _______|___        
-      NT            |     |    |           NT     
-  ____|_____        |     |    |        ___|___    
- PT   PT    PT      PT    PT   PT      PT      PT 
- |    |     |       |     |    |       |       |   
- a  white toilet sitting next  to      a      sink
-
+( ( a white toilet ) ( sitting ( next ( to ( a sink ) ) ) ) )
 
 induced tree:
 
-                             NT                             
-                _____________|______________                 
-               NT                           NT              
-       ________|____               _________|___             
-      |             NT            |             NT          
-      |         ____|____         |     ________|____        
-      NT       |         NT       |    |             NT     
-  ____|___     |     ____|___     |    |         ____|___    
- PT       PT   PT   PT       PT   PT   PT       PT       PT 
- |        |    |    |        |    |    |        |        |   
-shit     shit shit shit     shit shit shit     shit     shit
-
+( ( ( shit shit ) ( shit ( shit shit ) ) ) ( shit ( shit ( shit shit ) ) ) )
