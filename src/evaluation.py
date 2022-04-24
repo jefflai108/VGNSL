@@ -4,6 +4,7 @@ import sys
 import pickle
 import regex
 import time
+import json
 from tqdm import tqdm
 from collections import OrderedDict
 
@@ -163,7 +164,7 @@ def encode_data(data_path, basename, model, data_loader, log_step=10, logging=pr
         del images, captions, img_emb, cap_emb, audios, audio_masks
 
     if unsup_word_discovery_feats:
-        trees, ground_truth, unsup_discovered_word_alignments = _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments)
+        trees, ground_truth, unsup_discovered_word_alignments, _, _, _ = _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments)
         f1 = ex_sparseval_f1(ground_truth, trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
     else: # normal corpus f1
         f1, _, _ =  f1_score(trees, ground_truth)
@@ -328,7 +329,7 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
         use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, uniform_word_force_align=uniform_word_force_align, 
         test_time_oracle_segmentation=test_time_oracle_segmentation
     )
-
+    
     if phn_force_align: # phn-level alignment 
         ground_truth = [line.strip().lower() for line in open(
             os.path.join(data_path, f'{data_split}_phn-level-ground-truth-{basename}.txt'))]
@@ -353,10 +354,37 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
             #print('loading l1-based alignment!')
             unsup_discovered_word_alignments = np.load(os.path.join(data_path, f'{data_split}-{unsup_word_discovery_feats}-{unsup_word_discovery_feat_type}_alignment_via_max_weight_matching-{basename}.npy'), allow_pickle=True)[0]
         unsup_discovered_word_alignments = list(unsup_discovered_word_alignments.values())
+        unsup_discovered_word_timestamp = np.load(os.path.join(data_path, f'{data_split}-{unsup_word_discovery_feats}-pred_word_list-{basename}.npy'), allow_pickle=True)[0] # for visualization purpose
+        unsup_discovered_attn_timestamp = np.load(os.path.join(data_path, f'{data_split}-{unsup_word_discovery_feats}-pred_attn_list-{basename}.npy'), allow_pickle=True)[0] # for visualization purpose
 
     if visual_tree: 
         ground_truth = ground_truth[:visual_samples]
         all_captions = all_captions[:visual_samples]
+ 
+        def __deduplicate__(captions_list, image_key):
+            # ensure image:captions == 1:5
+            if len(captions_list) > 5: 
+                captions_list = captions_list[:5]
+            while len(captions_list) < 5: # duplicate 
+                print('duplicate %s captions' % image_key)
+                captions_list.append(captions_list[-1])
+            assert len(captions_list) == 5
+
+            return captions_list
+
+        def load_wav_filenames(): 
+            wav_filenames = []
+            with open('data/SpokenCOCO/SpokenCOCO_summary-83k-5k-5k.json', 'r') as f: 
+                data_summary_json = json.load(f)['test']
+                for image_key, captions_list in data_summary_json.items():
+                    captions_list = __deduplicate__(captions_list, image_key)
+                    for captions in captions_list: 
+                        wav_filenames.append(captions[0])
+
+            return wav_filenames
+
+        wav_filenames = load_wav_filenames() # for visualization purpose
+
     if export_tree: 
         export_tree_writer = open(export_tree_path, 'w')
     cap_embs = None
@@ -412,9 +440,15 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
         with open(mbr_path, 'w') as f: 
             for tree in trees: 
                 f.write('%s\n' % tree) 
-
+    
     if unsup_word_discovery_feats and not test_time_oracle_segmentation: # if test_time_oracle_segmentation, use normal F1 score. 
-        trees, ground_truth, unsup_discovered_word_alignments = _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments)
+        trees, ground_truth, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, wav_filenames = \
+            _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, wav_filenames)
+        
+        if visual_tree: 
+            viz_tree_alignments_timestamps(trees, ground_truth, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, wav_filenames)
+            exit()
+
         f1 = ex_sparseval_f1(ground_truth, trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
        
         ## tree baselines for unsup_word_discovery_feats
@@ -444,6 +478,21 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
         f1, _, _ = f1_score(trees, ground_truth, all_captions, visual_tree, constituent_recall)
 
     return f1
+
+def viz_tree_alignments_timestamps(orig_produced_trees, orig_gold_trees, alignments, word_timestamps, attn_timestamps, wav_filenames):
+    for i, item in enumerate(orig_produced_trees):
+        print('\nwav filename:') 
+        print(wav_filenames[i])
+        print('\nL1 word-to-word alignment:')
+        print(alignments[i])
+        print('\nDiscovered attention boundaries timestamps:')
+        print(attn_timestamps[i])
+        print('\nDiscovered word boundaries timestamps:')
+        print(word_timestamps[i])
+        print('\ngold tree:\n')
+        viz_tree(orig_gold_trees[i])
+        print('\ninduced tree:\n')
+        viz_tree(item)
 
 def left_branching_algorithm(st):
     words = st.replace('(', '').replace(')', '').split()
@@ -483,7 +532,8 @@ def viz_tree(bare_tree):
 def _retrieve_text_from_tree(tree): 
     return ' '.join(tree.replace('(', '').replace(')', '').split())
 
-def _cleanup_tree(orig_produced_trees, orig_gold_trees, unsup_discovered_word_alignments=None):
+def _cleanup_tree(orig_produced_trees, orig_gold_trees, unsup_discovered_word_alignments=None, 
+                  unsup_discovered_word_timestamp=None, unsup_discovered_attn_timestamp=None, wav_filenames=None):
     # remove word-level mismatch (from pre-processing)
     # by keeping track of the indices 
     indices_to_remove = []
@@ -494,11 +544,17 @@ def _cleanup_tree(orig_produced_trees, orig_gold_trees, unsup_discovered_word_al
     orig_produced_trees = [orig_produced_tree for i, orig_produced_tree in enumerate(orig_produced_trees) if i not in indices_to_remove]
     if unsup_discovered_word_alignments: 
         unsup_discovered_word_alignments = [alignment for i, alignment in enumerate(unsup_discovered_word_alignments) if i not in indices_to_remove]
+    if unsup_discovered_word_timestamp: 
+        unsup_discovered_word_timestamp = [timestamp for i, timestamp in unsup_discovered_word_timestamp.items() if i not in indices_to_remove]
+    if unsup_discovered_attn_timestamp: 
+        unsup_discovered_attn_timestamp = [timestamp for i, timestamp in unsup_discovered_attn_timestamp.items() if i not in indices_to_remove]
+    if wav_filenames: 
+        wav_filenames = [wav_filename for i, wav_filename in enumerate(wav_filenames) if i not in indices_to_remove]
 
-    return orig_produced_trees, orig_gold_trees, unsup_discovered_word_alignments
+    return orig_produced_trees, orig_gold_trees, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, wav_filenames
 
 def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False, constituent_recall_analysis=False):
-    orig_produced_trees, orig_gold_trees, _ = _cleanup_tree(orig_produced_trees, orig_gold_trees)
+    orig_produced_trees, orig_gold_trees, _, _, _, _ = _cleanup_tree(orig_produced_trees, orig_gold_trees)
 
     # double-check underlying word/phn sequence match 
     orig_gold_trees_text = [_retrieve_text_from_tree(orig_gold_tree) for orig_gold_tree in orig_gold_trees]

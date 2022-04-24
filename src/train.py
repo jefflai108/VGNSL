@@ -46,9 +46,11 @@ def train(opt, train_loader, model, epoch, val_loader, vocab, best_rsum):
                 '{e_log}\t'
                 'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                 'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                'CPU threads {number_of_threads}\t'
                 .format(
                     epoch, i, len(train_loader), batch_time=batch_time,
-                    data_time=data_time, e_log=str(model.logger)))
+                    data_time=data_time, e_log=str(model.logger),
+                    number_of_threads=torch.get_num_threads()))
 
         if opt.diffbound_gtword: # trick, as intermediate ckpt may be better --> see if this is better first. Possibly take as the default. 
             if model.Eiters % opt.val_step == 0: 

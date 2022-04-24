@@ -1,5 +1,8 @@
 #!/bin/bash
 
+OMP_NUM_THREADS=5 # limit the number of threads for CPU tensor operations 
+MKL_NUM_THREADS=5 
+
 basename=$1
 embed_size=$2
 lr=$3
@@ -32,6 +35,6 @@ fi
 python src/train.py --logger_name $expdir \
     --data_path ${datadir}/Freda-formatting --vocab_path ${datadir}/SpokenCOCO_vocab-threshold1.pkl --basename ${basename} \
     --init_embeddings 0 --img_dim 2048 --scoring_hidden_dim 128 \
-    --num_epochs 30 --workers 0 --batch_size 128 --margin ${margin} --val_step 1000 \
+    --num_epochs 30 --workers 2 --batch_size 128 --margin ${margin} --val_step 1000 \
     --embed_size ${embed_size} --feature_dim ${feature_dim} --learning_rate ${lr} --lambda_hi ${head_init_bias} --vse_reward_alpha $vse_reward_alpha \
     --speech_hdf5 --feature ${feature} --load_pretrained --phn_force_align --diffbound_gtword

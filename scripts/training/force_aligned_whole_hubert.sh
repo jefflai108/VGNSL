@@ -1,5 +1,8 @@
 #!/bin/bash
 
+OMP_NUM_THREADS=5 # limit the number of threads for CPU tensor operations 
+MKL_NUM_THREADS=5 
+
 basename=$1
 embed_size=$2
 lr=$3

@@ -4,9 +4,13 @@ import numpy as np
 from tqdm import tqdm
 import os
 import os.path as osp
+import sys
 
 from evaluation import _retrieve_text_from_tree, _cleanup_tree, extract_statistics, extract_spans
 from evaluation import f1_score as corpus_level_f1_score
+
+sys.path.insert(-1, os.path.join(sys.path[0], '../analysis'))
+from ex_sparseval import corpus_f1 as ex_sparseval_f1
 
 def mbr_selection(samples, key_function):
     ''' 
@@ -55,6 +59,8 @@ def pairwise_f1_score_for_mbr(orig_produced_trees, orig_gold_trees):
         precision_denom += pd
         recall_cnt += rc
         recall_denom += rd
+    if precision_denom == 0 and recall_denom == 0: 
+        return 0
     precision = float(precision_cnt) / precision_denom * 100.0
     recall = float(recall_cnt) / recall_denom * 100.0
     f1 = 2 * precision * recall / (precision + recall)
@@ -68,7 +74,12 @@ def _open_tree_file(tree_file):
 
     return content
 
-def run(pred_tree_dir_list): 
+def run(pred_tree_dir_list, unsup_word_discovery_feats=None, unsup_word_discovery_feat_type=None): 
+    # standard files
+    ground_truth_trees = _open_tree_file('data/SpokenCOCO/Freda-formatting/test_word-level-ground-truth-83k-5k-5k.txt')
+    if unsup_word_discovery_feats: 
+        unsup_discovered_word_alignments = np.load(f'data/SpokenCOCO/Freda-formatting/test-{unsup_word_discovery_feats}-{unsup_word_discovery_feat_type}_alignment_via_max_weight_matching-83k-5k-5k.npy', allow_pickle=True)[0]
+        unsup_discovered_word_alignments = list(unsup_discovered_word_alignments.values())
 
     # open all ckpt's pred_trees
     pred_tree_files = []
@@ -84,15 +95,306 @@ def run(pred_tree_dir_list):
         mbr_selected_trees.append(output['best_sample'])
 
     # calculate corpus-level F1 against ground-truth 
-    ground_truth_trees = _open_tree_file('data/SpokenCOCO/Freda-formatting/test_word-level-ground-truth-83k-5k-5k.txt')
-    f1, _, _ = corpus_level_f1_score(mbr_selected_trees, ground_truth_trees)
+    if unsup_word_discovery_feats: 
+        mbr_selected_trees, ground_truth_trees, unsup_discovered_word_alignments = _cleanup_tree(mbr_selected_trees, ground_truth_trees, unsup_discovered_word_alignments)
+        f1 = ex_sparseval_f1(ground_truth_trees, mbr_selected_trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
+    else:
+        f1, _, _ = corpus_level_f1_score(mbr_selected_trees, ground_truth_trees)
     print(f'MBR F1 for {pred_tree_dir} is {f1:.3f}')
 
 if __name__ == '__main__':
 
-    ## MBR selection for MFA whole_hubert
-        
+    # run MBR for phn MFA diffboundary V0 and V1
+    #exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k
+    exit()
+
+    ########################################################################### MBR selection for unsup-discovery seg_feats ##################################################################################
+    # MBR across epoches, learning rates, mlp_combine but within the same unsup-discovery seg_feats
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-6_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-6_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-6_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+
+    # MBR across epoches and learning rates but within the same unsup-discovery seg_feats
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-6_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-6_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-6_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+
+    # MBR across epoches but within the same learning rate and within the same unsup-discovery seg_feats
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV3_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombineV2_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_MLPcombine_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-6_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-6_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-4_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-5_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/unsup_attn_discovery_disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest_seg_feats_embed512_lr1e-6_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadpython_insertThreshold0.2_snapshotbest', 
+        unsup_word_discovery_feat_type = 'attn')
+    
+    ########################################################################### MBR selection for MFA whole_hubert ##################################################################################
+    # MBR across epoches, learning rates, and hubert layers
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-3_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-4_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr1e-3_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr1e-4_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr1e-3_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr1e-4_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr1e-3_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr1e-4_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr1e-3_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr1e-4_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-3_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-4_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr'])
+    
     # MBR across epoches and learning rates but the same hubert layers
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert4_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert6_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert8_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert10_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-5_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr'])
     run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-3_83k-5k-5k/mbr',
          'exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-4_83k-5k-5k/mbr',
          'exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr',
@@ -123,7 +425,52 @@ if __name__ == '__main__':
          'exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-5_83k-5k-5k/mbr',
          'exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-6_83k-5k-5k/mbr',
          'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr'])
-    exit()
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr', 
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-6_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed768_lr5e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed768_lr1e-5_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed768_lr1e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-4_83k-5k-5k/mbr', 
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr', 
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed768_lr5e-6_83k-5k-5k/mbr', 
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed768_lr1e-5_83k-5k-5k/mbr', 
+        'exp/spokencoco/force_aligned_whole_hubert_large24_embed768_lr1e-6_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+        'exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
 
     # MBR across epoches and hubert layers but the same learning rate
     run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
@@ -131,13 +478,90 @@ if __name__ == '__main__':
          'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr', 
          'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr', 
          'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr', 
-         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr']) # 55.561
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr1e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr1e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr1e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr1e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-6_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr1e-5_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr1e-5_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr1e-5_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr1e-5_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr',
+         'exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'])
 
     # MBR across epoches but within a hyper-parameter set 
-    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr']) # 54.994
-    run(['exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr']) # 53.246
-    run(['exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr']) # 53.460
-    run(['exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr']) # 53.143
-    run(['exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr']) # 36.669
-    run(['exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr']) # 48.505
-
+    run(['exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr1e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-7_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr1e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed768_lr5e-6_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed768_lr1e-5_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed768_lr1e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-3_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-4_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-5_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr1e-6_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr']) 

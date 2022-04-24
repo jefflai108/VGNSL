@@ -38,9 +38,6 @@ def corpus_f1(pred_trees, gold_trees, aligns, is_baretree=False):
     pred_cnt = 0
 
     for pred_tree, gold_tree, align in zip(pred_trees, gold_trees, aligns):
-        #print(pred_tree)
-        #print(gold_tree)
-        #print(align)
         if '(' not in pred_tree or '(' not in gold_tree: # for (rare) cases where there is just one word.
             continue 
         pred_tree = ExNLTKTree.fromstring(pred_tree) if not is_baretree else BareTree.fromstring(pred_tree)

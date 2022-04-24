@@ -12,6 +12,7 @@ feature=hubert10; feature_dim=768
 feature=$4
 last_ckpt=$5
 
+# oracle segmentation based VGNSL 
 for ckpt in `seq -s ' ' 0 ${last_ckpt}`; do
     datadir=data/SpokenCOCO
     expname=force_aligned_whole_${feature}_embed${embed_size}_lr${lr}_${basename}

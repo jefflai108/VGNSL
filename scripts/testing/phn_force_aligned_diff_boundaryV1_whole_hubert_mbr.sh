@@ -19,19 +19,20 @@ rl_loss=$7
 datadir=data/SpokenCOCO
 if [[ $rl_loss ]]; then 
     vse_reward_alpha=$rl_loss 
-    expdir=exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_${feature}_embed${embed_size}_lr${lr}_margin${margin}_lambdahi${head_init_bias}_vseRL${vse_reward_alpha}_${basename}
+    expdir=exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_${feature}_embed${embed_size}_lr${lr}_margin${margin}_lambdahi${head_init_bias}_vseRL${vse_reward_alpha}_${basename}
 else
     vse_reward_alpha=1.0
-    expdir=exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_${feature}_embed${embed_size}_lr${lr}_margin${margin}_lambdahi${head_init_bias}_${basename}
+    expdir=exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_${feature}_embed${embed_size}_lr${lr}_margin${margin}_lambdahi${head_init_bias}_${basename}
 fi 
 echo $expdir
+mkdir -p $expdir/mbr
 
 i=0
 while [ $i -ne 30 ]; do  
     if [ -f ${expdir}/${i}.pth.tar ]; then
         #echo evaluating ${i}.pth.tar
-        python src/test.py --data_path ${datadir}/Freda-formatting/ --candidate ${expdir}/${i}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab-threshold1.pkl --basename ${basename}
+        python src/test.py --data_path ${datadir}/Freda-formatting/ --candidate ${expdir}/${i}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab-threshold1.pkl --basename ${basename} \
+                           --mbr_path ${expdir}/mbr/${i}_pred_tree.txt
     fi 
     i=$(($i+1))
 done
-exit 0

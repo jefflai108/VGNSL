@@ -2,7 +2,6 @@
 import nltk
 import pickle
 from collections import Counter
-from pycocotools.coco import COCO
 class Vocabulary(object):
     """Simple vocabulary wrapper."""
 
