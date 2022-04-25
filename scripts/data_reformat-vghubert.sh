@@ -13,15 +13,15 @@
 # ./scripts/data_reformat.sh 83k-5k-5k 20 2 train
 
 datadir=data/SpokenCOCO
-split=$1
-num_labs=$2
-lab_id=$3
+split=83k-5k-5k
+num_labs=0
+lab_id=-1
 #for data_split in train val test; do
-data_split=$4
-layer_num=
+data_split=$1
+feature=$2
+layer_num=$3
 
-python data/data_reformat_v4-vghubert.py \ 
+python data/data_reformat_v4-vghubert.py \
     -j ${datadir}/SpokenCOCO_summary-${split}.json \
-    -o ${datadir}/Freda-formatting/ --h5_format --parallelize -n $num_labs -l $lab_id \
-    --data-split $data_split --feature hubert --layer_num $layer_num
-
+    -o ${datadir}/Freda-formatting/ --h5_format -n $num_labs -l $lab_id \
+    --data-split $data_split --feature $feature --layer_num $layer_num

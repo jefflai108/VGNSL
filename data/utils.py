@@ -179,7 +179,7 @@ def setup_vg_hubert(model_type, snapshot='best', device='cuda'):
     if model_type == 'disc-81':
         exp_dir = '/data/sls/scratch/clai24/data/SpokenCOCO/vghubert_model_weights/disc-81'
     elif model_type == 'disc-82':
-        expdir = '/data/sls/scratch/clai24/data/SpokenCOCO/vghubert_model_weights/disc-82'
+        exp_dir = '/data/sls/scratch/clai24/data/SpokenCOCO/vghubert_model_weights/disc-82'
     else:
         print('%s not supported' % model_type)
         exit()
