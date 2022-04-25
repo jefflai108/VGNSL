@@ -164,7 +164,7 @@ def encode_data(data_path, basename, model, data_loader, log_step=10, logging=pr
         del images, captions, img_emb, cap_emb, audios, audio_masks
 
     if unsup_word_discovery_feats:
-        trees, ground_truth, unsup_discovered_word_alignments, _, _, _ = _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments)
+        trees, ground_truth, unsup_discovered_word_alignments, _, _, _, _ = _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments)
         f1 = ex_sparseval_f1(ground_truth, trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
     else: # normal corpus f1
         f1, _, _ =  f1_score(trees, ground_truth)
@@ -361,6 +361,17 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
         ground_truth = ground_truth[:visual_samples]
         all_captions = all_captions[:visual_samples]
  
+        def convert_wordlist_frame_to_sec(feature_wordlist): 
+            # convert pred_word_list from frames --> seconds 
+            frame_stride = 0.02
+            for k, v in feature_wordlist.items():
+                feature_wordlist[k] = [(word, init_sec * frame_stride, end_sec * frame_stride) for (word, init_sec, end_sec) in v]
+
+            return feature_wordlist
+
+        oracle_word_framestamp = np.load(os.path.join(data_path, f'{data_split}_segment-hubert2_word_list-{basename}.npy'), allow_pickle=True)[0] # for visualization purpose
+        oracle_word_timestamp  = convert_wordlist_frame_to_sec(oracle_word_framestamp) 
+
         def __deduplicate__(captions_list, image_key):
             # ensure image:captions == 1:5
             if len(captions_list) > 5: 
@@ -442,11 +453,11 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
                 f.write('%s\n' % tree) 
     
     if unsup_word_discovery_feats and not test_time_oracle_segmentation: # if test_time_oracle_segmentation, use normal F1 score. 
-        trees, ground_truth, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, wav_filenames = \
-            _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, wav_filenames)
+        trees, ground_truth, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, oracle_word_timestamp, wav_filenames = \
+            _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, oracle_word_timestamp, wav_filenames)
         
         if visual_tree: 
-            viz_tree_alignments_timestamps(trees, ground_truth, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, wav_filenames)
+            viz_tree_alignments_timestamps(trees, ground_truth, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, oracle_word_timestamp, wav_filenames)
             exit()
 
         f1 = ex_sparseval_f1(ground_truth, trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
@@ -479,12 +490,14 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
 
     return f1
 
-def viz_tree_alignments_timestamps(orig_produced_trees, orig_gold_trees, alignments, word_timestamps, attn_timestamps, wav_filenames):
+def viz_tree_alignments_timestamps(orig_produced_trees, orig_gold_trees, alignments, word_timestamps, attn_timestamps, oracle_word_timestamp, wav_filenames):
     for i, item in enumerate(orig_produced_trees):
         print('\nwav filename:') 
         print(wav_filenames[i])
         print('\nL1 word-to-word alignment:')
         print(alignments[i])
+        print('\nOracle word boundaries timestamps:')
+        print(oracle_word_timestamp[i])
         print('\nDiscovered attention boundaries timestamps:')
         print(attn_timestamps[i])
         print('\nDiscovered word boundaries timestamps:')
@@ -535,7 +548,8 @@ def _retrieve_text_from_tree(tree):
     return ' '.join(tree.replace('(', '').replace(')', '').split())
 
 def _cleanup_tree(orig_produced_trees, orig_gold_trees, unsup_discovered_word_alignments=None, 
-                  unsup_discovered_word_timestamp=None, unsup_discovered_attn_timestamp=None, wav_filenames=None):
+                  unsup_discovered_word_timestamp=None, unsup_discovered_attn_timestamp=None, oracle_word_timestamp=None, 
+                  wav_filenames=None):
     # remove word-level mismatch (from pre-processing)
     # by keeping track of the indices 
     indices_to_remove = []
@@ -552,11 +566,13 @@ def _cleanup_tree(orig_produced_trees, orig_gold_trees, unsup_discovered_word_al
         unsup_discovered_attn_timestamp = [timestamp for i, timestamp in unsup_discovered_attn_timestamp.items() if i not in indices_to_remove]
     if wav_filenames: 
         wav_filenames = [wav_filename for i, wav_filename in enumerate(wav_filenames) if i not in indices_to_remove]
+    if oracle_word_timestamp: 
+        oracle_word_timestamp = [timestamp for i, timestamp in oracle_word_timestamp.items() if i not in indices_to_remove]
 
-    return orig_produced_trees, orig_gold_trees, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, wav_filenames
+    return orig_produced_trees, orig_gold_trees, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, oracle_word_timestamp, wav_filenames
 
 def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False, constituent_recall_analysis=False):
-    orig_produced_trees, orig_gold_trees, _, _, _, _ = _cleanup_tree(orig_produced_trees, orig_gold_trees)
+    orig_produced_trees, orig_gold_trees, _, _, _, _, _ = _cleanup_tree(orig_produced_trees, orig_gold_trees)
 
     # double-check underlying word/phn sequence match 
     orig_gold_trees_text = [_retrieve_text_from_tree(orig_gold_tree) for orig_gold_tree in orig_gold_trees]
