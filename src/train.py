@@ -160,7 +160,16 @@ if __name__ == '__main__':
                         'hubert_large4', 'hubert_large6', 'hubert_large8', 'hubert_large10', 
                         'hubert_large12', 'hubert_large14', 'hubert_large16',
                         'hubert_large18', 'hubert_large20', 'hubert_large22', 'hubert_large24', 
-                        'content_vec_v07_1112', 'content_vec_v12_0512'])
+                        'content_vec_v07_1112', 'content_vec_v12_0512',
+                        'disc-82_0', 'disc-82_1', 'disc-82_2', 'disc-82_3', 'disc-82_4', 'disc-82_5', 
+                        'disc-82_6', 'disc-82_7', 'disc-82_8', 'disc-82_9', 'disc-82_10', 'disc-82_11',
+                        'disc-81_0', 'disc-81_1', 'disc-81_2', 'disc-81_3', 'disc-81_4', 'disc-81_5', 
+                        'disc-81_6', 'disc-81_7', 'disc-81_8', 'disc-81_9', 'disc-81_10', 'disc-81_11',
+                        'hubert2_cat_disc-82_0', 'hubert2_cat_disc-82_1', 'hubert2_cat_disc-82_2', 'hubert2_cat_disc-82_3', 'hubert2_cat_disc-82_4', 'hubert2_cat_disc-82_5', 
+                        'hubert2_cat_disc-82_6', 'hubert2_cat_disc-82_7', 'hubert2_cat_disc-82_8', 'hubert2_cat_disc-82_9', 'hubert2_cat_disc-82_10', 'hubert2_cat_disc-82_11',
+                        'hubert2_cat_disc-81_0', 'hubert2_cat_disc-81_1', 'hubert2_cat_disc-81_2', 'hubert2_cat_disc-81_3', 'hubert2_cat_disc-81_4', 'hubert2_cat_disc-81_5', 
+                        'hubert2_cat_disc-81_6', 'hubert2_cat_disc-81_7', 'hubert2_cat_disc-81_8', 'hubert2_cat_disc-81_9', 'hubert2_cat_disc-81_10', 'hubert2_cat_disc-81_11',
+                        ])
     parser.add_argument('--dino_feature', type=str, default=None, 
                         choices = ['vits8', 'vits16', 'vitb8', 'vitb16', 
                                    'deit_base_patch16_224', 'deit_base_distilled_patch16_384', 

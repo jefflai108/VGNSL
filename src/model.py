@@ -23,8 +23,8 @@ from module import AttentivePooling, AttentivePoolingInputNorm, \
                    AttentivePoolingDiscreteInput, create_resdavenet_vq, \
                    MLPCombineBasicBlock
 
-from differential_boundary import DifferentialWordSegmentation # diffboundV0
-#from differential_boundary_v1 import DifferentialWordSegmentation # diffboundV1
+#from differential_boundary import DifferentialWordSegmentation # diffboundV0
+from differential_boundary_v1 import DifferentialWordSegmentation # diffboundV1
 
 class EncoderImagePrecomp(nn.Module):
     """ image encoder """

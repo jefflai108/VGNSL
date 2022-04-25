@@ -189,16 +189,16 @@ class H5PrecompDataset(PrecompDataset):
     def _load_speech_feature(self, data_path, data_split, basename, feature='logmelspec', utt_cmvn=False): 
         # whole hubert
         self.feature_embed_obj = h5py.File(os.path.join(data_path, f'{data_split}_segment-{feature}_embed-{basename}.hdf5'), 'r')
-        if self.phn_force_align: # use phn-level alignment 
-            self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_phn_list-{basename}.npy'), allow_pickle=True)[0]
-        elif self.uniform_word_force_align: 
-            self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_uniform_word_list-{basename}.npy'), allow_pickle=True)[0]
-        else: # default alignment is word-level 
-            self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
-        if self.unsup_word_discovery_feats: # overwrite, and use word-discovery word_list. 
+        if not self.unsup_word_discovery_feats: # oracle segmentation
+            if self.phn_force_align: # use phn-level alignment 
+                self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_phn_list-{basename}.npy'), allow_pickle=True)[0]
+            elif self.uniform_word_force_align: 
+                self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_uniform_word_list-{basename}.npy'), allow_pickle=True)[0]
+            else: # default alignment is word-level 
+                self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
+        if self.unsup_word_discovery_feats: # word-discovery word_list. 
             if self.test_time_oracle_segmentation: 
                 print('not implemented yet')
-            gt_feature_wordlist = np.load(os.path.join(data_path, f'{data_split}_segment-{feature}_word_list-{basename}.npy'), allow_pickle=True)[0]
             self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_{self.unsup_word_discovery_feat_type}_list-{basename}.npy'), allow_pickle=True)[0]
             self.vg_hubert_seg_feats = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_seg_feat-{basename}.npy'), allow_pickle=True)[0]
 
@@ -210,10 +210,6 @@ class H5PrecompDataset(PrecompDataset):
             else: frame_stride = 0.02
             for k, v in self.feature_wordlist.items():
                 self.feature_wordlist[k] = [(word, init_sec/frame_stride, end_sec/frame_stride) for (word, init_sec, end_sec) in v]
-
-            # then, convert attention boundaries to word boundaries --> deprecate now
-            #for k, v in self.feature_wordlist.items():
-            #    self.feature_wordlist[k] = convert_attention_boundary_to_word_boundary(v, gt_feature_wordlist[k])
 
         #print(self.feature_embed_obj[str(22)][:].shape)
         #print(self.feature_wordlist[22])

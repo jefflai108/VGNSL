@@ -41,7 +41,7 @@ def pairwise_f1_score_for_mbr(orig_produced_trees, orig_gold_trees):
     orig_gold_trees = [orig_gold_trees]
 
     # cleanup 
-    orig_produced_trees, orig_gold_trees, _ = _cleanup_tree(orig_produced_trees, orig_gold_trees)
+    orig_produced_trees, orig_gold_trees, _, _, _, _ = _cleanup_tree(orig_produced_trees, orig_gold_trees)
 
     # double-check underlying word/phn sequence match 
     orig_gold_trees_text = [_retrieve_text_from_tree(orig_gold_tree) for orig_gold_tree in orig_gold_trees]
@@ -104,8 +104,35 @@ def run(pred_tree_dir_list, unsup_word_discovery_feats=None, unsup_word_discover
 
 if __name__ == '__main__':
 
-    # run MBR for phn MFA diffboundary V0 and V1
-    #exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k
+    ######################################################################## MBR selection for phn_MFA diffBounad whole_hubert #############################################################################
+    # run MBR for phn MFA diffboundary V0
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+
+    # run MBR for phn MFA diffboundary V1
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+
     exit()
 
     ########################################################################### MBR selection for unsup-discovery seg_feats ##################################################################################
