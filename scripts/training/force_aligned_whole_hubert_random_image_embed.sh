@@ -3,14 +3,7 @@
 basename=$1
 embed_size=$2
 lr=$3
-feature=hubert; feature_dim=768
 feature=hubert2; feature_dim=768
-feature=hubert4; feature_dim=768
-feature=hubert6; feature_dim=768
-feature=hubert8; feature_dim=768
-feature=hubert10; feature_dim=768
-feature=content_vec_v07_1112; feature_dim=768
-feature=content_vec_v12_0512; feature_dim=768
 feature=$4
 datadir=data/SpokenCOCO
 expdir=exp/spokencoco/force_aligned_random_image_embed_whole_${feature}_embed${embed_size}_lr${lr}_${basename}

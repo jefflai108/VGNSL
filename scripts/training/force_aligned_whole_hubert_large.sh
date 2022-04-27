@@ -3,8 +3,6 @@
 basename=$1
 embed_size=$2
 lr=$3
-feature=hubert_large16; feature_dim=1024
-feature=hubert_large18; feature_dim=1024
 feature=hubert_large24; feature_dim=1024
 feature=$4
 datadir=data/SpokenCOCO

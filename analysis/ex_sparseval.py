@@ -30,6 +30,7 @@ def corpus_f1(pred_trees, gold_trees, aligns, is_baretree=False):
     """
     Compute corpus-level F1 score.
     """
+    
     assert len(pred_trees) == len(gold_trees)
     assert len(pred_trees) == len(aligns)
 

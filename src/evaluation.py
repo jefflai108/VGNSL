@@ -313,6 +313,8 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
     if hasattr(opt, 'uniform_word_force_align'): 
         uniform_word_force_align = opt.uniform_word_force_align
     else: uniform_word_force_align = False 
+   
+    opt.feature = 'hubert2' # hack, due to feature files moved to temp/ to create space for scratch/; delete this shit later
     
     if visual_tree: 
         eval_batch_size = 1 
@@ -492,7 +494,8 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
 
 def viz_tree_alignments_timestamps(orig_produced_trees, orig_gold_trees, alignments, word_timestamps, attn_timestamps, oracle_word_timestamp, wav_filenames):
     for i, item in enumerate(orig_produced_trees):
-        print('\nwav filename:') 
+        print('\n#############################################################################################################################')
+        print('wav filename:') 
         print(wav_filenames[i])
         print('\nL1 word-to-word alignment:')
         print(alignments[i])
@@ -502,11 +505,14 @@ def viz_tree_alignments_timestamps(orig_produced_trees, orig_gold_trees, alignme
         print(attn_timestamps[i])
         print('\nDiscovered word boundaries timestamps:')
         print(word_timestamps[i])
-        print('\ngold tree:\n')
+        print('\ngold tree:')
         print(orig_gold_trees[i])
         #viz_tree(orig_gold_trees[i])
-        print('\ninduced tree:\n')
+        print('\ninduced tree:')
         print(item)
+        f1 = ex_sparseval_f1([orig_gold_trees[i]], [item], [alignments[i]], is_baretree=True)
+        print('\nF1 score:') 
+        print(f1)
         #viz_tree(item)
 
 def left_branching_algorithm(st):

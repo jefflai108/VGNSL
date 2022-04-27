@@ -106,19 +106,19 @@ if __name__ == '__main__':
 
     ######################################################################## MBR selection for phn_MFA diffBounad whole_hubert #############################################################################
     # run MBR for phn MFA diffboundary V0
-    #run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr']) 
-    #run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
-    #run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
-    #run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
-    #run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
-    #run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
-    #
-    #run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
-    #    'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
-    #    'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
-    #    'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
-    #    'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
-    #    'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr']) 
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
+    
+    run(['exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
+        'exp/spokencoco/phn_force_aligned_diffboundV0-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
 
     # run MBR for phn MFA diffboundary V1
     run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
@@ -134,8 +134,6 @@ if __name__ == '__main__':
         'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
         'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr',
         'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'])
-
-    exit()
 
     ########################################################################### MBR selection for unsup-discovery seg_feats ##################################################################################
     # MBR across epoches, learning rates, mlp_combine but within the same unsup-discovery seg_feats

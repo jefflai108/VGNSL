@@ -3,12 +3,7 @@
 basename=$1
 embed_size=$2
 lr=$3
-feature=hubert; feature_dim=768
 feature=hubert2; feature_dim=768
-feature=hubert4; feature_dim=768
-feature=hubert6; feature_dim=768
-feature=hubert8; feature_dim=768
-feature=hubert10; feature_dim=768
 jason_feats=disc-81_spokencoco_preFeats_max_0.7_9_clsAttn
 jason_feats=$4
 mask_ratio=$5

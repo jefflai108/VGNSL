@@ -6,15 +6,7 @@ MKL_NUM_THREADS=5
 basename=$1
 embed_size=$2
 lr=$3
-feature=logmelspec; feature_dim=40
-feature=hubert; feature_dim=768
 feature=hubert2; feature_dim=768
-feature=hubert4; feature_dim=768
-feature=hubert6; feature_dim=768
-feature=hubert8; feature_dim=768
-feature=hubert10; feature_dim=768
-feature=content_vec_v07_1112; feature_dim=768
-feature=content_vec_v12_0512; feature_dim=768
 feature=$4
 if [[ "$feature" = "logmelspec" ]]; then feature_dim=40 ; fi
 margin=$5

@@ -3,14 +3,7 @@
 basename=$1
 embed_size=$2
 lr=$3
-feature=hubert; feature_dim=768
 feature=hubert2; feature_dim=768
-feature=hubert4; feature_dim=768
-feature=hubert6; feature_dim=768
-feature=hubert8; feature_dim=768
-feature=hubert10; feature_dim=768
-feature=content_vec_v07_1112; feature_dim=768
-feature=content_vec_v12_0512; feature_dim=768
 feature=$4
 dino_feature=$5
 if [[ "$dino_feature" = "vits8" ]]; then dino_dim=384; fi
