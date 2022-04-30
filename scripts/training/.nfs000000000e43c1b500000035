@@ -7,7 +7,7 @@ basename=$1
 embed_size=$2
 lr=$3
 feature=disc-82_0; feature_dim=768
-#feature=hubert2_cat_disc-82_0; feature_dim=1536
+feature=hubert2_cat_disc-82_0; feature_dim=1536
 feature=$4
 jason_feats=disc-81_spokencoco_preFeats_max_0.7_9_clsAttn
 jason_feats=$5

@@ -200,9 +200,9 @@ class H5PrecompDataset(PrecompDataset):
             if self.test_time_oracle_segmentation: 
                 print('not implemented yet')
             self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_{self.unsup_word_discovery_feat_type}_list-{basename}.npy'), allow_pickle=True)[0]
-            self.vg_hubert_seg_feats = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_seg_feat-{basename}.npy'), allow_pickle=True)[0]
+            #self.vg_hubert_seg_feats = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_seg_feat-{basename}.npy'), allow_pickle=True)[0] # for training on seg_feats only
 
-            assert self.vg_hubert_seg_feats[22].shape[-1] == self.feature_embed_obj[str(22)][:].shape[-1]
+            #assert self.vg_hubert_seg_feats[22].shape[-1] == self.feature_embed_obj[str(22)][:].shape[-1] # for training on seg_feats only
                       
             # convert pred_word_list from secs --> frames 
             if self.feature == 'logmelspec': 

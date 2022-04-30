@@ -314,7 +314,7 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
         uniform_word_force_align = opt.uniform_word_force_align
     else: uniform_word_force_align = False 
    
-    opt.feature = 'hubert2' # hack, due to feature files moved to temp/ to create space for scratch/; delete this shit later
+    #opt.feature = 'hubert2' # hack, due to feature files moved to temp/ to create space for scratch/; delete this shit later
     
     if visual_tree: 
         eval_batch_size = 1 
@@ -397,6 +397,9 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
             return wav_filenames
 
         wav_filenames = load_wav_filenames() # for visualization purpose
+    else: 
+        oracle_word_timestamp = None 
+        wav_filenames = None
 
     if export_tree: 
         export_tree_writer = open(export_tree_path, 'w')
