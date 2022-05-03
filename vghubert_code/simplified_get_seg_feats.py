@@ -17,6 +17,14 @@ import numpy as np
 import h5py
 from collections import defaultdict
 
+def extract_feats(boundaries, feats, cls_attn_weights, spf):
+    seg_feats = []
+	cls_attn_weights_sum = cls_attn_weights.sum(0)
+    for t_s, t_e in boundaries:
+        t_s, t_e = int(t_s/spf), int(t_e/spf)+1
+        seg_feats.append((feats[t_s:t_e]*(cls_attn_weights_sum[t_s:t_e]/cls_attn_weights_sum[t_s:t_e].sum()).unsqueeze(1)).sum(0).cpu())
+    return seg_feats
+
 print("I am process %s, running on %s: starting (%s)" % (
         os.getpid(), os.uname()[1], time.asctime()))
 
@@ -58,5 +66,16 @@ with torch.no_grad():
 
     # this is the representations
     feats = [item.squeeze(0)[1:] for item in w2v2_out['layer_features']] # [1, T+1, D] -> [T, D]
-    
     print(feats[0].shape) # torch.Size([49, 768])
+
+
+    spf = len(audio)/sr/feats[0].shape[-2] # load from file 
+    attn_weights = w2v2_out['attn_weights'].squeeze(0) # [1, num_heads, tgt_len, src_len] -> [num_heads, tgt_len, src_len]
+    cls_attn_weights = attn_weights[:, 0, 1:] # [num_heads, tgt_len, src_len] -> [n_h, T]
+
+    # weighted by [CLS] attention
+    cls_weighted_feats = extract_feats(boundaries, feats[0], cls_attn_weights, spf)
+    print(cls_weighted_feats.shape)
+    
+
+

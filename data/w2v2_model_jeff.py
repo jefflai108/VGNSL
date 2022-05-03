@@ -1450,15 +1450,18 @@ class TransformerEncoder(nn.Module):
         layer_feats = []
         end_layer = max(feature_layer + [segment_layer])
         for i, layer in enumerate(self.layers):
-            x, z = layer(x, self_attn_padding_mask=padding_mask,need_head_weights=need_head_weights)
+            x, z = layer(x, self_attn_padding_mask=padding_mask, need_weights=need_head_weights)
             if i in feature_layer:
                 layer_feats.append(x.transpose(0, 1))
             if i == segment_layer:
-                if len(z.shape) == 3:
+                if len(z.shape) == 2:
                     z = z.unsqueeze(0)
                 attn_weights = z # [bsz, num_heads, tgt_len, src_len]
             if i == end_layer:
-                return layer_feats, None
+                if len(z.shape) == 2: 
+                    z = z.unsqueeze(0) 
+                attn_weights = z # [bsz, num_heads, tgt_len, src_len]
+                return layer_feats, attn_weights
         
         raise RuntimeError("shouldn't get here")
         if all_hidden_states:

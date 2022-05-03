@@ -10,27 +10,7 @@ import textgrid
 
 from networkx_tutorial import run as l1_alignment
 
-# 1. map "wav" --> location in "wavs-speaker"
-
-# e.g. "wavs/train/428/mfbjxyldr6c1o-3ZPPDN2SLVWRQHXHKC1P7P9QLHI9EC_296759_180764.wav" 
-# shoudl be "wavs-speaker/mfbjxyldr6c1o/mfbjxyldr6c1o-3ZPPDN2SLVWRQHXHKC1P7P9QLHI9EC_296759_180764.wav"
-#
-# 2. SpokenCOCO summary: SpokenCOCO_summary-83k-5k-5k.json
-# find the corresponding files 
-#
-#
-# 2.1 make sure the time stamps align (frame rate)
-#
-# 3. modify word_list (create a new one) with new word boundaries
-# e.g. y = np.load('test_segment-hubert2_word_list-83k-5k-5k.npy', allow_pickle=True)
-# >>> y[0][0]
-#[('a', 33.5, 41.5), ('dirt', 41.5, 61.0), ('path', 61.0, 86.5), ('with', 86.5, 92.5), ('a', 92.5, 96.0), ('young', 96.0, 112.00000000000001), ('person', 112.00000000000001, 132.5), ('on', 132.5, 140.0), ('a', 140.0, 144.5), ('motor', 144.5, 159.5), ('bike', 159.5, 178.0), ('rests', 183.5, 214.5), ('to', 216.0, 221.49999999999997), ('the', 221.49999999999997, 226.5), ('foreground', 226.5, 260.0), ('of', 260.0, 265.0), ('a', 265.0, 268.5), ('verdant', 268.5, 292.0), ('area', 293.5, 314.5), ('with', 314.5, 324.0), ('a', 324.0, 327.5), ('bridge', 327.5, 357.0), ('and', 366.5, 373.0), ('a', 373.0, 377.5), ('background', 377.5, 410.50000000000006), ('of', 410.50000000000006, 416.5), ('cloudwreathed', 423.00000000000006, 469.00000000000006), ('mountains', 476.99999999999994, 509.49999999999994)]
-##
-
-# goal of the above: 
-# first step: construct a dictionary {new_wav_id: y'[0][0]} 
-# second step: min-weight matching of y[0][0] and y'[0][0]
-# third step: output in Freda format by running same procedure of data/reformat_v4.py 
+from utils import vghubert_feature_extraction, setup_vg_hubert
 
 def _convert_default_wav_to_wavspeaker(main_dir, wav_pth): 
     wav_name = wav_pth.split('/')[-1]
@@ -120,7 +100,7 @@ def _deduplicate(captions_list, image_key):
 
     return captions_list
 
-def read_jason_file(main_dir, ffile, boundaries_only=True, attention_boundaries=True): 
+def read_jason_file(main_dir, ffile, boundaries_only=True, attention_boundaries=True, upstream_model=None, upstream_model_layer=11, device='cuda'): 
     with open(ffile, 'rb') as f: 
         features = pickle.load(f)
 
@@ -129,16 +109,33 @@ def read_jason_file(main_dir, ffile, boundaries_only=True, attention_boundaries=
         word_boundaries = {_convert_default_wav_to_wavspeaker(main_dir, k):torch.tensor(v['word_boundaries']) for k,v in features.items()}
     print(len(features.keys())) # 25020 for val, 567171 for train, 25031 for test
 
-    if boundaries_only:
+    if boundaries_only: # return attn/word boundaries 
         if attention_boundaries: 
             return attn_boundaries
         else: return word_boundaries
     else: # return seg_feats instead of bounadries
-        seg_features = {_convert_default_wav_to_wavspeaker(main_dir, k):v['seg_feats'] for k,v in features.items()}
-        for wav in attn_boundaries.keys(): 
-            boundary = attn_boundaries[wav]
-            seg_feature = seg_features[wav]
-            assert len(boundary) == len(seg_feature) # ensure 1:1 mapping 
+        if upstream_model: # seg_features do not exist --> extract and pre-store 
+            seg_features = {} 
+            for wav_file in features.keys(): 
+                wav_file_fixed = _convert_default_wav_to_wavspeaker(main_dir, wav_file)
+                attn_boundaries = features[wav_file]['boundaries'] # load attention segment boundaries for [CLS]-weighted mean-pool 
+                vghubert_repre, _ = vghubert_feature_extraction(wav_file_fixed, 
+                                                                upstream_model, 
+                                                                layer=upstream_model_layer, 
+                                                                device=device, 
+                                                                cls_mean_pool=True, 
+                                                                spf=features[wav_file]['spf'],
+                                                                boundaries=attn_boundaries)
+                seg_feature = np.transpose(vghubert_repre)
+                assert seg_feature.shape[0] == len(attn_boundaries)
+                #print(seg_feature.shape) # (13, 768) 
+                seg_features[wav_file_fixed] = seg_feature
+        else: # seg_features exist --> pre-store only 
+            seg_features = {_convert_default_wav_to_wavspeaker(main_dir, k):v['seg_feats'] for k,v in features.items()}
+            for wav in attn_boundaries.keys(): 
+                boundary = attn_boundaries[wav]
+                seg_feature = seg_features[wav]
+                assert len(boundary) == len(seg_feature) # ensure 1:1 mapping 
 
         return seg_features
 
@@ -178,6 +175,7 @@ if __name__ == '__main__':
                         type=str, default='data/SpokenCOCO/SpokenCOCO_summary-83k-5k-5k.json')
     parser.add_argument('--data_dir', type=str, default='data/SpokenCOCO')
     parser.add_argument('--data_split', type=str, choices=['test', 'val', 'train'])
+    parser.add_argument('--vghubert_layer', type=int, choices=[0,1,2,3,4,5,6,7,8,9,10,11])
     parser.add_argument('--new_feature', type=str)
     parser.add_argument('--output-dir', '-o', type=str)
     args = parser.parse_args()
@@ -205,16 +203,16 @@ if __name__ == '__main__':
                                   attention_boundaries=False)
     run(coco_json[args.data_split], wav2wordseg, word_list_file, word_alignment_file)
 
-    ## (Optional) Step 2.2.1: convert attention boundaries to word boundaries
-    #attn_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_attn_list-' + basename + '.npy')
-    #word_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_word_list-' + basename + '.npy')
-    #print('converting pred_attn_list %s\nto pred_word_list %s\n' % (attn_list_file, word_list_file))
-    #convert_attention_boundary_to_word_boundary(attn_list_file, word_list_file)
+    # (Optional) Step 2.2.1: convert attention boundaries to word boundaries
+    attn_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_attn_list-' + basename + '.npy')
+    word_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_word_list-' + basename + '.npy')
+    print('converting pred_attn_list %s\nto pred_word_list %s\n' % (attn_list_file, word_list_file))
+    convert_attention_boundary_to_word_boundary(attn_list_file, word_list_file)
    
-    ## (Optional) Step 2.2.2: generate alignment based on word boundaries 
-    #word_alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-word_alignment_via_max_weight_matching-' + basename + '.npy')
-    #print('storing pred_word_list at %s\nstoring alignment at %s\n' % (word_list_file, word_alignment_file))
-    #run(coco_json[args.data_split], None, word_list_file, word_alignment_file)
+    # (Optional) Step 2.2.2: generate alignment based on word boundaries 
+    word_alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-word_alignment_via_max_weight_matching-' + basename + '.npy')
+    print('storing pred_word_list at %s\nstoring alignment at %s\n' % (word_list_file, word_alignment_file))
+    run(coco_json[args.data_split], None, word_list_file, word_alignment_file)
 
     # (Optional) Step 2.3: generete additional (duration-based) alignments based on existing attn_list/word_list
     attn_list_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_attn_list-' + basename + '.npy')
@@ -228,11 +226,24 @@ if __name__ == '__main__':
     word_alignment_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-word_alignment_via_max_weight_duration_matching-' + basename + '.npy')
     print('storing pred_word_list at %s\nstoring alignment at %s\n' % (word_list_file, word_alignment_file))
     run(coco_json[args.data_split], None, word_list_file, word_alignment_file, weighting_via_l1=False)
-
+    
     # Step 3: pre-store Jason's default feature
     seg_feat_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-pred_seg_feat-' + basename + '.npy')
     wav2wordseg = read_jason_file(args.data_dir, 
                                   osp.join(args.data_dir, 'Jason_word_discovery', args.new_feature, args.data_split + '_data_dict.pkl'), 
                                   boundaries_only=False)
+    print('storing pred_seg_feat at %s' % seg_feat_file)
+    run_seg_feat(coco_json[args.data_split], wav2wordseg, seg_feat_file)
+
+    # (Optional) Step 3.1: extract and pre-store Jason's default feature
+    seg_feat_file = osp.join(args.output_dir, f'{args.data_split}-{args.new_feature}-disc-81_snapshot15_layer${args.vghubert_layer}-pred_seg_feat-' + basename + '.npy')
+    device = 'cuda'
+    upstream_model = setup_vg_hubert(model_type='disc-81', snapshot='15', device=device) # load disc-81, snapshot 15
+    wav2wordseg = read_jason_file(args.data_dir, 
+                                  osp.join(args.data_dir, 'Jason_word_discovery', args.new_feature, args.data_split + '_data_dict.pkl'), 
+                                  boundaries_only=False, 
+                                  upstream_model=upstream_model, 
+                                  upstream_model_layer=args.vghubert_layer, 
+                                  device=device)
     print('storing pred_seg_feat at %s' % seg_feat_file)
     run_seg_feat(coco_json[args.data_split], wav2wordseg, seg_feat_file)

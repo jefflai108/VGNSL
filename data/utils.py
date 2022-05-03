@@ -144,11 +144,20 @@ def hubert_feature_extraction(input_utterance_pth, upstream_model,
 
     return numpy_reps, n_frames
 
+def cls_weighted_mean_pooling(boundaries, feats, cls_attn_weights, spf):
+    seg_feats = []
+    cls_attn_weights_sum = cls_attn_weights
+    for t_s, t_e in boundaries:
+        t_s, t_e = int(t_s/spf), int(t_e/spf)+1
+        seg_feats.append((feats[t_s:t_e]*(cls_attn_weights_sum[t_s:t_e]/cls_attn_weights_sum[t_s:t_e].sum()).unsqueeze(1)).sum(0).cpu())
+    return seg_feats
+
 def vghubert_feature_extraction(input_utterance_pth, model,
-                                layer=11, device='cuda'):
+                                layer=11, device='cuda', 
+                                cls_mean_pool=False, spf=None, boundaries=None):
     # extract vg-hubert feature on GPU with torch. 
     # return specified layer's representation: 0, 1, 2, ...., 11 (start with transformer_block1)
-
+    
     # load wavefile 
     y, native_sample_rate = librosa.load(input_utterance_pth)
     
@@ -168,8 +177,17 @@ def vghubert_feature_extraction(input_utterance_pth, model,
         # extract the representations
         reps = [item.squeeze(0)[1:] for item in w2v2_out['layer_features']] # [1, T+1, D] -> [T, D]
         reps = reps[0]
+        #print(reps.shape) # torch.Size([230, 768])
+        if cls_mean_pool: 
+            attn_weights = w2v2_out['attn_weights'].squeeze(0) # [1, num_heads, tgt_len, src_len] -> [num_heads, tgt_len, src_len]
+            cls_attn_weights = attn_weights[0, 1:] # [num_heads, tgt_len, src_len] -> [n_h, T]
+            
+            # weighted by [CLS] attention
+            reps = cls_weighted_mean_pooling(boundaries, reps, cls_attn_weights, spf)
+            reps = torch.stack(reps, 0)
+            #print(reps.shape) # torch.Size([13, 768])
         numpy_reps = np.transpose(reps.detach().cpu().numpy())
-    n_frames = numpy_reps.shape[1]
+        n_frames = numpy_reps.shape[1]
 
     return numpy_reps, n_frames
 
@@ -235,8 +253,6 @@ if __name__ == '__main__':
     # setup upstream model first 
     frame_stride=0.02
     HUBERT = getattr(hub, 'hubert_base')()
-    HUBERT = getattr(hub, 'content_vec_v07_11')()
-    HUBERT = getattr(hub, 'content_vec_v12_05')()
     # load pre-trained model 
     if torch.cuda.is_available(): 
         device = 'cuda'
@@ -263,3 +279,22 @@ if __name__ == '__main__':
     # example concatenating the extracted hubert and vghubert representations
     concat_hubert_and_vghubert_repre = np.concatenate((hubert_repre, vghubert_repre), axis=0)
     print(concat_hubert_and_vghubert_repre.shape) # (1536, 264)
+    print('************************************')
+
+    # example extracting seg_feats VG-hubert (w/ [CLS] attention weighting)
+    wav_file = 'wavs/train/392/m3h8xuyggvigfx-3UOUJI6MTDEYG9C1DSM8RAHBHXQUX1_455974_141516.wav'
+    wav_file_fixed = 'data/SpokenCOCO/wavs-speaker/m3h8xuyggvigfx/m3h8xuyggvigfx-3UOUJI6MTDEYG9C1DSM8RAHBHXQUX1_455974_141516.wav'
+    with open('data/SpokenCOCO/Jason_word_discovery/mbr_104_1030_top10/test_data_dict.pkl', 'rb') as f: 
+        data = pickle.load(f)
+    attn_boundaries = data[wav_file]['boundaries'] # load attention segment boundaries for [CLS]-weighted mean-pool 
+    spf = data[wav_file]['spf']
+    upstream_model = setup_vg_hubert(model_type='disc-81', snapshot='15', device=device) # load disc-81, snapshot 15 
+    vghubert_repre, vghubert_nframes = vghubert_feature_extraction(wav_file_fixed, 
+                                                                   upstream_model, 
+                                                                   layer=11, 
+                                                                   device=device, 
+                                                                   cls_mean_pool=True, 
+                                                                   spf=spf, 
+                                                                   boundaries=attn_boundaries)
+    print(vghubert_repre.shape, nframes) # (768, 13) 264
+    print('************************************')

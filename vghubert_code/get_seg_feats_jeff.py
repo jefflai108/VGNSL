@@ -24,11 +24,12 @@ from collections import defaultdict
 from operator import itemgetter
 
 
-def extract_feats(boundaries, feats, spf):
-    seg_feats = [[] for j in range(len(feats))]
-    for s, e in boundaries:
-        for j in range(len(feats)):
-            seg_feats[j].append(feats[j][int(s/spf):max(int(e/spf), int(s/spf)+1)])
+def extract_feats(boundaries, feats, cls_attn_weights, spf):
+    seg_feats = []
+	cls_attn_weights_sum = cls_attn_weights.sum(0)
+    for t_s, t_e in boundaries:
+        t_s, t_e = int(t_s/spf), int(t_e/spf)+1
+        seg_feats.append((feats[t_s:t_e]*(cls_attn_weights_sum[t_s:t_e]/cls_attn_weights_sum[t_s:t_e].sum()).unsqueeze(1)).sum(0).cpu())
     return seg_feats
 
 def cls_attn_seg_extract_feats(feats, cls_attn_weights, threshold, spf, no_cls, vad, insert_threshold):
