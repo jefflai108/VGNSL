@@ -198,6 +198,8 @@ if __name__ == '__main__':
                         help='use pretrained davenet')
     parser.add_argument('--use_seg_feats_for_unsup_word_discovery', action='store_true',
                         help='train VG-NSL on pre-stored segment-level feature instead of whole hubert.')
+    parser.add_argument('--seg_feats_feature', 
+                        help='type of seg_feats feature used in training')
     parser.add_argument('--unsup_word_discovery_feat_type', default='word', type=str, 
                         help='Use word or attention boundary from unsupervised word discovery', 
                         choices = ['word', 'attn'])
@@ -230,6 +232,7 @@ if __name__ == '__main__':
                                    'disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadno_insertThreshold0.2_snapshotbest',
                                    'disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadno_insertThreshold0.2_snapshotbest',
                                    'disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadno_insertThreshold0.2_snapshotbest',
+                                   'mbr_104_1030_top10', 
                                     ]
                         )
     parser.add_argument('--davenet_embed_type', default='RDVQ_00000', type=str,
@@ -335,7 +338,7 @@ if __name__ == '__main__':
         opt.data_path, vocab, opt.basename, opt.batch_size, opt.workers, opt.feature, opt.feature_cmvn, opt.speech_hdf5, 
         opt.discretized_phone, opt.discretized_word, opt.km_clusters, opt.phn_force_align, opt.diffbound_gtword, 
         opt.dino_feature, opt.img_dim, opt.unsup_word_discovery_feats, opt.unsup_word_discovery_feat_type, 
-        opt.use_seg_feats_for_unsup_word_discovery, opt.uniform_word_force_align,
+        opt.use_seg_feats_for_unsup_word_discovery, opt.seg_feats_feature, opt.uniform_word_force_align,
         opt.word_mask_ratio
     )
 

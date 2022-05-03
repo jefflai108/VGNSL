@@ -145,7 +145,7 @@ class H5PrecompDataset(PrecompDataset):
                  load_img=True, img_dim=2048, feature='logmelspec', utt_cmvn=False, 
                  phn_force_align=False, uniform_word_force_align=False, diffbound_gtword=False, dino_feature=None, 
                  unsup_word_discovery_feats=None, unsup_word_discovery_feat_type=None, 
-                 use_seg_feats_for_unsup_word_discovery=False, test_time_oracle_segmentation=False, 
+                 use_seg_feats_for_unsup_word_discovery=False, seg_feats_feature=None, test_time_oracle_segmentation=False, 
                  word_mask_ratio=0.0):
 
         self.data_split = data_split 
@@ -159,6 +159,7 @@ class H5PrecompDataset(PrecompDataset):
         self.unsup_word_discovery_feats = unsup_word_discovery_feats
         self.unsup_word_discovery_feat_type = unsup_word_discovery_feat_type
         self.use_seg_feats_for_unsup_word_discovery = use_seg_feats_for_unsup_word_discovery
+        self.seg_feats_feature = seg_feats_feature
         self.test_time_oracle_segmentation = test_time_oracle_segmentation
         self.word_mask_ratio = word_mask_ratio
 
@@ -200,7 +201,11 @@ class H5PrecompDataset(PrecompDataset):
             if self.test_time_oracle_segmentation: 
                 print('not implemented yet')
             self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_{self.unsup_word_discovery_feat_type}_list-{basename}.npy'), allow_pickle=True)[0]
-            #self.vg_hubert_seg_feats = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_seg_feat-{basename}.npy'), allow_pickle=True)[0] # for training on seg_feats only
+            if self.seg_feats_feature: # load specific seg_feats  
+                print('load customed seg_feats!')
+                self.vg_hubert_seg_feats = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-{self.seg_feats_feature}-pred_seg_feat-{basename}.npy'), allow_pickle=True)[0] # for training on seg_feats only
+            else: # default seg_feats 
+                self.vg_hubert_seg_feats = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_seg_feat-{basename}.npy'), allow_pickle=True)[0] # for training on seg_feats only
 
             #assert self.vg_hubert_seg_feats[22].shape[-1] == self.feature_embed_obj[str(22)][:].shape[-1] # for training on seg_feats only
                       
@@ -302,8 +307,8 @@ class H5PrecompDataset(PrecompDataset):
             masked_out_word_idx = random.sample(list(range(num_of_words)), int(num_of_words * self.word_mask_ratio))
         else: masked_out_word_idx = []
         seg_feat[masked_out_word_idx] = 0.0
-
-        return seg_feat, num_of_words
+        
+        return torch.tensor(seg_feat), num_of_words
 
     def __getitem__(self, index):
         # get image 
@@ -598,6 +603,7 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
                        unsup_word_discovery_feats=None, 
                        unsup_word_discovery_feat_type='word', 
                        use_seg_feats_for_unsup_word_discovery=False, 
+                       seg_feats_feature=None, 
                        test_time_oracle_segmentation=False, 
                        word_mask_ratio=0.0):
     if speech_hdf5: # whole utterance, support for logmelspec and hubert 
@@ -613,7 +619,7 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
             dset = H5PrecompDataset(data_path, data_split, vocab, basename, load_img, img_dim, feature, utt_cmvn,
                                     phn_force_align, uniform_word_force_align, diffbound_gtword, dino_feature,
                                     unsup_word_discovery_feats, unsup_word_discovery_feat_type, 
-                                    use_seg_feats_for_unsup_word_discovery, test_time_oracle_segmentation, 
+                                    use_seg_feats_for_unsup_word_discovery, seg_feats_feature, test_time_oracle_segmentation, 
                                     word_mask_ratio)
             data_loader = torch.utils.data.DataLoader(
                 dataset=dset, batch_size=batch_size, shuffle=shuffle,
@@ -634,7 +640,7 @@ def get_precomp_loader(data_path, data_split, vocab, basename,
 def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='logmelspec', utt_cmvn=False, speech_hdf5=False, 
                      discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False, diffbound_gtword=False, 
                      dino_feature=None, img_dim=2048, unsup_word_discovery_feats=None, unsup_word_discovery_feat_type='word', 
-                     use_seg_feats_for_unsup_word_discovery=False, uniform_word_force_align=False, 
+                     use_seg_feats_for_unsup_word_discovery=False, seg_feats_feature=None, uniform_word_force_align=False, 
                      word_mask_ratio=0.0):
 
     assert discretized_phone & discretized_word == False
@@ -645,7 +651,7 @@ def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='
         phn_force_align=phn_force_align, uniform_word_force_align=uniform_word_force_align, diffbound_gtword=diffbound_gtword, 
         dino_feature=dino_feature, img_dim=img_dim, 
         unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
-        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, 
+        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, seg_feats_feature=seg_feats_feature, 
         word_mask_ratio=word_mask_ratio
     )
     val_loader = get_precomp_loader(
@@ -654,7 +660,7 @@ def get_train_loaders(data_path, vocab, basename, batch_size, workers, feature='
         phn_force_align=phn_force_align, uniform_word_force_align=uniform_word_force_align, diffbound_gtword=diffbound_gtword, 
         dino_feature=dino_feature, img_dim=img_dim, 
         unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
-        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, 
+        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, seg_feats_feature=seg_feats_feature,
         word_mask_ratio=word_mask_ratio
     )
     return train_loader, val_loader
@@ -664,7 +670,7 @@ def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
                     feature='logmelspec', speech_hdf5=False, load_img=False, img_dim=2048, utt_cmvn=False, 
                     discretized_phone=False, discretized_word=False, km_clusters=0, phn_force_align=False, diffbound_gtword=False,
                     dino_feature=None, unsup_word_discovery_feats=None, unsup_word_discovery_feat_type='word', 
-                    use_seg_feats_for_unsup_word_discovery=False, uniform_word_force_align=False, 
+                    use_seg_feats_for_unsup_word_discovery=False, seg_feats_feature=None, uniform_word_force_align=False, 
                     test_time_oracle_segmentation=False, 
                     word_mask_ratio=0.0):
 
@@ -677,7 +683,7 @@ def get_eval_loader(data_path, split_name, vocab, basename, batch_size, workers,
         phn_force_align=phn_force_align, uniform_word_force_align=uniform_word_force_align, diffbound_gtword=diffbound_gtword, 
         dino_feature=dino_feature, img_dim=img_dim, 
         unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
-        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, 
+        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, seg_feats_feature=seg_feats_feature,
         test_time_oracle_segmentation=test_time_oracle_segmentation, 
         word_mask_ratio=word_mask_ratio
     )
