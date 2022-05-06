@@ -11,8 +11,9 @@ seg_feats_feature=disc-81_snapshot15_layer0
 seg_feats_feature=$5
 discovery_type=attn # seg_feats + attention boundaries
 datadir=data/SpokenCOCO
-#expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_seg_feats_${seg_feats_feature}_embed${embed_size}_MLPcombineV2_lr${lr}_${basename} # mlp_combine_v2 + deeper_score
-expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_seg_feats_${seg_feats_feature}_embed${embed_size}_MLPcombineV3_lr${lr}_${basename} # mlp_combine_v3 + deeper_score
+expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_seg_feats_${seg_feats_feature}_embed${embed_size}_MLPcombine_lr${lr}_${basename} # mlp_combine_v2
+expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_seg_feats_${seg_feats_feature}_embed${embed_size}_MLPcombineV2_lr${lr}_${basename} # mlp_combine_v2 + deeper_score
+#expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_seg_feats_${seg_feats_feature}_embed${embed_size}_MLPcombineV3_lr${lr}_${basename} # mlp_combine_v3 + deeper_score
 echo $expdir
 
 python src/train.py --logger_name $expdir \
@@ -22,5 +23,7 @@ python src/train.py --logger_name $expdir \
     --embed_size ${embed_size} --feature_dim ${feature_dim} --learning_rate ${lr} \
     --speech_hdf5 --feature ${feature} --load_pretrained \
     --unsup_word_discovery_feats $jason_feats --unsup_word_discovery_feat_type ${discovery_type} --use_seg_feats_for_unsup_word_discovery --seg_feats_feature $seg_feats_feature \
-    --mlp_combine_v3 --deeper_score
+    --mlp_combine_v2 --deeper_score
+    #--mlp_combine
     #--mlp_combine_v2 --deeper_score
+    #--mlp_combine_v3 --deeper_score

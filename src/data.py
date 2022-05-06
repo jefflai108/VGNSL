@@ -202,7 +202,6 @@ class H5PrecompDataset(PrecompDataset):
                 print('not implemented yet')
             self.feature_wordlist = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_{self.unsup_word_discovery_feat_type}_list-{basename}.npy'), allow_pickle=True)[0]
             if self.seg_feats_feature: # load specific seg_feats  
-                print('load customed seg_feats!')
                 self.vg_hubert_seg_feats = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-{self.seg_feats_feature}-pred_seg_feat-{basename}.npy'), allow_pickle=True)[0] # for training on seg_feats only
             else: # default seg_feats 
                 self.vg_hubert_seg_feats = np.load(os.path.join(data_path, f'{data_split}-{self.unsup_word_discovery_feats}-pred_seg_feat-{basename}.npy'), allow_pickle=True)[0] # for training on seg_feats only

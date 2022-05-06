@@ -304,6 +304,9 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
     if hasattr(opt, 'use_seg_feats_for_unsup_word_discovery'): 
         use_seg_feats_for_unsup_word_discovery = opt.use_seg_feats_for_unsup_word_discovery
     else: use_seg_feats_for_unsup_word_discovery = False 
+    if hasattr(opt, 'seg_feats_feature'): 
+        seg_feats_feature = opt.seg_feats_feature
+    else: seg_feats_feature = None
     if hasattr(opt, 'unsup_word_discovery_feat_type'): 
         unsup_word_discovery_feat_type = opt.unsup_word_discovery_feat_type
     else: unsup_word_discovery_feat_type = None 
@@ -313,22 +316,20 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
     if hasattr(opt, 'uniform_word_force_align'): 
         uniform_word_force_align = opt.uniform_word_force_align
     else: uniform_word_force_align = False 
-   
-    #opt.feature = 'hubert2' # hack, due to feature files moved to temp/ to create space for scratch/; delete this shit later
     
     if visual_tree: 
         eval_batch_size = 1 
     elif export_tree: # smaller batch size to avoid mem error
         eval_batch_size = 128
     else: eval_batch_size = opt.batch_size
-
+    
     data_loader = get_eval_loader(
         data_path, data_split, vocab, basename, eval_batch_size, 1,
         feature=opt.feature, load_img=False, img_dim=opt.img_dim, utt_cmvn=use_cmvn, speech_hdf5=opt.speech_hdf5, 
         discretized_phone=use_discretized_phone, discretized_word=use_discretized_word, km_clusters=km_clusters, 
         phn_force_align=phn_force_align, diffbound_gtword=diffbound_gtword, dino_feature=dino_feature, 
         unsup_word_discovery_feats=unsup_word_discovery_feats, unsup_word_discovery_feat_type=unsup_word_discovery_feat_type, 
-        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, uniform_word_force_align=uniform_word_force_align, 
+        use_seg_feats_for_unsup_word_discovery=use_seg_feats_for_unsup_word_discovery, seg_feats_feature=seg_feats_feature, uniform_word_force_align=uniform_word_force_align, 
         test_time_oracle_segmentation=test_time_oracle_segmentation
     )
     
