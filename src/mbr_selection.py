@@ -92,6 +92,7 @@ def run(pred_tree_dir_list, unsup_word_discovery_feats=None, unsup_word_discover
     for i in tqdm(range(25000)): 
         pred_tree_samples = [pred_tree[i] for pred_tree in pred_trees] # outputs from different model/ckpt given an input
         output = mbr_selection(pred_tree_samples, key_function=pairwise_f1_score_for_mbr)
+        print(output['best_sample'])
         mbr_selected_trees.append(output['best_sample'])
 
     # calculate corpus-level F1 against ground-truth 
@@ -103,6 +104,25 @@ def run(pred_tree_dir_list, unsup_word_discovery_feats=None, unsup_word_discover
     print(f'MBR F1 for {pred_tree_dir} is {f1:.3f}')
 
 if __name__ == '__main__':
+
+    ######################################################################## write MBR selection outputs to file ###########################################################################################
+    # finished: 
+    # exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k
+    # exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k
+    # exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k 
+    # exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k
+    # exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k
+    # exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k
+    # 
+
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr'])
+    exit()
 
     ######################################################################## MBR selection for phn_MFA diffBounad whole_hubert #############################################################################
     # run MBR for phn MFA diffboundary V0

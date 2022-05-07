@@ -167,7 +167,7 @@ def encode_data(data_path, basename, model, data_loader, log_step=10, logging=pr
         trees, ground_truth, unsup_discovered_word_alignments, _, _, _, _ = _cleanup_tree(trees, ground_truth, unsup_discovered_word_alignments)
         f1 = ex_sparseval_f1(ground_truth, trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
     else: # normal corpus f1
-        f1, _, _ =  f1_score(trees, ground_truth)
+        f1, _, _ =  f1_score(trees, ground_truth, data_split='val')
     logging(f'validation tree f1 score is {f1}')
 
     return img_embs, cap_embs
@@ -438,7 +438,7 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
             start_id, end_id = ids[0], ids[-1]
             for tree in trees: 
                 export_tree_writer.write('%s\n' % tree)
-            f1, _, _ = f1_score(trees, ground_truth[start_id:end_id+1], all_captions[start_id:end_id+1])
+            f1, _, _ = f1_score(trees, ground_truth[start_id:end_id+1], all_captions[start_id:end_id+1], data_split=data_split)
             print(f'Current batch tree f1 is {f1}')
             del trees, candidate_trees
             torch.cuda.empty_cache()
@@ -492,7 +492,7 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
             c_rf1 /= 5
             print(f'\tCorpus sparseval F1: {c_rf1:.3f}')
     else: # normal corpus f1
-        f1, _, _ = f1_score(trees, ground_truth, all_captions, visual_tree, constituent_recall)
+        f1, _, _ = f1_score(trees, ground_truth, all_captions, visual_tree, constituent_recall, data_split=data_split)
 
     return f1
 
@@ -581,13 +581,14 @@ def _cleanup_tree(orig_produced_trees, orig_gold_trees, unsup_discovered_word_al
 
     return orig_produced_trees, orig_gold_trees, unsup_discovered_word_alignments, unsup_discovered_word_timestamp, unsup_discovered_attn_timestamp, oracle_word_timestamp, wav_filenames
 
-def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False, constituent_recall_analysis=False):
+def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=False, constituent_recall_analysis=False, data_split='val'):
     orig_produced_trees, orig_gold_trees, _, _, _, _, _ = _cleanup_tree(orig_produced_trees, orig_gold_trees)
 
     # double-check underlying word/phn sequence match 
     orig_gold_trees_text = [_retrieve_text_from_tree(orig_gold_tree) for orig_gold_tree in orig_gold_trees]
     orig_produced_trees_text = [_retrieve_text_from_tree(orig_produced_tree) for orig_produced_tree in orig_produced_trees]
-    assert orig_gold_trees_text == orig_produced_trees_text # underlying words/phones should match. 
+    if data_split != 'train': # ignore mismatch cases for train due to self-training
+        assert orig_gold_trees_text == orig_produced_trees_text # underlying words/phones should match. 
 
     # constituency recall analysis 
     if constituent_recall_analysis:

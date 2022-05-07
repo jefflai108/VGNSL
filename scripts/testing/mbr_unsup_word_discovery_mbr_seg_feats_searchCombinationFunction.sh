@@ -11,7 +11,8 @@ seg_feats_feature=$5
 discovery_type=attn # seg_feats + attention boundaries
 
 datadir=data/SpokenCOCO
-expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_seg_feats_${seg_feats_feature}_embed${embed_size}_MLPcombineV2_lr${lr}_${basename} # mlp_combine_v2 + deeper_score
+expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_seg_feats_${seg_feats_feature}_embed${embed_size}_MLPcombine_lr${lr}_${basename} # mlp_combine
+#expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_seg_feats_${seg_feats_feature}_embed${embed_size}_MLPcombineV2_lr${lr}_${basename} # mlp_combine_v2 + deeper_score
 #expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_seg_feats_${seg_feats_feature}_embed${embed_size}_MLPcombineV3_lr${lr}_${basename} # mlp_combine_v3 + deeper_score
 echo $expdir
 
