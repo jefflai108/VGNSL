@@ -15,12 +15,17 @@ expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_s
 expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_seg_feats_${seg_feats_feature}_embed${embed_size}_MLPcombineV2_lr${lr}_${basename} # mlp_combine_v2 + deeper_score
 expdir=exp/spokencoco/mbr_unsup_${discovery_type}_discovery_${jason_feats}_mbr_seg_feats_${seg_feats_feature}_embed${embed_size}_MLPcombineV3_lr${lr}_${basename} # mlp_combine_v3 + deeper_score
 echo $expdir
+mkdir -p ${expdir}/mbr # for test
+mkdir -p ${expdir}/mbr-self_train # for train/val 
 
 i=0
 while [ $i -ne 20 ]; do  
     if [ -f ${expdir}/${i}.pth.tar ]; then
         #echo evaluating ${i}.pth.tar
-        python src/test.py --data_path ${datadir}/Freda-formatting/ --candidate ${expdir}/${i}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab-threshold1.pkl --basename ${basename}
+        split=train
+        python src/test.py --data_path ${datadir}/Freda-formatting/ --candidate ${expdir}/${i}.pth.tar --vocab_path ${datadir}/SpokenCOCO_vocab-threshold1.pkl --basename ${basename} \
+                           --mbr_path ${expdir}/mbr-self_train/${i}_pred_tree-${split}.txt \
+                           --data_split $split
     fi 
     i=$(($i+1))
 done

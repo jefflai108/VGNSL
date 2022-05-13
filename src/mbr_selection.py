@@ -46,7 +46,7 @@ def pairwise_f1_score_for_mbr(orig_produced_trees, orig_gold_trees):
     # double-check underlying word/phn sequence match 
     orig_gold_trees_text = [_retrieve_text_from_tree(orig_gold_tree) for orig_gold_tree in orig_gold_trees]
     orig_produced_trees_text = [_retrieve_text_from_tree(orig_produced_tree) for orig_produced_tree in orig_produced_trees]
-    assert orig_gold_trees_text == orig_produced_trees_text # underlying words/phones should match. 
+    #assert orig_gold_trees_text == orig_produced_trees_text # underlying words/phones should match. 
 
     # compute f1 score over spans 
     gold_trees = list(map(lambda tree: extract_spans(tree), orig_gold_trees))
@@ -63,6 +63,8 @@ def pairwise_f1_score_for_mbr(orig_produced_trees, orig_gold_trees):
         return 0
     precision = float(precision_cnt) / precision_denom * 100.0
     recall = float(recall_cnt) / recall_denom * 100.0
+    if precision == 0 and recall == 0: 
+        return 0
     f1 = 2 * precision * recall / (precision + recall)
        
     return f1
@@ -74,46 +76,237 @@ def _open_tree_file(tree_file):
 
     return content
 
-def run(pred_tree_dir_list, unsup_word_discovery_feats=None, unsup_word_discovery_feat_type=None): 
+def run(pred_tree_dir_list, unsup_word_discovery_feats=None, unsup_word_discovery_feat_type=None, data_split='test', output_fpath=None): 
     # standard files
-    ground_truth_trees = _open_tree_file('data/SpokenCOCO/Freda-formatting/test_word-level-ground-truth-83k-5k-5k.txt')
+    ground_truth_trees = _open_tree_file(f'data/SpokenCOCO/Freda-formatting/{data_split}_word-level-ground-truth-83k-5k-5k.txt')
     if unsup_word_discovery_feats: 
-        unsup_discovered_word_alignments = np.load(f'data/SpokenCOCO/Freda-formatting/test-{unsup_word_discovery_feats}-{unsup_word_discovery_feat_type}_alignment_via_max_weight_matching-83k-5k-5k.npy', allow_pickle=True)[0]
+        unsup_discovered_word_alignments = np.load(f'data/SpokenCOCO/Freda-formatting/{data_split}-{unsup_word_discovery_feats}-{unsup_word_discovery_feat_type}_alignment_via_max_weight_matching-83k-5k-5k.npy', allow_pickle=True)[0]
         unsup_discovered_word_alignments = list(unsup_discovered_word_alignments.values())
 
     # open all ckpt's pred_trees
     pred_tree_files = []
     for pred_tree_dir in pred_tree_dir_list:
         pred_tree_files.extend([osp.join(pred_tree_dir, f) for f in os.listdir(pred_tree_dir) if osp.isfile(osp.join(pred_tree_dir, f))])
+    if data_split in ['val', 'train']: # filter out val/train tree files 
+        pred_tree_files = [pred_tree_file for pred_tree_file in pred_tree_files if ('-' + data_split + '.txt') in pred_tree_file]
     pred_trees = [_open_tree_file(pred_tree_file) for pred_tree_file in pred_tree_files]
 
     # mbr selection across ckpts
     mbr_selected_trees = []
-    for i in tqdm(range(25000)): 
+    for i in tqdm(range(len(ground_truth_trees))): 
         pred_tree_samples = [pred_tree[i] for pred_tree in pred_trees] # outputs from different model/ckpt given an input
         output = mbr_selection(pred_tree_samples, key_function=pairwise_f1_score_for_mbr)
-        print(output['best_sample'])
         mbr_selected_trees.append(output['best_sample'])
 
     # calculate corpus-level F1 against ground-truth 
     if unsup_word_discovery_feats: 
-        mbr_selected_trees, ground_truth_trees, unsup_discovered_word_alignments = _cleanup_tree(mbr_selected_trees, ground_truth_trees, unsup_discovered_word_alignments)
+        mbr_selected_trees, ground_truth_trees, unsup_discovered_word_alignments, _, _, _, _ = _cleanup_tree(mbr_selected_trees, ground_truth_trees, unsup_discovered_word_alignments)
         f1 = ex_sparseval_f1(ground_truth_trees, mbr_selected_trees, unsup_discovered_word_alignments, is_baretree=True) # careful of the ordering: gold_trees --> pred_trees
     else:
-        f1, _, _ = corpus_level_f1_score(mbr_selected_trees, ground_truth_trees)
+        f1, _, _ = corpus_level_f1_score(mbr_selected_trees, ground_truth_trees, data_split=data_split)
     print(f'MBR F1 for {pred_tree_dir} is {f1:.3f}')
 
+    # write to output fpath 
+    if output_fpath:
+        with open(output_fpath, 'w') as f: 
+            for mbr_tree in mbr_selected_trees: 
+                f.write('%s\n' % mbr_tree)
+
 if __name__ == '__main__':
+    ########################################################## MBR selection for MBR_unsup-discovery MBR_seg_feats (fully-unsup setting) ##################################################################
+    # MBR across epoches and hubert layers but the same learning rate
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'],
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'],
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+
+    # MBR across epoches but within a hyper-parameter set
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn')
 
     ######################################################################## write MBR selection outputs to file ###########################################################################################
-    # finished: 
-    # exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k
-    # exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k
-    # exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k 
-    # exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k
-    # exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k
-    # exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k
-    # 
+    # write MBR decode outputs to file for phn_force_aligned_diffboundV1-gtword_whole_huberts_embed512_lr5e-6_83k-5k-5k
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/phn_force_aligned_diffboundV1-gtword_whole_huberts_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/phn_force_aligned_diffboundV1-gtword_whole_huberts_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr', 
+        'exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/phn_force_aligned_diffboundV1-gtword_whole_huberts_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/phn_force_aligned_diffboundV1-gtword_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/phn_force_aligned_diffboundV1-gtword_whole_hubert4_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/phn_force_aligned_diffboundV1-gtword_whole_hubert6_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/phn_force_aligned_diffboundV1-gtword_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/phn_force_aligned_diffboundV1-gtword_whole_hubert4_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/phn_force_aligned_diffboundV1-gtword_whole_hubert6_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert2_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/phn_force_aligned_diffboundV1-gtword_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert4_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/phn_force_aligned_diffboundV1-gtword_whole_hubert4_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert6_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/phn_force_aligned_diffboundV1-gtword_whole_hubert6_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/phn_force_aligned_diffboundV1-gtword_whole_hubert8_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/phn_force_aligned_diffboundV1-gtword_whole_hubert10_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_margin0.2_lambdahi0_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/phn_force_aligned_diffboundV1-gtword_whole_hubert_embed512_lr5e-6_83k-5k-5k.txt')
+
+    # write MBR decode outputs to file for force_aligned_freezed_{vits16,vits8,vitb8,vitb16,deits}_whole_hubert2_embed512_lr5e-6_83k-5k-5k
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+         data_split = 'val', 
+         output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_whole_huberts_and_freezed_vits_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+         data_split = 'train', 
+         output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_whole_huberts_and_freezed_vits_embed512_lr5e-6_83k-5k-5k.txt')
 
     run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
          'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr', 
@@ -121,8 +314,184 @@ if __name__ == '__main__':
          'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr', 
          'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr', 
          'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr', 
-         'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr'])
-    exit()
+         'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'], 
+         data_split = 'test', 
+         output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_whole_huberts_and_freezed_vits_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_freezed_vits16_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_freezed_vits8_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_freezed_vitb16_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_freezed_vitb8_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_freezed_deit_base_patch16_224_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_freezed_deit_base_distilled_patch16_384_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+
+    # write MBR decode outputs to file for force_aligned_whole_hubert*_embed512_lr5e-6_83k-5k-5k
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+         data_split = 'val', 
+         output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_whole_huberts_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr-self_train', 
+         'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+         data_split = 'train', 
+         output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_whole_huberts_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr', 
+         'exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr'], 
+         data_split = 'test', 
+         output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_whole_huberts_embed512_lr5e-6_83k-5k-5k.txt')
+    
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr-self_train'], 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test', 
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_whole_hubert2_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_whole_hubert4_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_whole_hubert6_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_whole_hubert8_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_whole_hubert10_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_whole_hubert_embed512_lr5e-6_83k-5k-5k.txt')
+    run(['exp/spokencoco/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k/mbr'], 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/force_aligned_whole_hubert_large24_embed512_lr5e-6_83k-5k-5k.txt')
 
     ######################################################################## MBR selection for phn_MFA diffBounad whole_hubert #############################################################################
     # run MBR for phn MFA diffboundary V0

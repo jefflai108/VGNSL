@@ -259,7 +259,7 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
                visual_tree=False, visual_samples=10,
                export_tree=False, export_tree_path=None, 
                constituent_recall=False, duration_based_alignment=False, 
-               test_time_oracle_segmentation=False, mbr_path=None, 
+               test_time_oracle_segmentation=False, mbr_path=None, ljspeech=False,
                right_branching=False, left_branching=False, random_branching=False):
     """ use the trained model to generate parse trees for text """
     # load model and options
@@ -333,7 +333,7 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
         test_time_oracle_segmentation=test_time_oracle_segmentation
     )
     
-    if phn_force_align: # phn-level alignment 
+    if phn_force_align: # phn-level alignment for SpokenCOCO
         ground_truth = [line.strip().lower() for line in open(
             os.path.join(data_path, f'{data_split}_phn-level-ground-truth-{basename}.txt'))]
         all_captions = [line.strip() for line in open(
@@ -344,7 +344,12 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
                 os.path.join(data_path, f'{data_split}_word-level-ground-truth-{basename}.txt'))]
             all_captions = [line.strip() for line in open(
                 os.path.join(data_path, f'{data_split}_caps-{basename}.txt'))]
-    else: # word-level alignment 
+    elif ljspeech: # load alignment for LJ
+        ground_truth = [line.strip() for line in open(
+            os.path.join(data_path, f'{data_split}_ground-truth-{basename}.txt'))]
+        all_captions = [line.strip() for line in open(
+            os.path.join(data_path, f'{data_split}_caps-{basename}.txt'))]
+    else: # word-level alignment for SpokenCOCO
         ground_truth = [line.strip() for line in open(
             os.path.join(data_path, f'{data_split}_word-level-ground-truth-{basename}.txt'))]
         all_captions = [line.strip() for line in open(
@@ -587,7 +592,8 @@ def f1_score(orig_produced_trees, orig_gold_trees, captions=None, visual_tree=Fa
     # double-check underlying word/phn sequence match 
     orig_gold_trees_text = [_retrieve_text_from_tree(orig_gold_tree) for orig_gold_tree in orig_gold_trees]
     orig_produced_trees_text = [_retrieve_text_from_tree(orig_produced_tree) for orig_produced_tree in orig_produced_trees]
-    if data_split != 'train': # ignore mismatch cases for train due to self-training
+
+    if data_split in ['val', 'test']: # ignore mismatch cases for train due to self-training
         assert orig_gold_trees_text == orig_produced_trees_text # underlying words/phones should match. 
 
     # constituency recall analysis 
