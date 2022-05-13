@@ -25,6 +25,8 @@ def corpus_f1(pred_trees, gold_trees):
     cnt_spans_rec = 0
     cnt_spans_matched = 0
     for pred, gold in zip(pred_trees, gold_trees):
+        if len(gold.split()) == 1: # single word only (very rare)
+            continue 
         pred_spans = set(BareTree.spans(BareTree.fromstring(pred)))
         gold_spans = set(BareTree.spans(BareTree.fromstring(gold)))
         matched_spans = pred_spans.intersection(gold_spans)
@@ -44,6 +46,8 @@ def sentence_f1(pred_trees, gold_trees):
     accu_f1_score = 0
     cnt_instances = 0
     for pred, gold in zip(pred_trees, gold_trees):
+        if len(gold.split()) == 1: # single word only (very rare)
+            continue 
         pred_spans = set(BareTree.spans(BareTree.fromstring(pred)))
         gold_spans = set(BareTree.spans(BareTree.fromstring(gold)))
         matched_spans = pred_spans.intersection(gold_spans)

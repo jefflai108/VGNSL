@@ -20,20 +20,42 @@
 # use Yung-Sung's latest MFA install
 source /data/sls/r/u/yungsung/home/miniconda3/bin/activate
 
-datadir=data/SpokenCOCO
-python data/parallel_aligner.py \
-    -d ${datadir}/wavs-speaker -c ${datadir} -l ${datadir}/done_alignment_speakers_list2.txt -N 20 -n $1
+stage=2
 
-#datadir=data/SpokenCOCO
-#for spkdir in $datadir/wavs-speaker/*; do
-#    #echo $spkdir
-#    targetdir="${spkdir/wavs-speaker/wavs-speaker-aligned}"
-#    #echo $targetdir
-#
-#    echo aligning $spkdir 
-#    echo '$spkdir' >> done_alignment_speakers_list.txt
-#    #mfa align $spkdir $datadir/librispeech-lexicon.txt english $targetdir -t $datadir/.mfa_dump-${spkdir} -j 10 -v --debug --clean
-#
-#    # adapt pre-trained Librispeech to SpokenCOCO, then align. API: https://montreal-forced-aligner.readthedocs.io/en/latest/user_guide/workflows/adapt_acoustic_model.html
-#    mfa adapt $spkdir $datadir/librispeech-lexicon.txt english $targetdir -t $datadir/.mfa_adapt-${spkdir} -j 10 -v --debug --clean
-#done
+if [ $stage -eq 0 ]; then 
+    # SpokenCOCO parallelized 
+    datadir=data/SpokenCOCO
+    python data/parallel_aligner.py \
+        -d ${datadir}/wavs-speaker -c ${datadir} -l ${datadir}/done_alignment_speakers_list2.txt -N 20 -n $1
+fi 
+
+if [ $stage -eq 1 ]; then 
+    # SpokenCOCO default 
+    datadir=data/SpokenCOCO
+    for spkdir in $datadir/wavs-speaker/*; do
+        #echo $spkdir
+        targetdir="${spkdir/wavs-speaker/wavs-speaker-aligned}"
+        #echo $targetdir
+
+        echo aligning $spkdir 
+        echo '$spkdir' >> done_alignment_speakers_list.txt
+        #mfa align $spkdir $datadir/librispeech-lexicon.txt english $targetdir -t $datadir/.mfa_dump-${spkdir} -j 10 -v --debug --clean
+
+        # adapt pre-trained Librispeech to SpokenCOCO, then align. API: https://montreal-forced-aligner.readthedocs.io/en/latest/user_guide/workflows/adapt_acoustic_model.html
+        mfa adapt $spkdir $datadir/librispeech-lexicon.txt english $targetdir -t $datadir/.mfa_adapt-${spkdir} -j 10 -v --debug --clean
+    done
+fi 
+
+if [ $stage -eq 2 ]; then
+    # LJspeech default 
+    datadir=data/LJspeech
+    for spkdir in $datadir/*-speaker; do
+        echo $spkdir
+        targetdir=${spkdir}-aligned
+        echo $targetdir
+
+        echo aligning $spkdir 
+        # adapt pre-trained Librispeech to SpokenCOCO, then align. API: https://montreal-forced-aligner.readthedocs.io/en/latest/user_guide/workflows/adapt_acoustic_model.html
+        mfa adapt $spkdir /data/sls/scratch/clai24/data/SpokenCOCO/librispeech-lexicon.txt english $targetdir -t $datadir/.mfa_adapt-${spkdir} -j 4 -v --debug --clean
+    done
+fi 
