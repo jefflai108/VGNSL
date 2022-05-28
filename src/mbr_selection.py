@@ -98,6 +98,12 @@ def run(pred_tree_dir_list, unsup_word_discovery_feats=None, unsup_word_discover
         output = mbr_selection(pred_tree_samples, key_function=pairwise_f1_score_for_mbr)
         mbr_selected_trees.append(output['best_sample'])
 
+    # write to output fpath 
+    if output_fpath:
+        with open(output_fpath, 'w') as f: 
+            for mbr_tree in mbr_selected_trees: 
+                f.write('%s\n' % mbr_tree)
+
     # calculate corpus-level F1 against ground-truth 
     if unsup_word_discovery_feats: 
         mbr_selected_trees, ground_truth_trees, unsup_discovered_word_alignments, _, _, _, _ = _cleanup_tree(mbr_selected_trees, ground_truth_trees, unsup_discovered_word_alignments)
@@ -106,13 +112,267 @@ def run(pred_tree_dir_list, unsup_word_discovery_feats=None, unsup_word_discover
         f1, _, _ = corpus_level_f1_score(mbr_selected_trees, ground_truth_trees, data_split=data_split)
     print(f'MBR F1 for {pred_tree_dir} is {f1:.3f}')
 
-    # write to output fpath 
-    if output_fpath:
-        with open(output_fpath, 'w') as f: 
-            for mbr_tree in mbr_selected_trees: 
-                f.write('%s\n' % mbr_tree)
 
 if __name__ == '__main__':
+
+    ######################################################################## write MBR selection outputs to file ###########################################################################################
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'],
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0-11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'],
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0-11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'],
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0-11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'],
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9-11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train', 
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'],
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9-11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
+        'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'],
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9-11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'test',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/test/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'train',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/train/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+    run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr-self_train'], 
+        unsup_word_discovery_feats = 'mbr_104_1030_top10', 
+        unsup_word_discovery_feat_type = 'attn', 
+        data_split = 'val',
+        output_fpath = 'exp/spokencoco/MBR_decode_trees/val/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k.txt')
+
     ########################################################## MBR selection for MBR_unsup-discovery MBR_seg_feats (fully-unsup setting) ##################################################################
     # MBR across epoches and hubert layers but the same learning rate
     run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',

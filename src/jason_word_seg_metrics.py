@@ -59,9 +59,22 @@ def main(all_pred_boundaries, all_gt_boundaries):
     print("oversegmentation: ", b_os)
     print("R-value: ", b_r_val)
 
+def fix_boundary_format(my_boundary):
+    fixed_boundary = [start for (word, start, end) in my_boundary]
+    fixed_boundary.append(my_boundary[-1][-1])
+
+    fixed_boundary = [x * 0.02 for x in fixed_boundary]
+
+    return fixed_boundary
+        
 if __name__ == '__main__': 
-    
-    main()
+   
+    all_pred_boundaries = np.load('data/SpokenCOCO/Freda-formatting/test_segment-hubert2_word_list-83k-5k-5k.npy', allow_pickle=True)[0]
+    all_pred_boundaries = [fix_boundary_format(all_pred_boundary) for i, all_pred_boundary in all_pred_boundaries.items()]
+
+    all_gt_boundaries = all_pred_boundaries
+
+    main(all_pred_boundaries, all_gt_boundaries)
     exit()
 
     # word segmentation results 
