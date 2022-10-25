@@ -144,6 +144,41 @@ def hubert_feature_extraction(input_utterance_pth, upstream_model,
 
     return numpy_reps, n_frames
 
+def hubert_feature_extraction_mp(input_utterance_pth, 
+                                 reps, 
+                                 spf=0.02, 
+                                 boundaries=None, 
+                                 hubert_dim=768):
+    # extract hubert feature on GPU with torch. 
+    # return specified layer's representation: 0, 1, 2, ...., 12 (start with CNN encoder outputs)
+
+    ## load wavefile 
+    #y, native_sample_rate = librosa.load(input_utterance_pth)
+    #
+    ## resample to the target sample rate -- important for pre-trained 16k models
+    #y = librosa.resample(y, native_sample_rate, 16000)
+    #y = torch.from_numpy(y).to(device)
+
+    with torch.no_grad():
+        #reps = upstream_model([y])["hidden_states"]
+        #print(f'reps has {len(reps)} layers')
+        #reps = reps[layer].squeeze().reshape(hubert_dim, -1)
+        reps = reps.reshape(hubert_dim, -1)
+        reps = vanilla_mean_pooling(boundaries, reps, spf)
+        if len(reps) == 0: 
+            reps=np.array(reps)
+        else:
+            reps = np.stack(reps, 0)
+
+    return reps, None
+
+def vanilla_mean_pooling(boundaries, feats, spf):
+    seg_feats = []
+    for t_s, t_e in boundaries:
+        t_s, t_e = int(t_s/spf), int(t_e/spf)+1
+        seg_feats.append(np.mean(feats[:, t_s:t_e], axis=1))
+    return seg_feats
+
 def cls_weighted_mean_pooling(boundaries, feats, cls_attn_weights, spf):
     seg_feats = []
     cls_attn_weights_sum = cls_attn_weights

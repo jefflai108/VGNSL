@@ -30,12 +30,13 @@ jason_feature=disc-81_spokencoco_preFeats_weightedmean_0.7_9_clsAttn_vadno_inser
 jason_feature=disc-82_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadno_insertThreshold0.2_snapshotbest
 jason_feature=disc-81_spokencoco_preFeats_weightedmean_0.8_9_clsAttn_vadno_insertThreshold0.2_snapshotbest
 jason_feature=mbr_104_1030_top10
+jason_feature=dpdp
 
-jason_feature=$1
-split=$2
-layer_num=$3
+jason_feature=dpdp
+split=$1
+layer_num=$2
 #for split in val test train; do
-    python data/postprocess_jason_features.py \
+    python data/postprocess_jason_features_dpdp.py \
         -j ${datadir}/SpokenCOCO_summary-83k-5k-5k.json --data_dir ${datadir} \
         -o ${datadir}/Freda-formatting \
         --data_split $split --new_feature $jason_feature --vghubert_layer $layer_num
