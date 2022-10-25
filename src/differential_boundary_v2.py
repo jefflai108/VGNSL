@@ -5,37 +5,18 @@ import numpy as np
 
 from utils import l2norm
 
-class MeanPooledPhoneSegment(nn.Module): 
-    """
-    Return the mean-pooled representation with propor masking. 
-    """
-    def __init__(self): 
-        super(MeanPooledPhoneSegment, self).__init__()
-
-    def forward(self, batch_rep, att_mask):
-        """
-        input:
-        batch_rep : size (B, T, H), B: batch size, T: sequence length, H: Hidden dimension
-        att_mask:  size (B, T),     Attention Mask logits
-        
-        attention_weight:
-        att_w : size (B, T, 1)
-        
-        return:
-        utter_rep: size (B, H)
-        """
-        att_w = torch.where(att_mask == -100000, 0, 1).unsqueeze(-1)
-        phn_segment_rep = torch.mean(batch_rep * att_w, dim=1)
-
-        return phn_segment_rep
-
-
 class SegmentSimilarityMeasure(nn.Module): 
     """
-    Compute how similar two segments are. Use cosine-similarity instead of MLP. 
+    Compute how similar two segments are. Use MLP instead of dot-product. 
     """
     def __init__(self, hidden_dim): 
         super(SegmentSimilarityMeasure, self).__init__()
+
+        self.sim_measure = nn.Sequential(
+            nn.Linear(hidden_dim * 2, hidden_dim),
+            nn.GELU(),
+            nn.Linear(hidden_dim, 1, bias=False)
+        )
 
     def forward(self, batch_segment1, batch_segment2): 
         """
@@ -46,7 +27,12 @@ class SegmentSimilarityMeasure(nn.Module):
         output: 
         batch_sim: (B, N-1)
         """
-        S = F.cosine_similarity(l2norm(batch_segment1), l2norm(batch_segment2), dim=2)
+        concat_batch_segment = torch.cat(
+            (l2norm(batch_segment1), l2norm(batch_segment2)), 
+            dim=2
+        )
+        S = self.sim_measure(concat_batch_segment).squeeze(-1)
+        S = F.sigmoid(S)
 
         return S
 
@@ -106,34 +92,6 @@ def segment_peak_detector(segment_dissimilarity, threshold):
     )
     return peak_detector 
 
-def top_k_peak_sampling(P, phn_mask, gt_word_lens, proxy_large_num=10):
-    """
-    top_k selection on peak to match # of words specified in phn_mask
-
-    input: 
-    P: size (B, N), B: batch size, N: number of phns
-    phn_mask : size (B, N)
-    gt_word_lens: size (B,)
-
-    output: 
-    P: size (B, N)
-    """
-    # iterate through P as each Pi has different # of gt words 
-    # ensure top-k word segments are selected from *the valid phn ranges*
-    for i in range(len(P)): 
-        num_of_words = gt_word_lens[i]
-        num_of_phns = torch.sum(torch.where(phn_mask[i] != -100000, 1, 0)).item()
-        P[i, 0] = proxy_large_num # utt has to start with segmentation. Make it large so that first seg must be selected by top-k
-        topk_Pi, topk_Pi_idx = torch.topk(P[i, :num_of_phns], num_of_words) # for the corner case of under-segmentation. trivial solve by randomly uniform segment the rest (return from topk sampling)
-        P[i, topk_Pi_idx] = proxy_large_num
-    
-    P = torch.where(P != proxy_large_num, torch.tensor(0.0, device=P.device), torch.tensor(1.0, device=P.device)) # rest of P set to 0. This will avoid over-segmentation.
-
-    # good way to debug
-    #print(P)
-    #print(gt_word_lens)
-    return P
- 
 def weighted_random_peak_sampling(P, phn_mask, gt_word_lens, proxy_large_num=10):
     """
     weighted_random sample top_k selection on peak to match # of words specified in phn_mask
@@ -168,6 +126,7 @@ class DifferentialWordSegmentation(nn.Module):
         
         self.adjacent_segment_sim_measure = SegmentSimilarityMeasure(hidden_dim)
         self.peak_detection_threshold = peak_detection_threshold
+        self.word_transform = nn.Linear(hidden_dim, hidden_dim, bias=False)
 
     def forward(self, segment_rep, phn_mask, gt_word_lens):
         '''
@@ -241,6 +200,7 @@ class DifferentialWordSegmentation(nn.Module):
         W = W.permute(0, 2, 1) # B, M, N 
         word_segment_rep = torch.bmm(W, segment_rep)
         #print(word_segment_rep.shape) # B, M, H
+        word_segment_rep = self.word_transform(word_segment_rep)
         #print(word_segment_rep[-1])
         word_masks = torch.where(word_segment_rep==0, 0, 1)
         #print(word_masks[-1])

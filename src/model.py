@@ -22,9 +22,10 @@ import utils
 from module import AttentivePooling, AttentivePoolingInputNorm, \
                    AttentivePoolingDiscreteInput, create_resdavenet_vq, \
                    MLPCombineBasicBlock
-
+                   
 #from differential_boundary import DifferentialWordSegmentation # diffboundV0
-from differential_boundary_v1 import DifferentialWordSegmentation # diffboundV1
+#from differential_boundary_v1 import DifferentialWordSegmentation # diffboundV1
+from differential_boundary_v2 import DifferentialWordSegmentation # diffboundV2
 
 class EncoderImagePrecomp(nn.Module):
     """ image encoder """
@@ -130,6 +131,7 @@ class EncoderText(nn.Module):
                                                                    discrete_embed_size=self.embed_size)
             else: # default audio VG-NSL
                 self.sem_embedding = AttentivePooling(self.semantics_dim, self.embed_size)
+                
             if hasattr(opt, 'davenet_embed') and opt.davenet_embed:
                 self.use_davenet = True 
                 state_path = os.path.join('/data/sls/temp/clai24/pretrained-models', opt.davenet_embed_type, 'models/best_audio_model.pth')
@@ -215,10 +217,10 @@ class EncoderText(nn.Module):
                 sem_embeddings = self.sem_embedding(x, batched_audio_masks)
             sem_embeddings = sem_embeddings.reshape(batch_size, num_word, self.embed_size)
             if self.diffbound_gtword: # transform phn_seg --> word_seg via differential boundary
+                sem_embeddings, (b, gt_word_lens) = self.differential_boundary_module(sem_embeddings, audio_masks[:, :, 0], gt_word_lens=lengths)
                 #print(sem_embeddings.shape)
-                #print(audio_masks.shape)
-                sem_embeddings = self.differential_boundary_module(sem_embeddings, audio_masks[:, :, 0], gt_word_lens=lengths)
-                #print(sem_embeddings.shape)
+            else: 
+                (b, gt_word_lens) = (None, None)
 
             del x
             del audio_masks, batched_audio_masks
@@ -309,7 +311,7 @@ class EncoderText(nn.Module):
             right_bounds = self.update_with_mask(right_bounds, right_bounds, this_spans[:, 1], *update_masks)
 
         return features, left_span_features, right_span_features, output_word_embeddings, tree_indices, \
-               tree_probs, span_bounds
+               tree_probs, span_bounds, (b, gt_word_lens)
 
     @staticmethod
     def update_with_mask(lv, rv, cv, lm, rm, cm):
@@ -513,8 +515,8 @@ class VGNSL(object):
 
         # compute the embeddings
         img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, probs, \
-            span_bounds = self.forward_emb(images, audios, lengths, speech_hdf5=speech_hdf5, audio_masks=audio_masks)
-        
+            span_bounds, (b, gt_word_lens) = self.forward_emb(images, audios, lengths, speech_hdf5=speech_hdf5, audio_masks=audio_masks)
+
         # measure accuracy and record loss
         cum_reward, matching_loss = self.forward_reward(
             img_emb, cap_span_features, left_span_features, right_span_features, word_embs, lengths,

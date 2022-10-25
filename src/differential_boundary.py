@@ -211,7 +211,7 @@ class DifferentialWordSegmentation(nn.Module):
         word_segment_rep = torch.mul(word_segment_rep, word_masks)
         #print(word_segment_rep.shape) # B, M, H
         #print(word_segment_rep[-1, 5:])
-        return word_segment_rep
+        return word_segment_rep, (b.data.cpu().numpy(), gt_word_lens.data.cpu().numpy())
 
 '''
 some to-dos:

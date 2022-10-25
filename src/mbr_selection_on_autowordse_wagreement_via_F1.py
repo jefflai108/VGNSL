@@ -100,21 +100,31 @@ def run(pred_tree_dir_list, unsup_word_discovery_feats=None, unsup_word_discover
     predicted_tree_accum_iou, rbt_accum_iou = 0, 0
     cnt = 0
     for i in tqdm(range(len(ground_truth_trees))): 
-        if ground_truth_trees[i] == 'MISMATCH' or len(word_bounds[i]) < 2: 
+        if ground_truth_trees[i] == 'MISMATCH': 
             continue 
-        pred_tree_samples = [pred_tree[i] for pred_tree in pred_trees] # outputs from different model/ckpt given an input
-        output = mbr_selection(pred_tree_samples, key_function=pairwise_f1_score_for_mbr) # agreement score based on normal F1
-        def pairwise_autowordse_score_for_mbr(induced_tree_1, induced_tree_2):
-            return sample_wise_autowordse(induced_tree_1, induced_tree_2, word_bounds[i], word_bounds[i])
+        cnt += 1
 
-        #output = mbr_selection(pred_tree_samples, key_function=pairwise_autowordse_score_for_mbr) # agreement score based on autowordse 
-        mbr_selected_tree = output['best_sample']
+        if len(word_bounds[i]) >= 2:
+            pred_tree_samples = [pred_tree[i] for pred_tree in pred_trees] # outputs from different model/ckpt given an input
+            output = mbr_selection(pred_tree_samples, key_function=pairwise_f1_score_for_mbr) # agreement score based on normal F1
+            def pairwise_autowordse_score_for_mbr(induced_tree_1, induced_tree_2):
+                return sample_wise_autowordse(induced_tree_1, induced_tree_2, word_bounds[i], word_bounds[i])
 
-        predicted_avg_iou, rbt_avg_iou = sample_wise_autowordse(ground_truth_trees[i], mbr_selected_tree, oracle_bounds[i], word_bounds[i])
+            #output = mbr_selection(pred_tree_samples, key_function=pairwise_autowordse_score_for_mbr) # agreement score based on autowordse 
+            mbr_selected_tree = output['best_sample']
+
+            predicted_avg_iou, rbt_avg_iou = sample_wise_autowordse(ground_truth_trees[i], mbr_selected_tree, oracle_bounds[i], word_bounds[i])
+        else: # give 0% to IOUs
+            #print(idx)
+            #print(gold_trees[idx])
+            #print(induced_trees[idx])
+            #print(oracle_bounds[idx])
+            #print(word_bounds[idx])
+            predicted_avg_iou = 0 
+            rbt_avg_iou = 0
 
         predicted_tree_accum_iou += predicted_avg_iou
         rbt_accum_iou += rbt_avg_iou
-        cnt += 1
 
     predicted_avg_iou = predicted_tree_accum_iou / cnt 
     rbt_avg_iou = rbt_accum_iou / cnt 
@@ -158,7 +168,7 @@ if __name__ == '__main__':
             'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
             'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'],
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
 
     elif stage == 1:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr',
@@ -174,57 +184,57 @@ if __name__ == '__main__':
             'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr', 
             'exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'],
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
 
     elif stage == 2:
         # MBR across epoches but within a hyper-parameter set
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer0_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
     elif stage == 3:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer1_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
     elif stage == 4:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer2_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
     elif stage == 5:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer3_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
     elif stage == 6:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer4_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
     elif stage == 7:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer5_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
     elif stage == 8:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer6_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
     elif stage == 9:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer7_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
     elif stage == 10:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer8_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
     elif stage == 11:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer9_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
     elif stage == 12:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer10_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
     elif stage == 13:
         run(['exp/spokencoco/mbr_unsup_attn_discovery_mbr_104_1030_top10_mbr_seg_feats_disc-81_snapshot15_layer11_embed512_MLPcombineV3_lr1e-3_83k-5k-5k/mbr'], 
             unsup_word_discovery_feats = 'mbr_104_1030_top10', 
-            unsup_word_discovery_feat_type = 'attn')
+            unsup_word_discovery_feat_type = 'word')
 
     ######################################################################## MBR selection for phn_MFA diffBounad whole_hubert #############################################################################
     # run MBR for phn MFA diffboundary V0

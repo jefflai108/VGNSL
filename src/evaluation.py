@@ -259,7 +259,8 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
                visual_tree=False, visual_samples=10,
                export_tree=False, export_tree_path=None, 
                constituent_recall=False, duration_based_alignment=False, 
-               test_time_oracle_segmentation=False, mbr_path=None, ljspeech=False,
+               test_time_oracle_segmentation=False, mbr_path=None, 
+               predict_word_seg_path=None, ljspeech=False,
                right_branching=False, left_branching=False, random_branching=False):
     """ use the trained model to generate parse trees for text """
     # load model and options
@@ -413,6 +414,9 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
     logged = False
     trees = list()
 
+    if diffbound_gtword: 
+        all_b, all_gt_word_lens = [[]], []
+
     for i, (images, captions, audios, audio_masks, lengths, ids) in enumerate(data_loader):
         if visual_tree and i == visual_samples: 
             break 
@@ -425,7 +429,11 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
         # compute the embeddings
         model_output = model.forward_emb(images, audios, lengths, volatile=True, speech_hdf5=opt.speech_hdf5, audio_masks=audio_masks) # feed in audios instead of captions
         img_emb, cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, all_probs, \
-        span_bounds = model_output[:8]
+        span_bounds, (b, gt_word_lens) = model_output[:9]
+
+        if diffbound_gtword: 
+            all_b.extend(b.tolist())
+            all_gt_word_lens.extend(gt_word_lens)
 
         candidate_trees = list()
         for j in range(len(ids)):
@@ -452,6 +460,14 @@ def test_trees(data_path, model_path, vocab_path, basename, data_split='test',
         #cap_emb = torch.cat([cap_span_features[l-2][i].reshape(1, -1) for i, l in enumerate(lengths)], dim=0)
         del images, captions, img_emb, audios, audio_masks, lengths, ids, model_output, \
             cap_span_features, left_span_features, right_span_features, word_embs, tree_indices, all_probs, span_bounds
+
+    if diffbound_gtword: 
+        all_b = all_b[1:]
+        assert len(all_b) == 25000 and len(all_gt_word_lens) == 25000
+        if predict_word_seg_path: 
+            print(f'writing predicted word segmentation to {predict_word_seg_path}')
+            with open(predict_word_seg_path, 'wb') as f:
+                np.save(f, all_b)
 
     if export_tree: 
         export_tree_writer.close()

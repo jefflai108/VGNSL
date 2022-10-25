@@ -68,6 +68,33 @@ class AttentivePooling(nn.Module):
 
         return segment_rep
 
+class MeanPooledPhoneSegment(nn.Module): 
+    """
+    Return the mean-pooled representation with propor masking. 
+    """
+    def __init__(self, feature_dim, output_dim): 
+        super(MeanPooledPhoneSegment, self).__init__()
+
+        self.W = nn.Linear(feature_dim, output_dim, bias=False)
+
+    def forward(self, batch_rep, att_mask):
+        """
+        input:
+        batch_rep : size (B, T, H), B: batch size, T: sequence length, H: Hidden dimension
+        att_mask:  size (B, T),     Attention Mask logits
+        
+        attention_weight:
+        att_w : size (B, T, 1)
+        
+        return:
+        utter_rep: size (B, H)
+        """
+        att_w = torch.where(att_mask == -100000, 0, 1).unsqueeze(-1)
+        phn_segment_rep = torch.mean(batch_rep * att_w, dim=1)
+        phn_segment_rep = self.W(phn_segment_rep)
+
+        return phn_segment_rep
+
 class AttentivePoolingInputNorm(nn.Module):
     """
     AttentivePooling with additional input layernorm, for hubert_large features
