@@ -199,6 +199,7 @@ class EncoderText(nn.Module):
             if not speech_hdf5: assert lengths.tolist() == audio_masks.tolist()
       
         # retrieve speech embeddings
+        (b, gt_word_lens) = (None, None)
         if speech_hdf5: 
             # learnable pooling 
             # treat each (word) segment independently i.e. pool *within* segment not across 
@@ -219,8 +220,6 @@ class EncoderText(nn.Module):
             if self.diffbound_gtword: # transform phn_seg --> word_seg via differential boundary
                 sem_embeddings, (b, gt_word_lens) = self.differential_boundary_module(sem_embeddings, audio_masks[:, :, 0], gt_word_lens=lengths)
                 #print(sem_embeddings.shape)
-            else: 
-                (b, gt_word_lens) = (None, None)
 
             del x
             del audio_masks, batched_audio_masks

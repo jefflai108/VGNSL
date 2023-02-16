@@ -367,6 +367,9 @@ if __name__ == '__main__':
             model.load_state_dict(checkpoint['model']) 
             starting_epoch = checkpoint['epoch']
             best_rsum = checkpoint['best_rsum']
+    else: 
+        starting_epoch = 0
+        best_rsum = 0
 
     # start with validation
     validate(opt, val_loader, model, vocab)
